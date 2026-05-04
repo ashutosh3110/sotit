@@ -14,6 +14,7 @@ const UserHome = lazy(() => import('./modules/user/pages/UserHome'));
 const UserLogin = lazy(() => import('./modules/user/pages/UserLogin'));
 const UserRegister = lazy(() => import('./modules/user/pages/UserRegister'));
 const AuthLanding = lazy(() => import('./modules/auth/pages/AuthLanding'));
+const WelcomePage = lazy(() => import('./modules/auth/pages/WelcomePage'));
 const UserProfile = lazy(() => import('./modules/user/pages/UserProfile'));
 const UserFind = lazy(() => import('./modules/user/pages/UserFind'));
 const UserSearch = lazy(() => import('./modules/user/pages/UserSearch'));
@@ -73,7 +74,8 @@ const AppRoutes = () => {
       <div className="flex-1 flex flex-col min-h-screen">
         <Routes location={location} key={location.pathname}>
           {/* Main Auth Gateway */}
-          <Route path="/" element={<AuthLanding />} />
+          <Route path="/" element={<WelcomePage />} />
+          <Route path="/auth" element={<AuthLanding />} />
 
           {/* User App Module */}
           <Route path="/user" element={<ModuleWrapper type="user"><UserHome /></ModuleWrapper>} />
@@ -134,7 +136,7 @@ const AppRoutes = () => {
 
 const AppContent = () => {
   const location = useLocation();
-  const authPaths = ['/', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise'];
+  const authPaths = ['/', '/auth', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise'];
   const isAuthPage = authPaths.includes(location.pathname) || location.pathname.startsWith('/admin');
 
   return (

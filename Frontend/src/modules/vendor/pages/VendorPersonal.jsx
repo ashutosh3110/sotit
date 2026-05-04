@@ -14,6 +14,7 @@ const VendorPersonal = () => {
   const [mechanicTypes, setMechanicTypes] = useState([]);
   const [ownerVehicleType, setOwnerVehicleType] = useState('Sedan/SUV');
   const [ownerSalary, setOwnerSalary] = useState('');
+  const [driverVehicleTypes, setDriverVehicleTypes] = useState(['Car']);
 
   const languages = ['Tamil', 'Marathi', 'Hindi', 'English', 'Bengali', 'Gujarati', 'Kannada', 'Telugu'];
   const mechanicOptions = [
@@ -40,6 +41,10 @@ const VendorPersonal = () => {
 
   const toggleCity = (city) => {
     setOperatingCities(prev => prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]);
+  };
+  
+  const toggleDriverVehicleType = (type) => {
+    setDriverVehicleTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
   };
 
   const handleSubmit = (e) => {
@@ -143,6 +148,31 @@ const VendorPersonal = () => {
                                     className="bg-transparent text-[15px] font-bold text-slate-800 w-full focus:outline-none placeholder:text-neutral-400 uppercase"
                                     required
                                 />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {role === 'driver' && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="space-y-4 pt-2 overflow-hidden"
+                            >
+                                <span className="text-[13px] font-black uppercase tracking-widest text-neutral-700 pl-2">Vehicle Type</span>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {['Car', 'Bus', 'Truck', 'Tempo'].map((type) => (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => toggleDriverVehicleType(type)}
+                                            className={`py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border ${driverVehicleTypes.includes(type) ? 'bg-[#C44545] text-white border-[#C44545] shadow-lg shadow-[#C44545]/20' : 'bg-white text-neutral-400 border-neutral-100 shadow-sm'}`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>

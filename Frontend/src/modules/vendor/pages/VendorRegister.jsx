@@ -33,7 +33,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
       {/* Dynamic Header */}
       <div className="px-6 py-3 flex items-center justify-between sticky top-0 bg-inherit z-30">
         <button 
-          onClick={() => isEmbedded ? onSwitchToLogin() : navigate('/')} 
+          onClick={() => isEmbedded ? onSwitchToLogin() : navigate('/auth')} 
           className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-black/[0.03] active:scale-90 transition-transform"
         >
           <ArrowLeft size={20} className="text-slate-900" strokeWidth={2.5} />
