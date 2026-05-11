@@ -52,6 +52,92 @@ const VendorRegister = () => {
     regCertificate: null, officeProof: null
   });
 
+  // --- Custom Dropdown Component ---
+  const CustomDropdown = ({ label, options, value, onChange, placeholder, icon: Icon, disabled }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState("");
+    const dropdownRef = useRef(null);
+
+    const filteredOptions = options.filter(opt => 
+        (opt.name || opt).toLowerCase().includes(search.toLowerCase())
+    );
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setIsOpen(false);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative w-full" ref={dropdownRef}>
+            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">{label}</label>
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full flex items-center justify-between bg-white border ${isOpen ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-200'} rounded-2xl py-4 px-6 transition-all disabled:opacity-50`}
+            >
+                <div className="flex items-center gap-3 overflow-hidden">
+                    {Icon && <Icon size={18} className={value ? 'text-[#C44545]' : 'text-slate-400'} />}
+                    <span className={`text-sm font-bold truncate ${value ? 'text-slate-900' : 'text-slate-400'}`}>
+                        {value || placeholder}
+                    </span>
+                </div>
+                <ChevronDown size={16} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180 text-[#C44545]' : ''}`} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[100] overflow-hidden"
+                    >
+                        <div className="p-3 border-b border-slate-50">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                <input 
+                                    type="text" 
+                                    placeholder="Search..." 
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full bg-slate-50 border-none rounded-xl py-2.5 pl-9 pr-4 text-xs font-bold focus:ring-0"
+                                />
+                            </div>
+                        </div>
+                        <div className="max-h-60 overflow-y-auto no-scrollbar p-1">
+                            {filteredOptions.length > 0 ? filteredOptions.map((opt, i) => {
+                                const name = opt.name || opt;
+                                const isSelected = value === name;
+                                return (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange(opt);
+                                            setIsOpen(false);
+                                            setSearch("");
+                                        }}
+                                        className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-between transition-colors ${isSelected ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    >
+                                        {name}
+                                        {isSelected && <Check size={14} />}
+                                    </button>
+                                );
+                            }) : (
+                                <div className="p-4 text-center text-xs font-bold text-slate-400">No results found</div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+  };
+
   // --- Handlers ---
   const handleSendOTP = async () => {
     if (mobile.length !== 10) return toast.error("Enter valid 10-digit mobile");
@@ -90,11 +176,15 @@ const VendorRegister = () => {
               fetchedCity = data.address?.city || data.address?.town || data.address?.village || "";
               
               if (type === 'personal') {
+                const fetchedStateName = data.address?.state || "";
+                const stateObj = allStates.find(s => s.name === fetchedStateName);
+                
                 setAddress(prev => ({
                     ...prev,
                     street: fetchedAddress,
                     city: fetchedCity,
-                    state: data.address?.state || prev.state,
+                    state: fetchedStateName,
+                    isoCode: stateObj?.isoCode || prev.isoCode,
                     pincode: data.address?.postcode || prev.pincode
                 }));
                 setLiveLocation(loc);
@@ -273,29 +363,24 @@ const VendorRegister = () => {
                         <input type="text" placeholder="Current Address" value={address.street} onChange={(e) => setAddress({...address, street: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                         
                         <div className="grid grid-cols-1 gap-4">
-                          <select 
-                            value={address.isoCode} 
-                            onChange={(e) => {
-                              const s = allStates.find(x => x.isoCode === e.target.value);
-                              setAddress({...address, state: s?.name || "", isoCode: e.target.value, city: ""});
-                            }} 
-                            className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold"
-                          >
-                            <option value="">Select State</option>
-                            {allStates.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
-                          </select>
+                          <CustomDropdown 
+                            label="State"
+                            options={allStates}
+                            value={address.state}
+                            placeholder="Select State"
+                            icon={Globe}
+                            onChange={(s) => setAddress({...address, state: s.name, isoCode: s.isoCode, city: ""})}
+                          />
 
-                          <select 
-                            value={address.city} 
-                            onChange={(e) => setAddress({...address, city: e.target.value})} 
+                          <CustomDropdown 
+                            label="City / District"
+                            options={address.isoCode ? City.getCitiesOfState('IN', address.isoCode) : []}
+                            value={address.city}
+                            placeholder="Select City/District"
+                            icon={MapPin}
                             disabled={!address.isoCode}
-                            className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold disabled:opacity-50"
-                          >
-                            <option value="">Select City/District</option>
-                            {address.isoCode && City.getCitiesOfState('IN', address.isoCode).map(c => (
-                              <option key={c.name} value={c.name}>{c.name}</option>
-                            ))}
-                          </select>
+                            onChange={(c) => setAddress({...address, city: c.name})}
+                          />
 
                           <input type="tel" placeholder="Pincode" value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                         </div>
@@ -309,7 +394,7 @@ const VendorRegister = () => {
 
             {/* Towing & Driver Professional Details */}
             {(role === 'driver' || role === 'towing') && step === 2 && (
-              <div className="space-y-6 pt-4">
+              <div className="space-y-6 pt-4 pb-20">
                 <h3 className="text-sm font-black uppercase tracking-widest text-[#C44545] ml-2">Step 2: Professional Details</h3>
                 <div className="space-y-4">
                   <div className="px-2">
@@ -320,12 +405,12 @@ const VendorRegister = () => {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-4">Vehicle Classes</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-2 px-2">
                       {(role === 'towing' ? ['LMV', 'HMV', 'MCWG'] : ['2-wheeler', '4-wheeler', 'transport']).map(c => (
                         <div key={c} onClick={() => {
                           const n = profData.vehicleClasses.includes(c) ? profData.vehicleClasses.filter(x => x !== c) : [...profData.vehicleClasses, c];
                           setProfData({...profData, vehicleClasses: n});
-                        }} className={`py-4 rounded-xl border-2 text-center text-[11px] font-black transition-all ${profData.vehicleClasses.includes(c) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400'}`}>{c}</div>
+                        }} className={`py-4 rounded-xl border-2 text-center text-[11px] font-black transition-all ${profData.vehicleClasses.includes(c) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}>{c}</div>
                       ))}
                     </div>
                   </div>
@@ -337,35 +422,35 @@ const VendorRegister = () => {
                     </select>
                   </div>
 
-                  <div onClick={() => setProfData({...profData, bgCheck: !profData.bgCheck})} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer">
-                    <div className={`h-5 w-5 rounded border-2 flex items-center justify-center ${profData.bgCheck ? 'bg-[#C44545] border-[#C44545] text-white' : 'border-slate-300'}`}>{profData.bgCheck && <CheckCircle2 size={12} />}</div>
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-600">I agree to background verification</span>
+                  <div onClick={() => setProfData({...profData, bgCheck: !profData.bgCheck})} className="flex items-center gap-3 p-5 bg-white border border-slate-100 rounded-2xl cursor-pointer mx-2 shadow-sm">
+                    <div className={`h-6 w-6 rounded-lg border-2 flex items-center justify-center transition-all ${profData.bgCheck ? 'bg-[#C44545] border-[#C44545] text-white' : 'border-slate-200'}`}>{profData.bgCheck && <Check size={14} />}</div>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-slate-600">Background verification agreement</span>
                   </div>
 
                   {/* Service Locations for Drivers */}
                   {role === 'driver' && (
-                    <div className="pt-6 border-t border-slate-100 space-y-4">
+                    <div className="pt-6 border-t border-slate-100 space-y-4 px-2">
                       <div className="px-2">
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C44545] mb-2">Operational Areas</h4>
                         <p className="text-[11px] font-bold text-slate-400 mb-4">Select districts where you can provide driving services.</p>
                       </div>
                       
-                      <select 
-                        value={profData.serviceStateCode} 
-                        onChange={(e) => {
-                          const s = allStates.find(x => x.isoCode === e.target.value);
-                          setProfData({...profData, serviceState: s?.name || "", serviceStateCode: e.target.value, serviceDistricts: []});
-                        }} 
-                        className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold"
-                      >
-                        <option value="">Select Service State</option>
-                        {allStates.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
-                      </select>
+                      <CustomDropdown 
+                        label="Service State"
+                        options={allStates}
+                        value={profData.serviceState}
+                        placeholder="Select Service State"
+                        icon={Globe}
+                        onChange={(s) => setProfData({...profData, serviceState: s.name, serviceStateCode: s.isoCode, serviceDistricts: []})}
+                      />
 
                       {profData.serviceStateCode && (
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-4">Select Districts (Multiple)</label>
-                          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-100 rounded-2xl bg-white no-scrollbar">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between px-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Select Districts</label>
+                            <span className="text-[10px] font-black text-[#C44545] bg-rose-50 px-2 py-1 rounded-md">{profData.serviceDistricts.length} Selected</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto p-3 border border-slate-200 rounded-[1.5rem] bg-white no-scrollbar shadow-inner">
                             {City.getCitiesOfState('IN', profData.serviceStateCode).map(city => (
                               <div 
                                 key={city.name}
@@ -375,25 +460,19 @@ const VendorRegister = () => {
                                     : [...profData.serviceDistricts, city.name];
                                   setProfData({...profData, serviceDistricts: n});
                                 }}
-                                className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all cursor-pointer ${profData.serviceDistricts.includes(city.name) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-400 hover:bg-slate-50'}`}
+                                className={`p-4 rounded-xl border text-[10px] font-black uppercase transition-all cursor-pointer flex items-center justify-between ${profData.serviceDistricts.includes(city.name) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
                               >
                                 {city.name}
+                                {profData.serviceDistricts.includes(city.name) && <Check size={12} />}
                               </div>
                             ))}
                           </div>
-                          {profData.serviceDistricts.length > 0 && (
-                            <div className="flex flex-wrap gap-2 px-2">
-                              {profData.serviceDistricts.map(d => (
-                                <span key={d} className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[9px] font-black uppercase">{d}</span>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>
                   )}
                 </div>
-                <button onClick={() => setStep(3)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
+                <button onClick={() => setStep(3)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4 shadow-xl shadow-[#C44545]/20">Next Step</button>
               </div>
             )}
 
