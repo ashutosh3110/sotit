@@ -1,12 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Shield, Wallet, ChevronRight, Settings, LogOut, Package, Star, CreditCard, Bell, Lock, HelpCircle, ArrowLeft } from "lucide-react";
+import { User, Shield, Wallet, ChevronRight, Settings, LogOut, Package, Star, CreditCard, Bell, Lock, HelpCircle, ArrowLeft, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getUserData, logoutUser } from "../utils/userStore";
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 const UserProfile = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(getUserData() || { profile: { name: "Guest" }, wallet: 0 });
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
         const handleUpdate = () => setUser(getUserData());
@@ -14,118 +16,121 @@ const UserProfile = () => {
         return () => window.removeEventListener('user_data_updated', handleUpdate);
     }, []);
 
-    const MenuButton = ({ icon: Icon, label, sublabel, onClick, color = "text-[#C44545]", bg = "bg-white" }) => (
-        <button 
-            onClick={onClick}
-            className="w-full flex items-center justify-between p-3.5 active:bg-rose-100/50 transition-colors group"
-        >
-            <div className="flex items-center gap-4">
-                <div className={`h-10 w-10 ${bg} ${color} rounded-xl flex items-center justify-center shadow-sm group-active:scale-90 transition-transform`}>
-                    <Icon size={18} strokeWidth={2.5} />
+    const toggleDarkMode = () => {
+        setIsDarkMode(!isDarkMode);
+        toast.success(`${!isDarkMode ? 'Dark' : 'Light'} Mode Enabled`);
+    };
+
+    const MenuButton = ({ icon: Icon, label, sublabel, onClick, color = "text-[#C44545]", bg = "bg-white", isLast = false, isDark = false }) => (
+        <>
+            <button 
+                onClick={onClick}
+                className={`w-full flex items-center justify-between p-5 transition-colors group ${isDark ? 'active:bg-slate-800' : 'active:bg-rose-50'}`}
+            >
+                <div className="flex items-center gap-5">
+                    <div className={`h-11 w-11 ${bg} ${color} rounded-2xl flex items-center justify-center shadow-inner group-active:scale-90 transition-transform border ${isDark ? 'border-slate-700' : 'border-rose-100/50'}`}>
+                        <Icon size={20} strokeWidth={2.5} />
+                    </div>
+                    <div className="flex flex-col items-start text-left">
+                        <span className={`text-[14px] font-black tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{label}</span>
+                        {sublabel && <span className={`text-[11px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{sublabel}</span>}
+                    </div>
                 </div>
-                <div className="flex flex-col items-start">
-                    <span className="text-[13px] font-black tracking-tight text-neutral-900">{label}</span>
-                    {sublabel && <span className="text-[11px] font-bold text-[#C44545]/60 uppercase tracking-widest">{sublabel}</span>}
-                </div>
-            </div>
-            <ChevronRight size={14} className="text-[#C44545]/30 group-hover:text-[#C44545] transition-colors" strokeWidth={3} />
-        </button>
+                <ChevronRight size={16} className={`${isDark ? 'text-slate-700' : 'text-slate-300'} group-hover:text-[#C44545] transition-colors`} strokeWidth={3} />
+            </button>
+            {!isLast && <div className={`mx-6 border-t ${isDark ? 'border-slate-800/50' : 'border-slate-50'}`} />}
+        </>
     );
 
     return (
-        <div className="bg-white min-h-screen pb-28 font-inter">
-            {/* Custom Header for Profile (Replaces Global Header) */}
-            <div className="sticky top-0 z-50 bg-[#C44545] px-6 py-4 flex items-center justify-between shadow-lg">
-                <h1 className="text-xl font-black tracking-tight text-white">My Account</h1>
+        <div className={`min-h-screen pb-28 font-inter transition-colors duration-500 ${isDarkMode ? 'bg-slate-950' : 'bg-neutral-50'}`}>
+            {/* Header */}
+            <div className="bg-[#C44545] px-6 pt-10 pb-12 flex items-center justify-between shadow-2xl shadow-[#C44545]/20 rounded-b-[3.5rem]">
+                <h1 className="text-2xl font-black tracking-tighter text-white">My Account.</h1>
                 <button 
-                  onClick={() => navigate('/user/preferences')}
-                  className="h-10 w-10 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10 shadow-sm active:scale-90 transition-transform"
+                  onClick={toggleDarkMode}
+                  className="h-12 w-12 bg-white/15 rounded-[1.4rem] flex items-center justify-center border border-white/10 backdrop-blur-md active:scale-90 transition-transform text-white"
                 >
-                    <Settings size={18} className="text-white" strokeWidth={2.5} />
+                    {isDarkMode ? <Sun size={20} className="fill-white" /> : <Moon size={20} />}
                 </button>
             </div>
 
-            <div className="px-6 pt-8 pb-6">
-                {/* Profile Card */}
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="relative">
-                        <div className="h-20 w-20 bg-[#C44545] rounded-[2rem] flex items-center justify-center text-white text-2xl font-black shadow-2xl shadow-[#C44545]/30 border-2 border-white">
-                            {user.profile.name?.[0] || 'U'}
-                        </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 h-6 w-6 bg-[#C44545] rounded-full border-2 border-white flex items-center justify-center">
-                            <Shield size={10} className="text-white" fill="white" />
-                        </div>
-                    </div>
-                    <div className="flex-1">
-                        <h2 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-1">{user.profile.name || "Arjun Dev"}</h2>
-                        <span className="text-[11px] font-black text-neutral-400 uppercase tracking-[0.2em] mb-2 block">ID: USR-7721A-09</span>
-                        <div className="w-fit inline-flex items-center gap-1 bg-[#C44545] text-white px-2.5 py-1 rounded-lg border border-white/10 shadow-sm">
-                            <Star size={10} className="fill-white text-white" />
-                            <span className="text-[10px] font-black uppercase tracking-widest leading-none">Premium User</span>
-                        </div>
-                    </div>
+            <div className="px-6 pt-10 pb-6">
+                {/* Menu box centered vertically with margin */}
+                <div className={`${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'} border rounded-[3rem] overflow-hidden shadow-2xl shadow-black/[0.03] mb-10 transition-colors duration-500`}>
+                    <MenuButton 
+                        icon={User} 
+                        label="Personal Details" 
+                        sublabel="Edit Info & Address" 
+                        onClick={() => navigate('/user/profile/edit')}
+                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
+                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
+                        isDark={isDarkMode}
+                    />
+                    <MenuButton 
+                        icon={Wallet} 
+                        label="My Sootit Wallet" 
+                        sublabel={`Balance: ₹${user?.wallet?.toLocaleString() || '0.00'}`} 
+                        onClick={() => navigate('/user/wallet')}
+                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
+                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
+                        isDark={isDarkMode}
+                    />
+                    <MenuButton 
+                        icon={Package} 
+                        label="Service History" 
+                        sublabel="Your Bookings" 
+                        onClick={() => navigate('/user/orders')}
+                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
+                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
+                        isDark={isDarkMode}
+                    />
+                    <MenuButton 
+                        icon={Star} 
+                        label="Rated Experts" 
+                        sublabel="Your Feedback" 
+                        onClick={() => navigate('/user/reviews')}
+                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
+                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
+                        isDark={isDarkMode}
+                    />
+                    <MenuButton 
+                        icon={HelpCircle} 
+                        label="Help & Support" 
+                        sublabel="Get Assistance" 
+                        onClick={() => navigate('/user/support')}
+                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
+                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
+                        isDark={isDarkMode}
+                    />
+                    <MenuButton 
+                        icon={Settings} 
+                        label="App Preferences" 
+                        sublabel="Themes & More" 
+                        isLast={true}
+                        onClick={() => navigate('/user/preferences')}
+                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
+                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
+                        isDark={isDarkMode}
+                    />
                 </div>
 
-
-
-                {/* Menu Sections */}
-                <div className="space-y-10">
-                    <section>
-                        <h3 className="text-[13px] font-black uppercase text-[#C44545]/40 tracking-[0.25em] mb-5 pl-1">Booking & Rating</h3>
-                        <div className="bg-rose-50 border border-rose-100 rounded-[2.5rem] overflow-hidden shadow-xl shadow-black/[0.01]">
-                            <MenuButton 
-                                icon={Package} 
-                                label="My Service History" 
-                                sublabel="Manage Bookings" 
-                                bg="bg-white" 
-                                color="text-[#C44545]"
-                                onClick={() => navigate('/user/orders')}
-                            />
-                            <div className="mx-6 border-t border-neutral-50" />
-                            <MenuButton 
-                                icon={Star} 
-                                label="My Rated Experts" 
-                                sublabel="Expert Feedback" 
-                                bg="bg-white" 
-                                color="text-[#C44545]"
-                                onClick={() => navigate('/user/reviews')}
-                            />
-                        </div>
-                    </section>
-
-                    <section>
-                        <h3 className="text-[13px] font-black uppercase text-[#C44545]/40 tracking-[0.25em] mb-5 pl-1">System & Personal</h3>
-                        <div className="bg-rose-50 border border-rose-100 rounded-[2.5rem] overflow-hidden shadow-xl shadow-black/[0.01]">
-                            <MenuButton 
-                                icon={HelpCircle} 
-                                label="Help & Support" 
-                                sublabel="24/7 Assistance" 
-                                bg="bg-white" 
-                                color="text-[#C44545]"
-                                onClick={() => navigate('/user/support')}
-                            />
-                            <div className="mx-6 border-t border-neutral-50" />
-                            <MenuButton 
-                                icon={Settings} 
-                                label="App Settings" 
-                                sublabel="UI & Themes" 
-                                bg="bg-white" 
-                                color="text-[#C44545]"
-                                onClick={() => navigate('/user/preferences')}
-                            />
-                        </div>
-                    </section>
-
-                    {/* Sign Out Card */}
-                    <motion.button 
-                        whileTap={{ scale: 0.98 }}
-                        onClick={logoutUser}
-                        className="w-full h-16 bg-rose-50 text-[#C44545] rounded-[1.8rem] border border-rose-100 flex items-center justify-center gap-4 font-black uppercase text-[12px] tracking-[0.3em] active:scale-95 transition-all shadow-xl shadow-[#C44545]/5 mb-10"
-                    >
-                        <LogOut size={16} strokeWidth={3} />
-                        Logout Session
-                    </motion.button>
-                </div>
+                {/* Unified Logout Button */}
+                <motion.button 
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                        toast.success("Logged out successfully");
+                        setTimeout(() => logoutUser(), 1000);
+                    }}
+                    className={`w-full h-16 rounded-[2rem] border flex items-center justify-center gap-4 font-black uppercase text-[11px] tracking-[0.3em] active:scale-95 transition-all shadow-xl ${
+                        isDarkMode 
+                        ? 'bg-slate-900 border-slate-800 text-rose-400 shadow-black/20' 
+                        : 'bg-rose-50 border-rose-100 text-[#C44545] shadow-[#C44545]/5'
+                    }`}
+                >
+                    <LogOut size={16} strokeWidth={3} />
+                    Logout Session
+                </motion.button>
             </div>
         </div>
     );

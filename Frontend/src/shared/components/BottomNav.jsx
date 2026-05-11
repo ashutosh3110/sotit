@@ -54,7 +54,7 @@ const AppBottomNav = () => {
           <>
             <NavItem to="/vendor" icon={Grid} label="PANEL" />
             <NavItem to="/vendor/jobs" icon={Briefcase} label="JOBS" />
-            <NavItem to="/vendor/settings" icon={Settings} label="ACC" />
+            <NavItem to="/vendor/settings" icon={Settings} label="PROFILE" />
           </>
         )}
         {isAdmin && (

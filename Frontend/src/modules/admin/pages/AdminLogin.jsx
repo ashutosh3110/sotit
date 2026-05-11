@@ -11,21 +11,32 @@ const AdminLogin = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    // Simulate Network Latency
-    setTimeout(() => {
-      if (email === "admin123@gmail.com" && password === "admin123") {
+    try {
+      const response = await fetch('http://localhost:5000/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
         localStorage.setItem('admin_auth', 'true');
+        localStorage.setItem('admin_token', data.token);
         navigate('/admin');
       } else {
-        setError("Invalid credentials. Access Denied.");
+        setError(data.message || "Invalid credentials. Access Denied.");
         setIsLoading(false);
       }
-    }, 1500);
+    } catch (err) {
+      console.error("Admin Login error:", err);
+      setError("Server connection failed.");
+      setIsLoading(false);
+    }
   };
 
   return (

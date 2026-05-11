@@ -3,6 +3,7 @@ import { ArrowRight, Briefcase } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { initVendorState } from "../utils/vendorStore";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 import logo from "../../../assets/logo.png";
 
@@ -12,25 +13,52 @@ const VendorLogin = ({ isEmbedded = false }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
 
-  const handleSendOTP = (e) => {
+  const handleSendOTP = async (e) => {
     e.preventDefault();
     if (phoneNumber.length === 10) {
-      setStep(2);
+      const tid = toast.loading("Sending OTP...");
+      try {
+        const response = await fetch('http://localhost:5000/api/vendors/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phoneNumber })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          toast.success("OTP Sent Successfully", { id: tid });
+          setStep(2);
+        } else {
+          toast.error(data.message, { id: tid });
+        }
+      } catch (err) {
+        toast.error("Failed to send OTP. Is server running?", { id: tid });
+      }
     } else {
-      alert("Please enter a valid 10-digit number");
+      toast.error("Please enter a valid 10-digit number");
     }
   };
 
-  const handleVerifyOTP = (e) => {
+  const handleVerifyOTP = async (e) => {
     e.preventDefault();
-    const savedRole = localStorage.getItem('temp_vendor_role') || 'mechanic';
-    // Initialize mock state
-    initVendorState({
-      name: savedRole === 'mechanic' ? "Sharma Garage" : savedRole === 'driver' ? "Arjun Dev" : "Professional Partner",
-      role: savedRole,
-      id: `VND-${Math.floor(Math.random() * 89999) + 10000}A`
-    });
-    navigate('/vendor'); 
+    const tid = toast.loading("Verifying...");
+    try {
+      const response = await fetch('http://localhost:5000/api/vendors/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: phoneNumber, otp: otp.join('') })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Login Successful", { id: tid });
+        initVendorState({ ...data.vendor, token: data.token });
+        navigate('/vendor');
+      } else {
+        toast.error(data.message, { id: tid });
+      }
+    } catch (err) {
+      toast.error("Login failed. Check connection.", { id: tid });
+    }
   };
 
   const handleOtpChange = (index, value) => {

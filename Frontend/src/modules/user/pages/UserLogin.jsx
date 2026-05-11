@@ -3,6 +3,7 @@ import { ArrowRight, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { initUserState } from "../utils/userStore";
+import toast from 'react-hot-toast';
 
 import logo from "../../../assets/logo.png";
 
@@ -12,23 +13,52 @@ const UserLogin = ({ isEmbedded = false }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
 
-  const handleSendOTP = (e) => {
+  const handleSendOTP = async (e) => {
     e.preventDefault();
     if (phoneNumber.length === 10) {
-      setStep(2);
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phoneNumber }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success("OTP sent to terminal");
+          setStep(2);
+        } else {
+          toast.error(data.message || "Failed to send OTP");
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        toast.error("Server error. Check backend.");
+      }
     } else {
-      alert("Please enter a valid 10-digit number");
+      toast.error("Please enter a valid 10-digit number");
     }
   };
 
-  const handleVerifyOTP = (e) => {
+  const handleVerifyOTP = async (e) => {
     e.preventDefault();
-    initUserState({
-      name: "Arjun Dev",
-      location: "Connaught Place",
-      id: "USR-7721"
-    });
-    navigate('/user'); 
+    const otpValue = otp.join("");
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: phoneNumber, otp: otpValue }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success("Login Successful!");
+        initUserState({ ...data.user, token: data.token });
+        navigate('/user');
+      } else {
+        toast.error(data.message || "Invalid OTP");
+      }
+    } catch (error) {
+      console.error("OTP Error:", error);
+      toast.error("Failed to verify OTP.");
+    }
   };
 
   const handleOtpChange = (index, value) => {

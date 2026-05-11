@@ -2,6 +2,7 @@ import { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Lenis from 'lenis';
+import { LocationProvider } from './context/LocationContext';
 
 // Shared Components
 import Loader from './shared/components/Loader';
@@ -26,18 +27,21 @@ const UserPreferences = lazy(() => import('./modules/user/pages/UserPreferences'
 const UserHistory = lazy(() => import('./modules/user/pages/UserHistory'));
 const UserBookingSuccess = lazy(() => import('./modules/user/pages/UserBookingSuccess'));
 const CategoryDetails = lazy(() => import('./modules/user/pages/CategoryDetails'));
+const UserPersonalInfo = lazy(() => import('./modules/user/pages/UserPersonalInfo'));
+const UserWallet = lazy(() => import('./modules/user/pages/UserWallet'));
 const PremiumSelection = lazy(() => import('./modules/user/pages/PremiumSelectionPage'));
 const VendorHome = lazy(() => import('./modules/vendor/pages/VendorHome'));
 const VendorLogin = lazy(() => import('./modules/vendor/pages/VendorLogin'));
 const VendorRegister = lazy(() => import('./modules/vendor/pages/VendorRegister'));
 const VendorJobs = lazy(() => import('./modules/vendor/pages/VendorJobs'));
-const VendorEarnings = lazy(() => import('./modules/vendor/pages/VendorEarnings'));
+const VendorWallet = lazy(() => import('./modules/vendor/pages/VendorWallet'));
 const VendorSettings = lazy(() => import('./modules/vendor/pages/VendorSettings'));
 const VendorProfile = lazy(() => import('./modules/vendor/pages/VendorProfile'));
 const VendorPersonal = lazy(() => import('./modules/vendor/pages/VendorPersonal'));
 const VendorExpertise = lazy(() => import('./modules/vendor/pages/VendorExpertise'));
 const VendorKYC = lazy(() => import('./modules/vendor/pages/VendorKYC'));
 const VendorRoles = lazy(() => import('./modules/vendor/pages/VendorRoles'));
+const VendorSupport = lazy(() => import('./modules/vendor/pages/VendorSupport'));
 const AdminDashboard = lazy(() => import('./modules/admin/pages/AdminDashboard'));
 const AdminUsers = lazy(() => import('./modules/admin/pages/AdminUsers'));
 const AdminVendors = lazy(() => import('./modules/admin/pages/AdminVendors'));
@@ -46,6 +50,9 @@ const AdminJobs = lazy(() => import('./modules/admin/pages/AdminJobs'));
 const AdminApprovals = lazy(() => import('./modules/admin/pages/AdminApprovals'));
 const AdminSettings = lazy(() => import('./modules/admin/pages/AdminSettings'));
 const AdminBanners = lazy(() => import('./modules/admin/pages/AdminBanners'));
+const AdminSupport = lazy(() => import('./modules/admin/pages/AdminSupport'));
+const AdminFAQs = lazy(() => import('./modules/admin/pages/AdminFAQs'));
+const AdminWallet = lazy(() => import('./modules/admin/pages/AdminWallet'));
 const AdminLogin = lazy(() => import('./modules/admin/pages/AdminLogin'));
 const OwnerDashboard = lazy(() => import('./modules/owner/pages/OwnerDashboard'));
 const RequirementForm = lazy(() => import('./modules/owner/pages/RequirementForm'));
@@ -76,12 +83,14 @@ const AppRoutes = () => {
           {/* Main Auth Gateway */}
           <Route path="/" element={<WelcomePage />} />
           <Route path="/auth" element={<AuthLanding />} />
+          <Route path="/user/auth" element={<Navigate to="/auth" replace />} />
 
           {/* User App Module */}
           <Route path="/user" element={<ModuleWrapper type="user"><UserHome /></ModuleWrapper>} />
           <Route path="/user/login" element={<ModuleWrapper type="user"><UserLogin /></ModuleWrapper>} />
           <Route path="/user/register" element={<ModuleWrapper type="user"><UserRegister /></ModuleWrapper>} />
           <Route path="/user/profile" element={<ModuleWrapper type="user"><UserProfile /></ModuleWrapper>} />
+          <Route path="/user/profile/edit" element={<ModuleWrapper type="user"><UserPersonalInfo /></ModuleWrapper>} />
           <Route path="/user/find" element={<ModuleWrapper type="user"><UserFind /></ModuleWrapper>} />
           <Route path="/user/search" element={<ModuleWrapper type="user"><UserSearch /></ModuleWrapper>} />
           <Route path="/user/orders" element={<ModuleWrapper type="user"><UserOrders /></ModuleWrapper>} />
@@ -93,6 +102,7 @@ const AppRoutes = () => {
           <Route path="/user/category/:category" element={<ModuleWrapper type="user"><CategoryDetails /></ModuleWrapper>} />
           <Route path="/user/premium-selection" element={<ModuleWrapper type="user"><PremiumSelection /></ModuleWrapper>} />
           <Route path="/user/booking-success" element={<ModuleWrapper type="user"><UserBookingSuccess /></ModuleWrapper>} />
+          <Route path="/user/wallet" element={<ModuleWrapper type="user"><UserWallet /></ModuleWrapper>} />
           
           {/* Vendor App Module (Drivers, Mechanics, RTO, Legal, Towing) */}
           <Route path="/vendor" element={<ModuleWrapper type="vendor"><VendorHome /></ModuleWrapper>} />
@@ -101,11 +111,13 @@ const AppRoutes = () => {
           <Route path="/vendor/register/personal" element={<ModuleWrapper type="vendor"><VendorPersonal /></ModuleWrapper>} />
           <Route path="/vendor/register/expertise" element={<ModuleWrapper type="vendor"><VendorExpertise /></ModuleWrapper>} />
           <Route path="/vendor/jobs" element={<ModuleWrapper type="vendor"><VendorJobs /></ModuleWrapper>} />
-          <Route path="/vendor/earnings" element={<Navigate to="/vendor" replace />} />
+          <Route path="/vendor/earnings" element={<ModuleWrapper type="vendor"><VendorWallet /></ModuleWrapper>} />
+          <Route path="/vendor/wallet" element={<ModuleWrapper type="vendor"><VendorWallet /></ModuleWrapper>} />
           <Route path="/vendor/settings" element={<ModuleWrapper type="vendor"><VendorSettings /></ModuleWrapper>} />
           <Route path="/vendor/profile" element={<ModuleWrapper type="vendor"><VendorProfile /></ModuleWrapper>} />
           <Route path="/vendor/kyc" element={<ModuleWrapper type="vendor"><VendorKYC /></ModuleWrapper>} />
           <Route path="/vendor/roles" element={<ModuleWrapper type="vendor"><VendorRoles /></ModuleWrapper>} />
+          <Route path="/vendor/support" element={<ModuleWrapper type="vendor"><VendorSupport /></ModuleWrapper>} />
           
           {/* Owner App Module */}
           <Route path="/owner-dashboard" element={<ModuleWrapper type="owner"><OwnerDashboard /></ModuleWrapper>} />
@@ -125,6 +137,9 @@ const AppRoutes = () => {
           <Route path="/admin/settings/platform" element={<ModuleWrapper type="admin"><AdminPlatform /></ModuleWrapper>} />
           <Route path="/admin/settings/profile" element={<ModuleWrapper type="admin"><AdminProfile /></ModuleWrapper>} />
           <Route path="/admin/banners" element={<ModuleWrapper type="admin"><AdminBanners /></ModuleWrapper>} />
+          <Route path="/admin/support" element={<ModuleWrapper type="admin"><AdminSupport /></ModuleWrapper>} />
+          <Route path="/admin/faqs" element={<ModuleWrapper type="admin"><AdminFAQs /></ModuleWrapper>} />
+          <Route path="/admin/wallet" element={<ModuleWrapper type="admin"><AdminWallet /></ModuleWrapper>} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/user" replace />} />
@@ -139,8 +154,10 @@ const AppContent = () => {
   const authPaths = ['/', '/auth', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise'];
   const isAuthPage = authPaths.includes(location.pathname) || location.pathname.startsWith('/admin');
 
+  const isAdminPage = location.pathname.startsWith('/admin');
+
   return (
-    <div className={`app-shell border-x border-black/5 ring-1 ring-black/[0.02] ${!isAuthPage ? 'pb-20' : ''}`}>
+    <div className={`${!isAdminPage ? 'app-shell' : 'min-h-screen bg-slate-50'} border-x border-black/5 ring-1 ring-black/[0.02] ${!isAuthPage ? 'pb-20' : ''}`}>
       {!isAuthPage && <AppHeader />}
       <AppRoutes />
       {!isAuthPage && <UserBottomNav />}
@@ -148,11 +165,12 @@ const AppContent = () => {
   );
 };
 
+import { Toaster } from 'react-hot-toast';
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Lenis instantiation
     const lenis = new Lenis({
       duration: 1,
       smoothWheel: true,
@@ -165,17 +183,12 @@ function App() {
     }
     requestAnimationFrame(raf);
 
-    // Prevent accidental zooming (Pinch to zoom & Ctrl+Wheel)
     const preventZoom = (e) => {
-      if (e.touches && e.touches.length > 1) {
-        e.preventDefault();
-      }
+      if (e.touches && e.touches.length > 1) e.preventDefault();
     };
     
     const preventWheelZoom = (e) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-      }
+      if (e.ctrlKey) e.preventDefault();
     };
 
     document.addEventListener('touchstart', preventZoom, { passive: false });
@@ -192,23 +205,26 @@ function App() {
 
   return (
     <Router>
-      <div className="relative min-h-screen bg-slate-200/50 font-sans selection:bg-[#C44545]/30 selection:text-[#C44545] antialiased">
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <Loader key="main-loader" />
-          ) : (
-            <motion.div 
-              key="main-app-content"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <ScrollToTop />
-              <AppContent />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <LocationProvider>
+        <Toaster position="top-center" reverseOrder={false} />
+        <div className="relative min-h-screen bg-slate-200/50 font-sans selection:bg-[#C44545]/30 selection:text-[#C44545] antialiased">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <Loader key="main-loader" />
+            ) : (
+              <motion.div 
+                key="main-app-content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <ScrollToTop />
+                <AppContent />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </LocationProvider>
     </Router>
   );
 }

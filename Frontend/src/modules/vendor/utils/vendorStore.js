@@ -14,7 +14,7 @@ export const setVendorData = (data) => {
 export const initVendorState = (profile) => {
   const initialState = {
     isLoggedIn: true,
-    profile,
+    profile, // Now includes token
     jobsApplied: [],
   };
   setVendorData(initialState);
@@ -23,6 +23,7 @@ export const initVendorState = (profile) => {
 
 export const logoutVendor = () => {
   localStorage.removeItem('vendor_data');
+  window.location.href = '/vendor/login';
 };
 
 export const applyForJob = (jobId) => {
@@ -32,21 +33,4 @@ export const applyForJob = (jobId) => {
   data.jobsApplied.push(jobId);
   setVendorData(data);
   return true;
-};
-
-export const rechargeWallet = (amount) => {
-  const data = getVendorData();
-  if (!data) return;
-
-  data.wallet += amount;
-  data.transactions.unshift({
-    id: "TX-" + Math.floor(Math.random() * 1000),
-    type: "Wallet Recharged",
-    sign: "+",
-    amount: amount.toFixed(2),
-    date: new Date().toLocaleString(),
-    isDeduct: false
-  });
-
-  setVendorData(data);
 };

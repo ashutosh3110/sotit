@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import AdminSidebar from "../components/AdminSidebar";
 
-const AdminSubSettings = ({ title, description, children }) => {
+const AdminSubSettings = ({ title, description, children, onSave, isLoading }) => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -26,8 +26,12 @@ const AdminSubSettings = ({ title, description, children }) => {
               <h1 className="text-xl font-black text-slate-900 tracking-tighter">{title}.</h1>
             </div>
           </div>
-          <button className="bg-[#C44545] text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-[#C44545]/20">
-            <Save size={14} /> Save Changes
+          <button 
+            onClick={onSave}
+            disabled={isLoading}
+            className="bg-[#C44545] text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-[#C44545]/20 disabled:opacity-50"
+          >
+            <Save size={14} /> {isLoading ? "Saving..." : "Save Changes"}
           </button>
         </header>
 
@@ -99,26 +103,106 @@ export const AdminPlatform = () => (
     </AdminSubSettings>
 );
 
-export const AdminProfile = () => (
-    <AdminSubSettings 
-        title="Profile Details" 
-        description="Update your administrative information including name, email, and avatar." 
-    >
-        <div className="space-y-6">
-            <div className="flex items-center gap-6 mb-8">
-                <div className="h-20 w-20 bg-rose-50 rounded-[2rem] border-2 border-dashed border-[#C44545]/30 flex items-center justify-center text-[#C44545] font-black text-xl">
-                    AD
+import toast from "react-hot-toast";
+
+export const AdminProfile = () => {
+    const [name, setName] = useState("Super Admin");
+    const [email, setEmail] = useState("admin@gmail.com");
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSave = async () => {
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('admin_token');
+            const response = await fetch('http://localhost:5000/api/admin/profile', {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name, email, oldPassword, newPassword }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success("Profile updated successfully!");
+                setOldPassword("");
+                setNewPassword("");
+            } else {
+                toast.error(data.message || "Failed to update profile");
+            }
+        } catch (error) {
+            console.error("Profile update error:", error);
+            toast.error("Server connection failed");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <AdminSubSettings 
+            title="Profile Details" 
+            description="Update your administrative information including name, email, and password security." 
+            onSave={handleSave}
+            isLoading={isLoading}
+        >
+            <div className="space-y-6">
+                <div className="flex items-center gap-6 mb-8">
+                    <div className="h-20 w-20 bg-rose-50 rounded-[2rem] border-2 border-dashed border-[#C44545]/30 flex items-center justify-center text-[#C44545] font-black text-xl">
+                        AD
+                    </div>
+                    <button className="text-[10px] font-black uppercase tracking-widest text-[#C44545] hover:underline">Change Avatar</button>
                 </div>
-                <button className="text-[10px] font-black uppercase tracking-widest text-[#C44545] hover:underline">Change Avatar</button>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Admin Name</label>
+                        <input 
+                            type="text" 
+                            value={name} 
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Email Address</label>
+                        <input 
+                            type="email" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                        />
+                    </div>
+                </div>
+
+                <div className="pt-6 border-t border-slate-100 space-y-6">
+                    <h4 className="text-[11px] font-black uppercase tracking-widest text-[#C44545]">Security Update</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Old Password</label>
+                            <input 
+                                type="password" 
+                                value={oldPassword}
+                                onChange={(e) => setOldPassword(e.target.value)}
+                                placeholder="Required for password change"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">New Password</label>
+                            <input 
+                                type="password" 
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="Enter new password"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Admin Name</label>
-                <input type="text" defaultValue="Super Admin" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" />
-            </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Email Address</label>
-                <input type="email" defaultValue="admin123@gmail.com" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" />
-            </div>
-        </div>
-    </AdminSubSettings>
-);
+        </AdminSubSettings>
+    );
+};

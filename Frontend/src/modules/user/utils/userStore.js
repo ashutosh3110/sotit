@@ -24,7 +24,7 @@ export const initUserState = (profile) => {
 };
 
 export const logoutUser = () => {
-  localStorage.removeItem('user_data');
+  localStorage.clear();
   window.location.href = '/';
 };
 

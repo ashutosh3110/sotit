@@ -13,13 +13,17 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@studio-freight/lenis": "^1.0.42",
+    "axios": "^1.16.0",
     "clsx": "^2.1.1",
+    "country-state-city": "^3.2.1",
     "framer-motion": "^12.38.0",
     "lenis": "^1.3.21",
     "lucide-react": "^1.7.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.14.0",
+    "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@ import { Users, Briefcase, Activity, ShieldCheck, TrendingUp, Menu } from "lucid
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import AdminSidebar from "../components/AdminSidebar";
+import toast from "react-hot-toast";
 
 /**
  * Super Admin Panel (Ultra Compact Desktop/Mobile Hybrid)
@@ -70,7 +71,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 { label: "User Management", count: "14.2k Users", icon: Users, path: '/admin/users' },
-                { label: "Vendor Verification", count: "152 Pending", icon: ShieldCheck, alert: true, path: '/admin/vendors' },
+                { label: "Vendor Verification", count: "152 Pending", icon: ShieldCheck, alert: true, path: '/admin/approvals' },
                 { label: "Job Postings", count: "890 Active", icon: Briefcase, path: '/admin/jobs' },
               ].map((item, i) => (
                 <motion.div 
@@ -94,7 +95,7 @@ const AdminDashboard = () => {
             </div>
           </section>
 
-          {/* Real-time Monitor (Compact) */}
+          {/* Real-time Monitor (Original) */}
           <section className="bg-[#C44545] p-6 rounded-[2rem] shadow-2xl shadow-[#C44545]/20 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 h-32 w-32 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10" />
             <div className="relative z-10">
