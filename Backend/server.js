@@ -16,7 +16,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   path: '/socket.io/',
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
+    origin: process.env.FRONTEND_URL,
     methods: ["GET", "POST"],
     credentials: true
   }

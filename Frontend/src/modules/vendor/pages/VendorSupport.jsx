@@ -45,7 +45,7 @@ const VendorSupport = () => {
         const currentUserId = user?.profile?.id || user?.profile?._id || user?.id || user?._id;
         if (!currentUserId) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/tickets/my?userId=${currentUserId}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/my?userId=${currentUserId}`);
             const data = await response.json();
             if (Array.isArray(data)) setTickets(data);
         } catch (err) {
@@ -56,7 +56,7 @@ const VendorSupport = () => {
     const fetchFAQs = async () => {
         const role = user?.profile?.role || user?.role || 'all';
         try {
-            const response = await fetch(`http://localhost:5000/api/faqs?type=vendor&role=${role}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/faqs?type=vendor&role=${role}`);
             const data = await response.json();
             if (Array.isArray(data)) setFaqs(data);
         } catch (err) {
@@ -92,7 +92,7 @@ const VendorSupport = () => {
 
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/tickets', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -38,7 +38,7 @@ const AdminSupport = () => {
     const fetchTickets = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/api/tickets?userType=${activeTab}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets?userType=${activeTab}`);
             const data = await response.json();
             if (Array.isArray(data)) {
                 setTickets(data);
@@ -59,7 +59,7 @@ const AdminSupport = () => {
 
     const handleUpdateStatus = async (id, newStatus) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/tickets/${id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
@@ -78,7 +78,7 @@ const AdminSupport = () => {
     const handleDeleteTicket = async (id) => {
         if (!window.confirm("Are you sure you want to delete this ticket?")) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/tickets/${id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/${id}`, {
                 method: 'DELETE'
             });
             if (response.ok) {

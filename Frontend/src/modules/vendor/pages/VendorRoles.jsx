@@ -17,7 +17,7 @@ const VendorRoles = () => {
   const fetchProfile = async () => {
     if (!vendorData?.profile?.id) return;
     try {
-        const response = await fetch(`http://localhost:5000/api/vendors/profile/${vendorData.profile.id}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/profile/${vendorData.profile.id}`);
         const data = await response.json();
         if (response.ok) {
             setProfile(data);

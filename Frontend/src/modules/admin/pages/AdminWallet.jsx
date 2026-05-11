@@ -53,7 +53,7 @@ const AdminWallet = () => {
         setIsLoading(true);
         try {
             const token = localStorage.getItem('admin_token');
-            const response = await fetch('http://localhost:5000/api/wallet/admin/data', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/wallet/admin/data`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

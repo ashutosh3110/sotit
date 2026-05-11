@@ -35,7 +35,7 @@ const VendorJobs = () => {
   const handleToggleOnline = async () => {
       const vendorId = vendor.profile.id || vendor.profile._id;
       try {
-          const response = await fetch(`http://localhost:5000/api/vendors/${vendorId}/toggle-status`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/${vendorId}/toggle-status`, {
               method: 'PUT'
           });
           const data = await response.json();

@@ -22,7 +22,7 @@ const AdminBanners = () => {
 
   const fetchBanners = async () => {
     try {
-        const response = await fetch('http://localhost:5000/api/banners');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/banners`);
         const data = await response.json();
         if (response.ok && Array.isArray(data)) {
             setBanners(data);
@@ -62,7 +62,7 @@ const AdminBanners = () => {
       formData.append('title', newBanner.title);
 
       try {
-          const response = await fetch('http://localhost:5000/api/banners', {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/banners`, {
               method: 'POST',
               body: formData
           });
@@ -81,7 +81,7 @@ const AdminBanners = () => {
   const handleDelete = async (id) => {
       if (!window.confirm("Are you sure you want to delete this banner?")) return;
       try {
-          await fetch(`http://localhost:5000/api/banners/${id}`, { method: 'DELETE' });
+          await fetch(`${import.meta.env.VITE_API_URL}/banners/${id}`, { method: 'DELETE' });
           fetchBanners();
       } catch (err) {
           console.error(err);

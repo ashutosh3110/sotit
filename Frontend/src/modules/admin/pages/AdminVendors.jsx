@@ -28,7 +28,7 @@ const AdminVendors = () => {
 
   const fetchVendors = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/vendors', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/vendors`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
         }

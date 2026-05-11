@@ -44,7 +44,7 @@ const VendorProfile = () => {
     const vId = vendorData?.profile?.id || vendorData?.profile?._id;
     if (!vId) return;
     try {
-        const response = await fetch(`http://localhost:5000/api/vendors/profile/${vId}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/profile/${vId}`);
         const data = await response.json();
         if (response.ok) {
             setFormData({
@@ -63,7 +63,7 @@ const VendorProfile = () => {
   const handleToggleOnline = async () => {
     const vendorId = vendor.profile.id || vendor.profile._id;
     try {
-        const response = await fetch(`http://localhost:5000/api/vendors/${vendorId}/toggle-status`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/${vendorId}/toggle-status`, {
             method: 'PUT'
         });
         const data = await response.json();
@@ -112,7 +112,7 @@ const VendorProfile = () => {
     const vId = vendorData?.profile?.id || vendorData?.profile?._id;
     const tid = toast.loading("Updating Profile...");
     try {
-        const response = await fetch(`http://localhost:5000/api/vendors/profile/${vId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/profile/${vId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

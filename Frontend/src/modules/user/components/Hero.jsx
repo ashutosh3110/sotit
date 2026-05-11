@@ -13,7 +13,7 @@ const AppHero = ({ user, onServiceSelect, activeRole }) => {
     useEffect(() => {
         const fetchMainBanners = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/banners?type=main');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/banners?type=main`);
                 const data = await response.json();
                 if (response.ok) setBanners(data);
             } catch (err) {

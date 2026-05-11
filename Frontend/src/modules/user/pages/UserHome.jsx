@@ -21,7 +21,7 @@ const Home = () => {
   const fetchRoleBanners = async (role) => {
       setLoading(true);
       try {
-          const response = await fetch(`http://localhost:5000/api/banners?type=service&role=${role}`);
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/banners?type=service&role=${role}`);
           const data = await response.json();
           if (response.ok) setRoleBanners(data);
       } catch (err) {

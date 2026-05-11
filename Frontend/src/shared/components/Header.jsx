@@ -22,7 +22,7 @@ const AppHeader = () => {
   const fetchNotifications = useCallback(async () => {
     if (!data?.profile?._id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/notifications/${data.profile._id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications/${data.profile._id}`);
       const notes = await response.json();
       if (response.ok) {
         setNotifications(notes);
@@ -54,7 +54,7 @@ const AppHeader = () => {
 
   const markAsRead = async (id) => {
       try {
-          await fetch(`http://localhost:5000/api/notifications/${id}/read`, { method: 'PUT' });
+          await fetch(`${import.meta.env.VITE_API_URL}/notifications/${id}/read`, { method: 'PUT' });
           fetchNotifications();
       } catch (err) {
           console.error(err);
@@ -64,7 +64,7 @@ const AppHeader = () => {
   const clearAll = async () => {
       if (!data?.profile?._id) return;
       try {
-          await fetch(`http://localhost:5000/api/notifications/${data.profile._id}/clear`, { method: 'DELETE' });
+          await fetch(`${import.meta.env.VITE_API_URL}/notifications/${data.profile._id}/clear`, { method: 'DELETE' });
           setNotifications([]);
           setUnreadCount(0);
       } catch (err) {

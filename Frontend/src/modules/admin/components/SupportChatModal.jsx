@@ -54,7 +54,7 @@ const SupportChatModal = ({ isOpen, onClose, ticket, isAdmin = false }) => {
         setSending(true);
         try {
             // 1. Save to Database
-            const response = await fetch(`http://localhost:5000/api/tickets/${ticket._id}/messages`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/${ticket._id}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

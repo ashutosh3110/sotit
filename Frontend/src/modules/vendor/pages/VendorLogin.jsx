@@ -18,7 +18,7 @@ const VendorLogin = ({ isEmbedded = false }) => {
     if (phoneNumber.length === 10) {
       const tid = toast.loading("Sending OTP...");
       try {
-        const response = await fetch('http://localhost:5000/api/vendors/send-otp', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/send-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mobile: phoneNumber })
@@ -42,7 +42,7 @@ const VendorLogin = ({ isEmbedded = false }) => {
     e.preventDefault();
     const tid = toast.loading("Verifying...");
     try {
-      const response = await fetch('http://localhost:5000/api/vendors/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile: phoneNumber, otp: otp.join('') })

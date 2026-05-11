@@ -38,7 +38,7 @@ const UserWallet = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:5000/api/wallet/transactions', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/wallet/transactions`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -77,7 +77,7 @@ const UserWallet = () => {
             const token = userData?.profile?.token;
             
             // 1. Create Order on Backend
-            const orderRes = await fetch('http://localhost:5000/api/wallet/create-order', {
+            const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/wallet/create-order`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ const UserWallet = () => {
                 order_id: orderData.order.id,
                 handler: async function (response) {
                     // 3. Verify Payment on Backend
-                    const verifyRes = await fetch('http://localhost:5000/api/wallet/verify-payment', {
+                    const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/wallet/verify-payment`, {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',

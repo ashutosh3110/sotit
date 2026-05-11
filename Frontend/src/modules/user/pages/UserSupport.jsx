@@ -52,7 +52,7 @@ const UserSupport = () => {
         const currentUserId = user?.profile?.id || user?.profile?._id || user?.id || user?._id;
         if (!currentUserId) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/tickets/my?userId=${currentUserId}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/my?userId=${currentUserId}`);
             const data = await response.json();
             if (Array.isArray(data)) setTickets(data);
         } catch (err) {
@@ -62,7 +62,7 @@ const UserSupport = () => {
 
     const fetchFAQs = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/faqs?type=customer`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/faqs?type=customer`);
             const data = await response.json();
             if (Array.isArray(data)) setFaqs(data);
         } catch (err) {
@@ -97,7 +97,7 @@ const UserSupport = () => {
 
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/tickets', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

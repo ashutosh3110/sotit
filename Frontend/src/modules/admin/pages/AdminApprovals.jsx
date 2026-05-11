@@ -19,7 +19,7 @@ const AdminApprovals = () => {
   const fetchPendingVendors = async () => {
     try {
       console.log("Fetching from: http://localhost:5000/api/admin/vendors/pending");
-      const response = await fetch("http://localhost:5000/api/admin/vendors/pending", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/vendors/pending`, {
         headers: {
             "Authorization": `Bearer ${localStorage.getItem("admin_token")}`
         }
@@ -44,7 +44,7 @@ const AdminApprovals = () => {
   const handleStatusUpdate = async (vendorId, status) => {
     const tid = toast.loading(`${status === 'approved' ? 'Approving' : 'Rejecting'} vendor...`);
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/vendors/${vendorId}/status`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/vendors/${vendorId}/status`, {
             method: 'PUT',
             headers: {
                 "Content-Type": "application/json",

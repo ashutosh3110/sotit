@@ -36,7 +36,7 @@ const AdminFAQs = () => {
     const fetchFAQs = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5000/api/faqs?type=${activeTab}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/faqs?type=${activeTab}`);
             const data = await response.json();
             setFaqs(data);
         } catch (err) {
@@ -55,7 +55,7 @@ const AdminFAQs = () => {
         if (!formData.question || !formData.answer) return toast.error("Please fill all fields");
 
         try {
-            const response = await fetch('http://localhost:5000/api/faqs', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/faqs`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -74,7 +74,7 @@ const AdminFAQs = () => {
     const handleDeleteFAQ = async (id) => {
         if (!window.confirm("Are you sure you want to delete this FAQ?")) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/faqs/${id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/faqs/${id}`, {
                 method: 'DELETE'
             });
             if (response.ok) {

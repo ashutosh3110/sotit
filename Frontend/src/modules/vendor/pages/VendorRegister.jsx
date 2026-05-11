@@ -1,14 +1,18 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Navigation, Wrench, Shield, Briefcase, FileText, Truck, Phone, ArrowRight, Car, Camera, MapPin, CheckCircle2, ShieldCheck, CreditCard, Landmark, Info, Map, Clock, Zap, Hammer, Wind, Battery, Settings, Disc, Droplets, Building2, Scale, GraduationCap, Video, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import toast from "react-hot-toast";
+import { State, City } from "country-state-city";
 
 const VendorRegister = () => {
   const navigate = useNavigate();
   const [role, setRole] = useState('driver');
   const [step, setStep] = useState(0); 
   const [isLoading, setIsLoading] = useState(false);
+
+  // --- Location Constants ---
+  const allStates = useMemo(() => State.getStatesOfCountry('IN'), []);
 
   // --- States ---
   const [name, setName] = useState("");
@@ -19,12 +23,13 @@ const VendorRegister = () => {
   const [profileFile, setProfileFile] = useState(null);
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const [address, setAddress] = useState({ street: "", city: "", state: "", pincode: "" });
+  const [address, setAddress] = useState({ street: "", city: "", state: "", isoCode: "", pincode: "" });
   const [liveLocation, setLiveLocation] = useState(null);
   const [capturedAddress, setCapturedAddress] = useState("");
 
   const [profData, setProfData] = useState({
-    dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Full Time", languages: ["Hindi"]
+    dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Full Time", languages: ["Hindi"],
+    serviceState: "", serviceStateCode: "", serviceDistricts: []
   });
 
   const [mechanicData, setMechanicData] = useState({
@@ -52,7 +57,7 @@ const VendorRegister = () => {
     if (mobile.length !== 10) return toast.error("Enter valid 10-digit mobile");
     const tid = toast.loading("Sending OTP...");
     try {
-        const response = await fetch("http://localhost:5000/api/vendors/send-otp", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/send-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mobile })
@@ -157,7 +162,7 @@ const VendorRegister = () => {
             if (kycFiles[key]) formData.append(key, kycFiles[key]);
         });
 
-        const response = await fetch("http://localhost:5000/api/vendors/register", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/register`, {
             method: 'POST',
             body: formData
         });
@@ -266,8 +271,32 @@ const VendorRegister = () => {
                       </button>
                       <div className="space-y-4">
                         <input type="text" placeholder="Current Address" value={address.street} onChange={(e) => setAddress({...address, street: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                        <div className="grid grid-cols-2 gap-4">
-                          <input type="text" placeholder="City" value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                        
+                        <div className="grid grid-cols-1 gap-4">
+                          <select 
+                            value={address.isoCode} 
+                            onChange={(e) => {
+                              const s = allStates.find(x => x.isoCode === e.target.value);
+                              setAddress({...address, state: s?.name || "", isoCode: e.target.value, city: ""});
+                            }} 
+                            className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold"
+                          >
+                            <option value="">Select State</option>
+                            {allStates.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
+                          </select>
+
+                          <select 
+                            value={address.city} 
+                            onChange={(e) => setAddress({...address, city: e.target.value})} 
+                            disabled={!address.isoCode}
+                            className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold disabled:opacity-50"
+                          >
+                            <option value="">Select City/District</option>
+                            {address.isoCode && City.getCitiesOfState('IN', address.isoCode).map(c => (
+                              <option key={c.name} value={c.name}>{c.name}</option>
+                            ))}
+                          </select>
+
                           <input type="tel" placeholder="Pincode" value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                         </div>
                       </div>
@@ -312,6 +341,57 @@ const VendorRegister = () => {
                     <div className={`h-5 w-5 rounded border-2 flex items-center justify-center ${profData.bgCheck ? 'bg-[#C44545] border-[#C44545] text-white' : 'border-slate-300'}`}>{profData.bgCheck && <CheckCircle2 size={12} />}</div>
                     <span className="text-[11px] font-bold uppercase tracking-widest text-slate-600">I agree to background verification</span>
                   </div>
+
+                  {/* Service Locations for Drivers */}
+                  {role === 'driver' && (
+                    <div className="pt-6 border-t border-slate-100 space-y-4">
+                      <div className="px-2">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C44545] mb-2">Operational Areas</h4>
+                        <p className="text-[11px] font-bold text-slate-400 mb-4">Select districts where you can provide driving services.</p>
+                      </div>
+                      
+                      <select 
+                        value={profData.serviceStateCode} 
+                        onChange={(e) => {
+                          const s = allStates.find(x => x.isoCode === e.target.value);
+                          setProfData({...profData, serviceState: s?.name || "", serviceStateCode: e.target.value, serviceDistricts: []});
+                        }} 
+                        className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold"
+                      >
+                        <option value="">Select Service State</option>
+                        {allStates.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
+                      </select>
+
+                      {profData.serviceStateCode && (
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-4">Select Districts (Multiple)</label>
+                          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-100 rounded-2xl bg-white no-scrollbar">
+                            {City.getCitiesOfState('IN', profData.serviceStateCode).map(city => (
+                              <div 
+                                key={city.name}
+                                onClick={() => {
+                                  const n = profData.serviceDistricts.includes(city.name) 
+                                    ? profData.serviceDistricts.filter(x => x !== city.name) 
+                                    : [...profData.serviceDistricts, city.name];
+                                  setProfData({...profData, serviceDistricts: n});
+                                }}
+                                className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all cursor-pointer ${profData.serviceDistricts.includes(city.name) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-400 hover:bg-slate-50'}`}
+                              >
+                                {city.name}
+                              </div>
+                            ))}
+                          </div>
+                          {profData.serviceDistricts.length > 0 && (
+                            <div className="flex flex-wrap gap-2 px-2">
+                              {profData.serviceDistricts.map(d => (
+                                <span key={d} className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[9px] font-black uppercase">{d}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <button onClick={() => setStep(3)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
               </div>

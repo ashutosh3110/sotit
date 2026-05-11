@@ -30,7 +30,7 @@ const VendorHome = () => {
       const vId = vendor.profile.id || vendor.profile._id;
       setIsToggling(true);
       try {
-          const response = await fetch(`http://localhost:5000/api/vendors/${vId}/toggle-status`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/${vId}/toggle-status`, {
               method: 'PUT'
           });
           const data = await response.json();

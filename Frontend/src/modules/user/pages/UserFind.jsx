@@ -73,7 +73,7 @@ const UserFind = () => {
             if (selectedState) params.append('state', selectedState.name);
             if (selectedDistrict) params.append('district', selectedDistrict);
 
-            const response = await axios.get(`http://localhost:5000/api/vendors/all?${params.toString()}`);
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/vendors/all?${params.toString()}`);
             if (response.data.success) {
                 setVendors(response.data.vendors);
             }
