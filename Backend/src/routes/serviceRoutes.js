@@ -17,6 +17,8 @@ router.get('/vendor/requests', protect, getVendorRequests);
 router.get('/vendor/history', protect, getVendorHistory);
 router.get('/user/history', protect, getUserHistory);
 router.put('/update-fcm', protect, updateFCMToken);
+router.post('/register-fcm', protect, updateFCMToken); // Alias for registration
+router.post('/test-notification', protect, sendTestNotification);
 router.post('/rate', protect, submitVendorRating);
 router.get('/process-driver-ratings', checkDriverRatings);
 

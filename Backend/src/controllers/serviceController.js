@@ -174,9 +174,32 @@ exports.updateFCMToken = async (req, res) => {
         const userId = req.user.id;
         await User.findByIdAndUpdate(userId, { fcmToken });
         await Vendor.findByIdAndUpdate(userId, { fcmToken });
-        res.status(200).json({ success: true, message: 'FCM Token updated' });
+        res.status(200).json({ success: true, message: 'FCM Token registered successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error updating FCM token' });
+    }
+};
+
+exports.sendTestNotification = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId) || await Vendor.findById(userId);
+        
+        if (!user || !user.fcmToken) {
+            return res.status(404).json({ success: false, message: 'User or FCM Token not found. Please register FCM token first.' });
+        }
+
+        await sendPushNotification(
+            user.fcmToken,
+            "Test Success! 🚀",
+            "Sootit notifications are working perfectly.",
+            { type: 'test' }
+        );
+
+        res.status(200).json({ success: true, message: 'Test notification sent! Check your device.' });
+    } catch (error) {
+        console.error("Test Notification Error:", error);
+        res.status(500).json({ success: false, message: 'Error sending test notification' });
     }
 };
 exports.checkDriverRatings = async (req, res) => {
