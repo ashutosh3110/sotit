@@ -381,7 +381,13 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
                   <div className="pt-4 space-y-4 border-t border-slate-100">
                     <div className="space-y-4">
-                      <input type="text" placeholder="Current Address" value={address.street} onChange={(e) => setAddress({...address, street: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                      <textarea 
+                        placeholder="Full Address (House No, Street, Landmark)" 
+                        rows={3}
+                        value={address.street} 
+                        onChange={(e) => setAddress({...address, street: e.target.value})} 
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold resize-none"
+                      />
                       
                       <div className="grid grid-cols-1 gap-4">
                         <CustomDropdown 
