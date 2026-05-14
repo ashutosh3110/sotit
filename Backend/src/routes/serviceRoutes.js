@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { hireExpert, acceptRequest, getVendorRequests, getVendorHistory, getUserHistory, updateFCMToken, submitVendorRating, checkDriverRatings, getProfileData } = require('../controllers/serviceController');
+const { hireExpert, acceptRequest, getVendorRequests, getVendorHistory, getUserHistory, updateFCMToken, sendTestNotification, submitVendorRating, checkDriverRatings, getProfileData } = require('../controllers/serviceController');
 const { createHireOrder, verifyHirePayment, createAcceptanceOrder, verifyAcceptancePayment, createSubscriptionOrder, verifySubscriptionPayment } = require('../controllers/paymentController');
 const { protect } = require('../middlewares/authMiddleware');
 
