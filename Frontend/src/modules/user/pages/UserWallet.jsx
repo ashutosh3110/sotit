@@ -120,6 +120,7 @@ const UserWallet = () => {
                     } else {
                         toast.error("Payment verification failed");
                     }
+                    setIsLoading(false);
                 },
                 prefill: {
                     name: userData?.profile?.name || "User",

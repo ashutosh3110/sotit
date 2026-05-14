@@ -4,8 +4,8 @@ const bcrypt = require('bcryptjs');
 const vendorSchema = new mongoose.Schema({
   name: { type: String, required: true },
   mobile: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  email: { type: String },
+  password: { type: String },
   role: { 
     type: String, 
     required: true, 
@@ -89,11 +89,11 @@ const vendorSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
+    default: 'approved'
   },
   isApproved: {
     type: Boolean,
-    default: false
+    default: true
   },
   isBlocked: {
     type: Boolean,
@@ -102,6 +102,10 @@ const vendorSchema = new mongoose.Schema({
   walletBalance: {
     type: Number,
     default: 0
+  },
+  fcmToken: {
+    type: String,
+    default: null
   },
   isOnline: {
     type: Boolean,

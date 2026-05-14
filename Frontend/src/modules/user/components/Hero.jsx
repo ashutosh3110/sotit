@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Navigation, Car, Shield, User, ArrowRight, Star, Wallet, Wrench, Briefcase, FileText, Truck, Zap, Loader2 } from "lucide-react";
+import { Search, MapPin, Navigation, Car, Shield, User, ArrowRight, Star, Wrench, Briefcase, FileText, Truck, Zap, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import heroBanner from "../../../assets/images/hero_banner.png";
@@ -35,11 +35,11 @@ const AppHero = ({ user, onServiceSelect, activeRole }) => {
     }, [banners]);
 
     const services = [
-        { icon: Car, label: "Drivers", role: 'driver' },
-        { icon: Wrench, label: "Mechanics", role: 'mechanic' },
-        { icon: Truck, label: "Towing", role: 'towing' },
-        { icon: FileText, label: "RTO Help", role: 'rto' },
-        { icon: Briefcase, label: "Legal", role: 'legal' },
+        { icon: Car, label: "Drivers", role: 'driver', color: "#3b82f6", bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-100" },
+        { icon: Wrench, label: "Mechanics", role: 'mechanic', color: "#d97706", bg: "bg-amber-600", text: "text-white", border: "border-amber-700" },
+        { icon: Truck, label: "Towing", role: 'towing', color: "#059669", bg: "bg-emerald-800", text: "text-white", border: "border-emerald-900" },
+        { icon: FileText, label: "RTO", role: 'rto', color: "#2563eb", bg: "bg-blue-800", text: "text-white", border: "border-blue-900" },
+        { icon: Briefcase, label: "Legal", role: 'legal', color: "#ef4444", bg: "bg-stone-900", text: "text-white", border: "border-stone-800" },
     ];
 
     return (
@@ -87,36 +87,30 @@ const AppHero = ({ user, onServiceSelect, activeRole }) => {
                 </motion.div>
             </div>
 
-            {/* Search & Services */}
-            <div className="px-5 mb-8">
-                <div className="relative group mb-8">
-                    <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                        <Search size={18} className="text-[#C44545]" strokeWidth={2.5} />
-                    </div>
-                    <input 
-                        type="text" 
-                        placeholder="Search for mechanics, drivers..." 
-                        className="w-full bg-white border border-rose-100 rounded-[2rem] py-5 pl-14 pr-6 text-sm font-bold text-slate-800 shadow-xl shadow-black/[0.02] focus:outline-none focus:border-[#C44545] focus:ring-4 focus:ring-rose-50 transition-all"
-                    />
-                </div>
 
-                {/* Prime Services Micro-Scroll */}
-                <div>
-                    <h3 className="text-[10px] font-black uppercase text-slate-600 tracking-[0.25em] mb-5 pl-1 border-l-4 border-[#C44545]">Prime Services</h3>
-                    <div className="flex overflow-x-auto gap-5 pb-2 hide-scrollbar">
+            {/* Prime Services List - Vertical Colorful Cards */}
+            <div className="px-5 mb-10">
+                <div className="space-y-6">
+                    <h3 className="text-[10px] font-black uppercase text-slate-600 tracking-[0.25em] mb-6 pl-1 border-l-4 border-[#C44545]">Prime Services</h3>
+                    <div className="grid grid-cols-1 gap-4">
                         {services.map((item, idx) => (
                             <motion.div
                                 key={idx}
-                                whileTap={{ scale: 0.90 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={() => onServiceSelect(item.role)}
-                                className="flex flex-col items-center gap-3 group cursor-pointer min-w-[70px]"
+                                className={`group cursor-pointer flex items-center gap-6 p-6 rounded-[2.5rem] border transition-all duration-300 ${activeRole === item.role ? 'bg-[#C44545] border-[#C44545] shadow-2xl shadow-[#C44545]/20' : `${item.bg} ${item.border} hover:shadow-xl hover:shadow-black/5`}`}
                             >
-                                <div className={`h-16 w-16 rounded-[1.8rem] flex items-center justify-center border transition-all duration-300 ${activeRole === item.role ? 'bg-[#C44545] text-white border-[#C44545] shadow-xl shadow-[#C44545]/30 scale-105' : 'bg-rose-50 text-[#C44545] border-rose-100 shadow-lg shadow-black/[0.02]'}`}>
-                                    <item.icon size={22} strokeWidth={2.5} />
+                                <div className={`h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-500 ${activeRole === item.role ? 'bg-white text-[#C44545]' : 'bg-white shadow-sm'}`}>
+                                    <item.icon size={26} strokeWidth={2.5} className={activeRole === item.role ? 'text-[#C44545]' : (item.text.includes('white') ? 'text-slate-900' : item.text)} />
                                 </div>
-                                <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeRole === item.role ? 'text-[#C44545]' : 'text-slate-500'}`}>
-                                    {item.label}
-                                </span>
+                                <div className="flex-1">
+                                    <h4 className={`text-lg font-black tracking-tighter uppercase leading-none transition-colors ${activeRole === item.role || item.role !== 'driver' ? 'text-white' : 'text-slate-900'}`}>
+                                        {item.label}
+                                    </h4>
+                                </div>
+                                <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${activeRole === item.role ? 'bg-white/10 text-white rotate-90' : 'bg-white/50 text-slate-400'}`}>
+                                    <ArrowRight size={20} strokeWidth={3} />
+                                </div>
                             </motion.div>
                         ))}
                     </div>

@@ -42,6 +42,7 @@ const VendorExpertise = lazy(() => import('./modules/vendor/pages/VendorExpertis
 const VendorKYC = lazy(() => import('./modules/vendor/pages/VendorKYC'));
 const VendorRoles = lazy(() => import('./modules/vendor/pages/VendorRoles'));
 const VendorSupport = lazy(() => import('./modules/vendor/pages/VendorSupport'));
+const VendorHistory = lazy(() => import('./modules/vendor/pages/VendorHistory'));
 const AdminDashboard = lazy(() => import('./modules/admin/pages/AdminDashboard'));
 const AdminUsers = lazy(() => import('./modules/admin/pages/AdminUsers'));
 const AdminVendors = lazy(() => import('./modules/admin/pages/AdminVendors'));
@@ -98,11 +99,10 @@ const AppRoutes = () => {
           <Route path="/user/support" element={<ModuleWrapper type="user"><UserSupport /></ModuleWrapper>} />
           <Route path="/user/reviews" element={<ModuleWrapper type="user"><UserReviews /></ModuleWrapper>} />
           <Route path="/user/preferences" element={<ModuleWrapper type="user"><UserPreferences /></ModuleWrapper>} />
-          <Route path="/user/history" element={<Navigate to="/user/profile" replace />} />
+          <Route path="/user/history" element={<ModuleWrapper type="user"><UserHistory /></ModuleWrapper>} />
           <Route path="/user/category/:category" element={<ModuleWrapper type="user"><CategoryDetails /></ModuleWrapper>} />
           <Route path="/user/premium-selection" element={<ModuleWrapper type="user"><PremiumSelection /></ModuleWrapper>} />
           <Route path="/user/booking-success" element={<ModuleWrapper type="user"><UserBookingSuccess /></ModuleWrapper>} />
-          <Route path="/user/wallet" element={<ModuleWrapper type="user"><UserWallet /></ModuleWrapper>} />
           
           {/* Vendor App Module (Drivers, Mechanics, RTO, Legal, Towing) */}
           <Route path="/vendor" element={<ModuleWrapper type="vendor"><VendorHome /></ModuleWrapper>} />
@@ -111,13 +111,12 @@ const AppRoutes = () => {
           <Route path="/vendor/register/personal" element={<ModuleWrapper type="vendor"><VendorPersonal /></ModuleWrapper>} />
           <Route path="/vendor/register/expertise" element={<ModuleWrapper type="vendor"><VendorExpertise /></ModuleWrapper>} />
           <Route path="/vendor/jobs" element={<ModuleWrapper type="vendor"><VendorJobs /></ModuleWrapper>} />
-          <Route path="/vendor/earnings" element={<ModuleWrapper type="vendor"><VendorWallet /></ModuleWrapper>} />
-          <Route path="/vendor/wallet" element={<ModuleWrapper type="vendor"><VendorWallet /></ModuleWrapper>} />
           <Route path="/vendor/settings" element={<ModuleWrapper type="vendor"><VendorSettings /></ModuleWrapper>} />
           <Route path="/vendor/profile" element={<ModuleWrapper type="vendor"><VendorProfile /></ModuleWrapper>} />
           <Route path="/vendor/kyc" element={<ModuleWrapper type="vendor"><VendorKYC /></ModuleWrapper>} />
           <Route path="/vendor/roles" element={<ModuleWrapper type="vendor"><VendorRoles /></ModuleWrapper>} />
           <Route path="/vendor/support" element={<ModuleWrapper type="vendor"><VendorSupport /></ModuleWrapper>} />
+          <Route path="/vendor/history" element={<ModuleWrapper type="vendor"><VendorHistory /></ModuleWrapper>} />
           
           {/* Owner App Module */}
           <Route path="/owner-dashboard" element={<ModuleWrapper type="owner"><OwnerDashboard /></ModuleWrapper>} />
@@ -125,7 +124,7 @@ const AppRoutes = () => {
           
           {/* Admin App Module */}
           <Route path="/admin/login" element={<ModuleWrapper type="admin"><AdminLogin /></ModuleWrapper>} />
-          <Route path="/admin" element={<ModuleWrapper type="admin"><AdminDashboard /></ModuleWrapper>} />
+          <Route path="/admin" element={<Navigate to="/admin/vendors" replace />} />
           <Route path="/admin/users" element={<ModuleWrapper type="admin"><AdminUsers /></ModuleWrapper>} />
           <Route path="/admin/vendors" element={<ModuleWrapper type="admin"><AdminVendors /></ModuleWrapper>} />
           <Route path="/admin/ratings" element={<ModuleWrapper type="admin"><AdminRatings /></ModuleWrapper>} />
@@ -139,7 +138,6 @@ const AppRoutes = () => {
           <Route path="/admin/banners" element={<ModuleWrapper type="admin"><AdminBanners /></ModuleWrapper>} />
           <Route path="/admin/support" element={<ModuleWrapper type="admin"><AdminSupport /></ModuleWrapper>} />
           <Route path="/admin/faqs" element={<ModuleWrapper type="admin"><AdminFAQs /></ModuleWrapper>} />
-          <Route path="/admin/wallet" element={<ModuleWrapper type="admin"><AdminWallet /></ModuleWrapper>} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/user" replace />} />

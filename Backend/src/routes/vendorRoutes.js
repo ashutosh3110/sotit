@@ -42,7 +42,9 @@ router.put('/kyc/:id', upload.fields([
 ]), updateVendorKYC);
 
 const { toggleStatus, getVendors } = require('../controllers/vendorController');
-router.get('/all', getVendors);
+const { optionalProtect } = require('../middlewares/authMiddleware');
+
+router.get('/all', optionalProtect, getVendors);
 router.put('/:id/toggle-status', toggleStatus);
 
 module.exports = router;

@@ -92,6 +92,25 @@ h1, h2, h3, h4, h5, h6 {
   display: none;
 }
 
+/* Allow scrollbar for admin/specific desktop views */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  display: block;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #E8E0E0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #C44545;
+}
+
 /* Bottom Nav Glass (Higher transparency, tighter padding) */
 .nav-glass {
   @apply bg-white/70 backdrop-blur-md border border-rose-100/40;

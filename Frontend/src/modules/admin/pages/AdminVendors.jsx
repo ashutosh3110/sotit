@@ -112,7 +112,10 @@ const AdminVendors = () => {
                                             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md border mt-1 block w-fit bg-emerald-50 text-emerald-600 border-emerald-100">{vendor.role}</span>
                                         </div>
                                     </div>
-                                    <div className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-emerald-100 shrink-0">Verified</div>
+                                    <div className="flex flex-col items-end gap-1 shrink-0">
+                                        <div className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-emerald-100">Verified</div>
+                                        {vendor.isBlocked && <div className="bg-red-50 text-red-600 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-red-100">Blocked</div>}
+                                    </div>
                                 </div>
                                 <div className="space-y-3 mb-6 py-4 border-y border-slate-50">
                                     <div className="flex items-center gap-3"><MapPin size={12} className="text-[#C44545]" /><span className="text-[12px] font-bold text-slate-600 truncate">{vendor.address?.city || 'N/A'}</span></div>
@@ -170,6 +173,53 @@ const AdminVendors = () => {
                                   <DetailRow icon={Mail} label="Email Address" value={selectedEntity.email} />
                                   <DetailRow icon={MapPin} label="Service Area" value={`${selectedEntity.address?.city || ''} ${selectedEntity.address?.state || ''}`} />
                               </div>
+
+                              {/* Rating Management (Non-Drivers) */}
+                              {selectedEntity.role !== 'driver' && (
+                                  <div className="p-6 bg-[#C44545]/5 border border-[#C44545]/10 rounded-[2rem] space-y-4">
+                                      <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-2">
+                                              <Star size={16} className="text-[#C44545] fill-[#C44545]" />
+                                              <h4 className="text-[11px] font-black uppercase tracking-widest text-[#C44545]">Manual Rating Control</h4>
+                                          </div>
+                                          <span className="text-xl font-black text-[#C44545]">{selectedEntity.rating || '0.0'}</span>
+                                      </div>
+                                      <div className="flex gap-2">
+                                          {[1, 2, 3, 4, 5].map((star) => (
+                                              <button 
+                                                key={star}
+                                                onClick={async () => {
+                                                    const tid = toast.loading("Updating rating...");
+                                                    try {
+                                                        const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/vendors/${selectedEntity._id}/update-rating`, {
+                                                            method: 'PUT',
+                                                            headers: { 
+                                                                'Content-Type': 'application/json',
+                                                                'Authorization': `Bearer ${localStorage.getItem('admin_token')}` 
+                                                            },
+                                                            body: JSON.stringify({ rating: star })
+                                                        });
+                                                        const data = await res.json();
+                                                        if (res.ok) {
+                                                            toast.success("Rating updated!", { id: tid });
+                                                            setSelectedEntity(data.vendor);
+                                                            setVendors(prev => prev.map(v => v._id === data.vendor._id ? data.vendor : v));
+                                                        } else {
+                                                            toast.error(data.message, { id: tid });
+                                                        }
+                                                    } catch (err) {
+                                                        toast.error("Failed to update rating", { id: tid });
+                                                    }
+                                                }}
+                                                className={`flex-1 py-3 rounded-xl border-2 transition-all font-black text-xs ${selectedEntity.rating === star ? 'bg-[#C44545] border-[#C44545] text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-[#C44545]/20'}`}
+                                              >
+                                                  {star}
+                                              </button>
+                                          ))}
+                                      </div>
+                                      <p className="text-[9px] font-bold text-slate-400 uppercase text-center tracking-wider">Note: Driver ratings are automated after 1 month of service.</p>
+                                  </div>
+                              )}
 
                               {/* Experience Details */}
                               <div className="space-y-4">
@@ -245,8 +295,32 @@ const AdminVendors = () => {
                       </div>
 
                       {/* FOOTER */}
-                      <div className="p-6 lg:px-10 py-6 bg-slate-50 border-t border-slate-100 shrink-0">
-                          <button onClick={() => setSelectedEntity(null)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-black/20 active:scale-95 transition-all">
+                      <div className="p-6 lg:px-10 py-6 bg-slate-50 border-t border-slate-100 shrink-0 flex gap-4">
+                          <button 
+                            onClick={async () => {
+                                const tid = toast.loading(`${selectedEntity.isBlocked ? 'Unblocking' : 'Blocking'} vendor...`);
+                                try {
+                                    const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/vendors/${selectedEntity._id}/toggle-block`, {
+                                        method: 'PUT',
+                                        headers: { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` }
+                                    });
+                                    const data = await res.json();
+                                    if (res.ok) {
+                                        toast.success(data.message, { id: tid });
+                                        setSelectedEntity(data.vendor);
+                                        setVendors(prev => prev.map(v => v._id === data.vendor._id ? data.vendor : v));
+                                    } else {
+                                        toast.error(data.message, { id: tid });
+                                    }
+                                } catch (err) {
+                                    toast.error("Action failed", { id: tid });
+                                }
+                            }}
+                            className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl active:scale-95 transition-all ${selectedEntity.isBlocked ? 'bg-emerald-600 shadow-emerald-600/20 text-white' : 'bg-red-600 shadow-red-600/20 text-white'}`}
+                          >
+                              {selectedEntity.isBlocked ? 'Unblock Partner' : 'Block Partner'}
+                          </button>
+                          <button onClick={() => setSelectedEntity(null)} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-black/20 active:scale-95 transition-all">
                               Close Profile
                           </button>
                       </div>

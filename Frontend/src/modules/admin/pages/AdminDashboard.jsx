@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import AdminSidebar from "../components/AdminSidebar";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
+import { requestForToken, onMessageListener } from "../../../utils/firebase";
 
 /**
  * Super Admin Panel (Ultra Compact Desktop/Mobile Hybrid)
@@ -12,6 +14,44 @@ import toast from "react-hot-toast";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Firebase FCM Setup for Admin
+  useEffect(() => {
+    const adminToken = localStorage.getItem('admin_token');
+    if (adminToken) {
+        // 1. Request Permission
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+
+        // 2. Request FCM Token and Sync with Backend
+        requestForToken().then(token => {
+            if (token) {
+                console.log("[ADMIN-FCM] Syncing token...");
+                fetch(`${import.meta.env.VITE_API_URL}/admin/update-fcm`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ fcmToken: token })
+                })
+                .then(res => res.json())
+                .then(data => console.log("[ADMIN-FCM] Server Response:", data))
+                .catch(err => console.error("[ADMIN-FCM] Sync Error:", err));
+            }
+        });
+
+        // 3. Listener
+        onMessageListener().then(payload => {
+            toast.success(payload.notification.title, { 
+                description: payload.notification.body,
+                icon: '💰',
+                duration: 6000
+            });
+        }).catch(err => console.log('FCM failed: ', err));
+    }
+  }, []);
 
   return (
     <div className="bg-neutral-50 min-h-screen font-inter flex">
@@ -51,7 +91,6 @@ const AdminDashboard = () => {
               {[
                 { label: "Active Nodes", val: "124", icon: TrendingUp, clr: "text-[#C44545]" },
                 { label: "System Uptime", val: "99.98%", icon: Activity, clr: "text-blue-500" },
-                { label: "Total Revenue", val: "₹14.2L", icon: TrendingUp, clr: "text-green-500" },
                 { label: "Growth", val: "+24%", icon: Activity, clr: "text-orange-500" },
               ].map((stat, i) => (
                 <div key={i} className="py-4 px-5 bg-white border border-slate-200 rounded-3xl flex flex-col justify-center shadow-sm">

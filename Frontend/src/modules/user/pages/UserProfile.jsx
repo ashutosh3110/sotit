@@ -68,15 +68,6 @@ const UserProfile = () => {
                         isDark={isDarkMode}
                     />
                     <MenuButton 
-                        icon={Wallet} 
-                        label="My Sootit Wallet" 
-                        sublabel={`Balance: ₹${user?.wallet?.toLocaleString() || '0.00'}`} 
-                        onClick={() => navigate('/user/wallet')}
-                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
-                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
-                        isDark={isDarkMode}
-                    />
-                    <MenuButton 
                         icon={Package} 
                         label="Service History" 
                         sublabel="Your Bookings" 

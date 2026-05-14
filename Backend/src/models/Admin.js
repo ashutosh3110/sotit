@@ -25,6 +25,14 @@ const adminSchema = new mongoose.Schema({
     type: String,
     default: 'admin',
   },
+  walletBalance: {
+    type: Number,
+    default: 0
+  },
+  fcmToken: {
+    type: String,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now,

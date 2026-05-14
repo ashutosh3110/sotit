@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Navigation, Wrench, Shield, Briefcase, FileText, Truck, Phone, ArrowRight, Car, Camera, MapPin, CheckCircle2, ShieldCheck, CreditCard, Landmark, Info, Map, Clock, Zap, Hammer, Wind, Battery, Settings, Disc, Droplets, Building2, Scale, GraduationCap, Video, Users } from "lucide-react";
+import { ArrowLeft, Navigation, Wrench, Shield, Briefcase, FileText, Truck, Phone, ArrowRight, Car, Camera, MapPin, CheckCircle2, ShieldCheck, CreditCard, Landmark, Info, Map, Clock, Zap, Hammer, Wind, Battery, Settings, Disc, Droplets, Building2, Scale, GraduationCap, Video, Users, ChevronDown, Search, Globe, Check, Square, CheckSquare } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
 import { State, City } from "country-state-city";
 
@@ -11,25 +11,28 @@ const VendorRegister = () => {
   const [step, setStep] = useState(0); 
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- Location Constants ---
+  // --- Constants ---
   const allStates = useMemo(() => State.getStatesOfCountry('IN'), []);
+  const mechanicServices = ['General Service', 'Engine Repair', 'Brake Service', 'Electrical Work', 'AC Service', 'Suspension & Steering', 'Oil & Filter Change', 'Body Work & Paint', 'Clutch & Gearbox', 'Battery & Charging'];
+  const rtoServices = ['RC Transfer', 'Driving License', 'Vehicle Insurance', 'Hypothecation Addition/Removal', 'NOC Certificate', 'Fitness Certificate', 'Permit Work', 'Address Change', 'Duplicate RC', 'Tax Payment'];
+  const legalPractices = ['Criminal Law', 'Civil Law', 'Property Law', 'Family Law', 'Corporate Law', 'Accident Claims', 'Taxation Law', 'Consumer Court', 'Cyber Law', 'Labor Law'];
 
   // --- States ---
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [profileImg, setProfileImg] = useState(null);
   const [profileFile, setProfileFile] = useState(null);
+  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [address, setAddress] = useState({ street: "", city: "", state: "", isoCode: "", pincode: "" });
   const [liveLocation, setLiveLocation] = useState(null);
-  const [capturedAddress, setCapturedAddress] = useState("");
 
   const [profData, setProfData] = useState({
     dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Full Time", languages: ["Hindi"],
-    serviceState: "", serviceStateCode: "", serviceDistricts: []
+    serviceStates: [], 
+    aadhaarNumber: ""
   });
 
   const [mechanicData, setMechanicData] = useState({
@@ -38,7 +41,7 @@ const VendorRegister = () => {
   });
 
   const [rtoData, setRtoData] = useState({
-    rtoOffice: "MH-12", services: [], experience: "1-3 Years", officeAddress: "", officeCity: "", officeLocation: null
+    rtoOffice: "", services: [], experience: "1-3 Years", officeAddress: "", officeCity: "", officeLocation: null
   });
 
   const [legalData, setLegalData] = useState({
@@ -191,34 +194,17 @@ const VendorRegister = () => {
               }
           }
           
-          // Role-specific updates
           if (type === 'garage') {
-              setMechanicData(prev => ({ 
-                  ...prev, 
-                  garageLocation: loc,
-                  garageAddress: fetchedAddress,
-                  garageCity: fetchedCity
-              }));
+              setMechanicData(prev => ({ ...prev, garageLocation: loc, garageAddress: fetchedAddress }));
           } else if (type === 'rto') {
-              setRtoData(prev => ({ 
-                  ...prev, 
-                  officeLocation: loc,
-                  officeAddress: fetchedAddress,
-                  officeCity: fetchedCity
-              }));
+              setRtoData(prev => ({ ...prev, officeLocation: loc, officeAddress: fetchedAddress }));
           } else if (type === 'legal') {
-              setLegalData(prev => ({ 
-                  ...prev, 
-                  gpsLocation: loc,
-                  visitingAddress: fetchedAddress,
-                  city: fetchedCity
-              }));
+              setLegalData(prev => ({ ...prev, gpsLocation: loc, visitingAddress: fetchedAddress }));
           }
           
           toast.dismiss(tid);
           toast.success("Location & Address Captured!");
       } catch (err) {
-          console.error("Reverse Geocoding Error:", err);
           toast.dismiss(tid);
           toast.error("Failed to fetch address details");
       }
@@ -237,7 +223,7 @@ const VendorRegister = () => {
         formData.append('name', name);
         formData.append('mobile', mobile);
         formData.append('email', email);
-        formData.append('password', password);
+        formData.append('password', password || mobile);
         formData.append('role', role);
         formData.append('address', JSON.stringify(address));
         formData.append('liveLocation', JSON.stringify(liveLocation));
@@ -270,12 +256,7 @@ const VendorRegister = () => {
   };
 
   const renderHeader = () => {
-    let totalSteps = 6;
-    if (role === 'mechanic') totalSteps = 8;
-    if (role === 'towing') totalSteps = 4;
-    if (role === 'rto') totalSteps = 5;
-    if (role === 'legal') totalSteps = 6;
-
+    let totalSteps = 2; // All roles consolidated to 2 steps now
     return (
       <div className="px-6 py-6 border-b border-slate-100 bg-white sticky top-0 z-40">
         <div className="flex items-center justify-between mb-4">
@@ -292,6 +273,33 @@ const VendorRegister = () => {
         </div>
       </div>
     );
+  };
+
+  const toggleStateSelection = (state) => {
+    const isSelected = profData.serviceStates.some(s => s.isoCode === state.isoCode);
+    let newStates;
+    if (isSelected) {
+        newStates = profData.serviceStates.filter(s => s.isoCode !== state.isoCode);
+    } else {
+        newStates = [...profData.serviceStates, { name: state.name, isoCode: state.isoCode, districts: [] }];
+    }
+    setProfData({ ...profData, serviceStates: newStates });
+  };
+
+  const toggleDistrictSelection = (stateCode, districtName) => {
+    const newStates = profData.serviceStates.map(s => {
+        if (s.isoCode === stateCode) {
+            const isDistSelected = s.districts.includes(districtName);
+            return {
+                ...s,
+                districts: isDistSelected 
+                    ? s.districts.filter(d => d !== districtName) 
+                    : [...s.districts, districtName]
+            };
+        }
+        return s;
+    });
+    setProfData({ ...profData, serviceStates: newStates });
   };
 
   return (
@@ -351,379 +359,313 @@ const VendorRegister = () => {
                       ))}
                     </div>
                   )}
-                  <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                  <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                  <input type="email" placeholder="Email Address (Optional)" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                   
-                  {role !== 'rto' && role !== 'legal' && (
-                    <div className="pt-4 space-y-4 border-t border-slate-100">
-                      <button type="button" onClick={() => fetchLiveLocation()} className={`w-full h-14 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-[11px] border transition-all ${liveLocation ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-[#C44545] border-[#C44545]/10'}`}>
-                        <MapPin size={16} /> {liveLocation ? "Location Updated" : "Capture Live Location"}
-                      </button>
-                      <div className="space-y-4">
-                        <input type="text" placeholder="Current Address" value={address.street} onChange={(e) => setAddress({...address, street: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                        
-                        <div className="grid grid-cols-1 gap-4">
-                          <CustomDropdown 
-                            label="State"
-                            options={allStates}
-                            value={address.state}
-                            placeholder="Select State"
-                            icon={Globe}
-                            onChange={(s) => setAddress({...address, state: s.name, isoCode: s.isoCode, city: ""})}
-                          />
+                  <div className="relative group">
+                    <input 
+                      type="password" 
+                      placeholder="Set Secure Password" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold focus:border-[#C44545] transition-all" 
+                    />
+                  </div>
 
-                          <CustomDropdown 
-                            label="City / District"
-                            options={address.isoCode ? City.getCitiesOfState('IN', address.isoCode) : []}
-                            value={address.city}
-                            placeholder="Select City/District"
-                            icon={MapPin}
-                            disabled={!address.isoCode}
-                            onChange={(c) => setAddress({...address, city: c.name})}
-                          />
+                  <div className="pt-4 space-y-4 border-t border-slate-100">
+                    <div className="space-y-4">
+                      <input type="text" placeholder="Current Address" value={address.street} onChange={(e) => setAddress({...address, street: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                      
+                      <div className="grid grid-cols-1 gap-4">
+                        <CustomDropdown 
+                          label="State"
+                          options={allStates}
+                          value={address.state}
+                          placeholder="Select State"
+                          icon={Globe}
+                          onChange={(s) => setAddress({...address, state: s.name, isoCode: s.isoCode, city: ""})}
+                        />
 
-                          <input type="tel" placeholder="Pincode" value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                        </div>
+                        <CustomDropdown 
+                          label="City / District"
+                          options={address.isoCode ? City.getCitiesOfState('IN', address.isoCode) : []}
+                          value={address.city}
+                          placeholder="Select City/District"
+                          icon={MapPin}
+                          disabled={!address.isoCode}
+                          onChange={(c) => setAddress({...address, city: c.name})}
+                        />
+
+                        <input type="tel" placeholder="Pincode" value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
+
+                {/* Service Locations (For All Roles now) */}
+                <div className="pt-8 mt-4 border-t-2 border-slate-100 space-y-6">
+                  <div className="px-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Map size={18} className="text-[#C44545]" />
+                      <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Service Locations</h4>
+                    </div>
+                    <p className="text-[12px] font-bold text-slate-400">Select multiple states and their districts.</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Available States</label>
+                      <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto p-4 border border-slate-200 rounded-[2rem] bg-white no-scrollbar shadow-inner">
+                          {allStates.map(state => {
+                              const isSelected = profData.serviceStates.some(s => s.isoCode === state.isoCode);
+                              return (
+                                  <div key={state.isoCode} className="space-y-3">
+                                      <div 
+                                          onClick={() => toggleStateSelection(state)}
+                                          className={`p-4 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-600 hover:bg-slate-50'}`}
+                                      >
+                                          <span className="text-[12px] font-black uppercase">{state.name}</span>
+                                          {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                                      </div>
+
+                                      {isSelected && (
+                                          <div className="pl-6 space-y-2 pb-4 border-l-2 border-rose-100 ml-4">
+                                              <div className="flex items-center justify-between mb-2 pr-2">
+                                                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Select Districts</span>
+                                                  <span className="text-[9px] font-black text-[#C44545]">{profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.length || 0} Picked</span>
+                                              </div>
+                                              <div className="grid grid-cols-1 gap-2">
+                                                  {City.getCitiesOfState('IN', state.isoCode).slice(0, 50).map(city => { 
+                                                      const isDistSelected = profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.includes(city.name);
+                                                      return (
+                                                          <div 
+                                                              key={city.name}
+                                                              onClick={() => toggleDistrictSelection(state.isoCode, city.name)}
+                                                              className={`p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isDistSelected ? 'border-[#C44545]/30 bg-white text-[#C44545]' : 'border-slate-100 text-slate-500 bg-slate-50/50'}`}
+                                                          >
+                                                              <span className="text-[11px] font-bold">{city.name}</span>
+                                                              {isDistSelected ? <CheckCircle2 size={16} className="fill-[#C44545] text-white" /> : <div className="h-4 w-4 rounded-full border-2 border-slate-200" />}
+                                                          </div>
+                                                      );
+                                                  })}
+                                              </div>
+                                          </div>
+                                      )}
+                                  </div>
+                              );
+                          })}
+                      </div>
+                  </div>
+                </div>
+
                 <button onClick={() => setStep(2)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 mt-6">Next Step <ArrowRight size={18} /></button>
               </div>
             )}
 
-            {/* Towing & Driver Professional Details */}
-            {(role === 'driver' || role === 'towing') && step === 2 && (
+            {/* Step 2: Professional Details (Unified for all roles) */}
+            {step === 2 && (
               <div className="space-y-6 pt-4 pb-20">
-                <h3 className="text-sm font-black uppercase tracking-widest text-[#C44545] ml-2">Step 2: Professional Details</h3>
+                <div className="px-2">
+                  <h3 className="text-xl font-black text-slate-900 mb-1">Final Step.</h3>
+                  <p className="text-[13px] font-bold text-slate-400 uppercase tracking-widest">Professional Details</p>
+                </div>
                 <div className="space-y-4">
-                  <div className="px-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Driving License Info</label>
-                    <input type="text" placeholder="DL Number" value={profData.dlNumber} onChange={(e) => setProfData({...profData, dlNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold mb-3" />
-                    <input type="date" value={profData.dlExpiry} onChange={(e) => setProfData({...profData, dlExpiry: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-400" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-4">Vehicle Classes</label>
-                    <div className="grid grid-cols-3 gap-2 px-2">
-                      {(role === 'towing' ? ['LMV', 'HMV', 'MCWG'] : ['2-wheeler', '4-wheeler', 'transport']).map(c => (
-                        <div key={c} onClick={() => {
-                          const n = profData.vehicleClasses.includes(c) ? profData.vehicleClasses.filter(x => x !== c) : [...profData.vehicleClasses, c];
-                          setProfData({...profData, vehicleClasses: n});
-                        }} className={`py-4 rounded-xl border-2 text-center text-[11px] font-black transition-all ${profData.vehicleClasses.includes(c) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}>{c}</div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="px-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Experience</label>
-                    <select value={profData.experience} onChange={(e) => setProfData({...profData, experience: e.target.value})} className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold">
-                      <option>0-1 Years</option><option>1-3 Years</option><option>3-5 Years</option><option>5+ Years</option>
-                    </select>
-                  </div>
-
-                  <div onClick={() => setProfData({...profData, bgCheck: !profData.bgCheck})} className="flex items-center gap-3 p-5 bg-white border border-slate-100 rounded-2xl cursor-pointer mx-2 shadow-sm">
-                    <div className={`h-6 w-6 rounded-lg border-2 flex items-center justify-center transition-all ${profData.bgCheck ? 'bg-[#C44545] border-[#C44545] text-white' : 'border-slate-200'}`}>{profData.bgCheck && <Check size={14} />}</div>
-                    <span className="text-[11px] font-black uppercase tracking-widest text-slate-600">Background verification agreement</span>
-                  </div>
-
-                  {/* Service Locations for Drivers */}
                   {role === 'driver' && (
-                    <div className="pt-6 border-t border-slate-100 space-y-4 px-2">
-                      <div className="px-2">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C44545] mb-2">Operational Areas</h4>
-                        <p className="text-[11px] font-bold text-slate-400 mb-4">Select districts where you can provide driving services.</p>
+                    <div className="px-2 space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Driving License Info</label>
+                        <input type="text" placeholder="DL Number" value={profData.dlNumber} onChange={(e) => setProfData({...profData, dlNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                       </div>
                       
-                      <CustomDropdown 
-                        label="Service State"
-                        options={allStates}
-                        value={profData.serviceState}
-                        placeholder="Select Service State"
-                        icon={Globe}
-                        onChange={(s) => setProfData({...profData, serviceState: s.name, serviceStateCode: s.isoCode, serviceDistricts: []})}
-                      />
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Driving Licence Expiry Date</label>
+                        <input type="date" value={profData.dlExpiry} onChange={(e) => setProfData({...profData, dlExpiry: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-400" />
+                      </div>
 
-                      {profData.serviceStateCode && (
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between px-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Select Districts</label>
-                            <span className="text-[10px] font-black text-[#C44545] bg-rose-50 px-2 py-1 rounded-md">{profData.serviceDistricts.length} Selected</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto p-3 border border-slate-200 rounded-[1.5rem] bg-white no-scrollbar shadow-inner">
-                            {City.getCitiesOfState('IN', profData.serviceStateCode).map(city => (
-                              <div 
-                                key={city.name}
-                                onClick={() => {
-                                  const n = profData.serviceDistricts.includes(city.name) 
-                                    ? profData.serviceDistricts.filter(x => x !== city.name) 
-                                    : [...profData.serviceDistricts, city.name];
-                                  setProfData({...profData, serviceDistricts: n});
-                                }}
-                                className={`p-4 rounded-xl border text-[10px] font-black uppercase transition-all cursor-pointer flex items-center justify-between ${profData.serviceDistricts.includes(city.name) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
-                              >
-                                {city.name}
-                                {profData.serviceDistricts.includes(city.name) && <Check size={12} />}
-                              </div>
-                            ))}
-                          </div>
+                      <div className="space-y-3 pt-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Service Type</label>
+                        <div className="flex gap-3">
+                          {['Full Time', 'Part Time'].map(type => (
+                            <button 
+                              key={type}
+                              type="button"
+                              onClick={() => setProfData({...profData, availability: type})}
+                              className={`flex-1 py-4 rounded-2xl border-2 font-black uppercase tracking-widest text-[11px] transition-all ${profData.availability === type ? 'border-[#C44545] bg-[#C44545] text-white shadow-lg shadow-[#C44545]/20' : 'border-slate-100 bg-white text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              {type}
+                            </button>
+                          ))}
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
+
+                  {role === 'mechanic' && (
+                    <div className="space-y-6">
+                      <div className="space-y-3 px-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Services Offered (Multiple Select)</label>
+                        <div className="flex flex-col gap-2">
+                          {mechanicServices.map(srv => (
+                            <div 
+                              key={srv}
+                              onClick={() => {
+                                const n = mechanicData.specialties.includes(srv) 
+                                  ? mechanicData.specialties.filter(x => x !== srv) 
+                                  : [...mechanicData.specialties, srv];
+                                setMechanicData({...mechanicData, specialties: n});
+                              }}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${mechanicData.specialties.includes(srv) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{srv}</span>
+                              {mechanicData.specialties.includes(srv) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 px-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Expertise (Multiple Select)</label>
+                        <div className="flex flex-col gap-2">
+                          {['Bike', 'Car', 'Truck', 'Bus', 'Other'].map(type => (
+                            <div 
+                              key={type}
+                              onClick={() => {
+                                const n = mechanicData.vehicleExpertise.includes(type) 
+                                  ? mechanicData.vehicleExpertise.filter(x => x !== type) 
+                                  : [...mechanicData.vehicleExpertise, type];
+                                setMechanicData({...mechanicData, vehicleExpertise: n});
+                              }}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${mechanicData.vehicleExpertise.includes(type) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{type}</span>
+                              {mechanicData.vehicleExpertise.includes(type) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {role === 'rto' && (
+                    <div className="space-y-4 px-2">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">RTO Office Details</label>
+                        <input type="text" placeholder="RTO Office (e.g. MH-12 Pune)" value={rtoData.rtoOffice} onChange={(e) => setRtoData({...rtoData, rtoOffice: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">RTO Services Provided</label>
+                        <div className="flex flex-col gap-2">
+                          {rtoServices.map(srv => (
+                            <div 
+                              key={srv}
+                              onClick={() => {
+                                const n = rtoData.services.includes(srv) ? rtoData.services.filter(x => x !== srv) : [...rtoData.services, srv];
+                                setRtoData({...rtoData, services: n});
+                              }}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${rtoData.services.includes(srv) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{srv}</span>
+                              {rtoData.services.includes(srv) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {role === 'legal' && (
+                    <div className="space-y-4 px-2">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Bar Registration Info</label>
+                        <input type="text" placeholder="Bar Reg Number" value={legalData.barRegNumber} onChange={(e) => setLegalData({...legalData, barRegNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Office Name</label>
+                        <input type="text" placeholder="Legal Office/Chamber Name" value={legalData.officeName} onChange={(e) => setLegalData({...legalData, officeName: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Practice Areas</label>
+                        <div className="flex flex-col gap-2">
+                          {legalPractices.map(srv => (
+                            <div 
+                              key={srv}
+                              onClick={() => {
+                                const n = legalData.practiceAreas.includes(srv) ? legalData.practiceAreas.filter(x => x !== srv) : [...legalData.practiceAreas, srv];
+                                setLegalData({...legalData, practiceAreas: n});
+                              }}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${legalData.practiceAreas.includes(srv) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{srv}</span>
+                              {legalData.practiceAreas.includes(srv) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="px-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Identity Proof (Optional)</label>
+                    <input type="text" placeholder="Aadhaar Number" value={profData.aadhaarNumber} onChange={(e) => setProfData({...profData, aadhaarNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                  </div>
+
+                  {role === 'driver' && (
+                    <div className="space-y-3 px-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Classes (Multiple Select)</label>
+                      <div className="flex flex-col gap-2">
+                        {['Bike', 'Car', 'Truck', 'Other'].map(c => (
+                          <div 
+                            key={c} 
+                            onClick={() => {
+                              const n = profData.vehicleClasses.includes(c) ? profData.vehicleClasses.filter(x => x !== c) : [...profData.vehicleClasses, c];
+                              setProfData({...profData, vehicleClasses: n});
+                            }} 
+                            className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${profData.vehicleClasses.includes(c) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
+                          >
+                            <span className="text-[12px] font-black uppercase">{c}</span>
+                            {profData.vehicleClasses.includes(c) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="px-2">
+                    <CustomDropdown 
+                      label="Experience"
+                      options={['0-1 Years', '1-3 Years', '3-5 Years', '5+ Years']}
+                      value={role === 'mechanic' ? mechanicData.experienceRange : (role === 'rto' ? rtoData.experience : (role === 'legal' ? legalData.experience : profData.experience))}
+                      placeholder="Select Experience"
+                      icon={Clock}
+                      onChange={(val) => {
+                        if (role === 'mechanic') setMechanicData({...mechanicData, experienceRange: val});
+                        else if (role === 'rto') setRtoData({...rtoData, experience: val});
+                        else if (role === 'legal') setLegalData({...legalData, experience: val});
+                        else setProfData({...profData, experience: val});
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-3 px-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Languages Known (Multiple Select)</label>
+                    <div className="flex flex-col gap-2">
+                      {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(lang => (
+                        <div 
+                          key={lang}
+                          onClick={() => {
+                            const n = profData.languages.includes(lang) 
+                              ? profData.languages.filter(x => x !== lang) 
+                              : [...profData.languages, lang];
+                            setProfData({...profData, languages: n});
+                          }}
+                          className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${profData.languages.includes(lang) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                        >
+                          <span className="text-[12px] font-black uppercase">{lang}</span>
+                          {profData.languages.includes(lang) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <button onClick={() => setStep(3)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4 shadow-xl shadow-[#C44545]/20">Next Step</button>
-              </div>
-            )}
-
-            {/* Towing & Driver Documents */}
-            {(role === 'driver' || role === 'towing') && step === 3 && (
-              <div className="space-y-4 pt-4">
-                <h3 className="text-xl font-black text-slate-900 mb-4 px-2">Step 3: Documents Upload.</h3>
-                {['aadhaar', 'pan', 'dlFile', 'selfie'].map(k => (
-                  <div key={k} className="relative p-5 rounded-2xl border-2 border-dashed border-slate-200 bg-white flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${kycFiles[k] ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>{kycFiles[k] ? <CheckCircle2 size={16} /> : <FileText size={16} />}</div>
-                      <span className="text-[12px] font-black uppercase tracking-tight">{k === 'dlFile' ? 'DL Upload' : k.toUpperCase()}</span>
-                    </div>
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setKycFiles({...kycFiles, [k]: e.target.files[0]})} />
-                  </div>
-                ))}
-                <button onClick={() => setStep(4)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-6">Next Step</button>
-              </div>
-            )}
-
-            {/* Mechanic Flow */}
-            {role === 'mechanic' && (
-              <>
-                {step === 2 && (
-                  <div className="space-y-6 pt-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-[#C44545] ml-2">Step 2: Specialties & Shop</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['Engine', 'Electrical', 'Body Work', 'AC Repair', 'Battery', 'Tyre/Puncture', 'Oil Service', 'General Service'].map(s => (
-                        <div key={s} onClick={() => {
-                          const n = mechanicData.specialties.includes(s) ? mechanicData.specialties.filter(x => x !== s) : [...mechanicData.specialties, s];
-                          setMechanicData({...mechanicData, specialties: n});
-                        }} className={`p-4 rounded-2xl border-2 text-[11px] font-black uppercase transition-all ${mechanicData.specialties.includes(s) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-500'}`}>{s}</div>
-                      ))}
-                    </div>
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                      <input type="text" placeholder="Garage / Shop Name" value={mechanicData.garageName} onChange={(e) => setMechanicData({...mechanicData, garageName: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                      <button onClick={() => fetchLiveLocation('garage')} className="w-full h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-[11px] border border-blue-100">
-                        <MapPin size={16} /> {mechanicData.garageLocation ? "GPS Captured" : "Garage GPS Location"}
-                      </button>
-                    </div>
-                    <button onClick={() => setStep(3)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
-                  </div>
-                )}
-                {step === 3 && (
-                  <div className="space-y-6 pt-4">
-                    <h3 className="text-xl font-black text-slate-900 px-2 leading-tight">Step 3 — Vehicle Expertise</h3>
-                    <div className="grid grid-cols-1 gap-2">
-                      {['2 Wheeler', '4 Wheeler', 'Heavy Vehicle', 'Truck', 'Bus'].map(v => (
-                        <div key={v} onClick={() => {
-                          const n = mechanicData.vehicleExpertise.includes(v) ? mechanicData.vehicleExpertise.filter(x => x !== v) : [...mechanicData.vehicleExpertise, v];
-                          setMechanicData({...mechanicData, vehicleExpertise: n});
-                        }} className={`p-5 rounded-2xl border-2 flex items-center justify-between cursor-pointer ${mechanicData.vehicleExpertise.includes(v) ? 'border-[#C44545] bg-rose-50' : 'border-slate-100'}`}><span className="font-black uppercase text-sm">{v}</span></div>
-                      ))}
-                    </div>
-                    <button onClick={() => setStep(4)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
-                  </div>
-                )}
-                {step === 4 && (
-                  <div className="space-y-6 pt-4">
-                    <h3 className="text-xl font-black text-slate-900 px-2 leading-tight">Step 4 — Experience Details</h3>
-                    <select value={mechanicData.experienceRange} onChange={(e) => setMechanicData({...mechanicData, experienceRange: e.target.value})} className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold">
-                      <option>0-1 Years</option><option>1-3 Years</option><option>3-5 Years</option><option>5+ Years</option>
-                    </select>
-                    <input type="text" placeholder="Working Hours" value={mechanicData.workingHours} onChange={(e) => setMechanicData({...mechanicData, workingHours: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <button onClick={() => setStep(5)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
-                  </div>
-                )}
-                {step === 5 && (
-                  <div className="space-y-6 pt-4 text-center">
-                    <h3 className="text-xl font-black text-slate-900 px-2">Step 5 — Service Radius</h3>
-                    <select value={mechanicData.serviceRadius} onChange={(e) => setMechanicData({...mechanicData, serviceRadius: e.target.value})} className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold">
-                      <option>5 KM</option><option>10 KM</option><option>20 KM</option><option>50 KM</option>
-                    </select>
-                    <button onClick={() => setStep(6)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
-                  </div>
-                )}
-                {step === 6 && (
-                  <div className="space-y-4 pt-4">
-                    <h3 className="text-xl font-black text-slate-900 px-2">Step 6 — Documents / KYC</h3>
-                    {['aadhaar', 'pan', 'garagePhoto', 'shopLicense'].map(k => (
-                      <div key={k} className="relative p-5 rounded-2xl border-2 border-dashed border-slate-200 bg-white flex items-center justify-between">
-                        <span className="text-[12px] font-black uppercase tracking-tight">{k}</span>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setKycFiles({...kycFiles, [k]: e.target.files[0]})} />
-                      </div>
-                    ))}
-                    <button onClick={() => setStep(7)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-6">Next Step</button>
-                  </div>
-                )}
-                {step === 7 && (
-                  <div className="space-y-4 pt-4">
-                    <h3 className="text-xl font-black text-slate-900 px-2 leading-tight">Step 7 — Bank Details</h3>
-                    <input type="text" placeholder="Account Holder Name" value={bankData.accountHolderName} onChange={(e) => setBankData({...bankData, accountHolderName: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <input type="text" placeholder="Bank Name" value={bankData.bankName} onChange={(e) => setBankData({...bankData, bankName: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <input type="text" placeholder="Account Number" value={bankData.accountNumber} onChange={(e) => setBankData({...bankData, accountNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <input type="text" placeholder="IFSC Code" value={bankData.ifscCode} onChange={(e) => setBankData({...bankData, ifscCode: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <button onClick={() => setStep(8)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-6">Next Step</button>
-                  </div>
-                )}
-                {step === 8 && (
-                   <div className="space-y-6 pt-4 text-center">
-                    <h3 className="text-xl font-black text-slate-900 px-2">Step 8 — Emergency Availability</h3>
-                    <div onClick={() => setMechanicData({...mechanicData, emergencySupport: !mechanicData.emergencySupport})} className={`p-8 rounded-[2.5rem] border-2 cursor-pointer ${mechanicData.emergencySupport ? 'border-[#C44545] bg-rose-50' : 'border-slate-100 bg-white'}`}>
-                      <Zap className={mechanicData.emergencySupport ? 'text-[#C44545] mx-auto mb-2' : 'text-slate-300 mx-auto mb-2'} />
-                      <p className="font-black uppercase text-[15px]">24x7 Emergency Support</p>
-                    </div>
-                    <button onClick={handleFinalSubmit} className="w-full bg-[#C44545] text-white h-20 rounded-[2.5rem] font-black uppercase mt-8">Finish Registration</button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* RTO Flow */}
-            {role === 'rto' && (
-              <>
-                {step === 2 && (
-                  <div className="space-y-6 pt-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-[#C44545] ml-2">Step 2: RTO Details</h3>
-                    <div className="px-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">RTO Office</label>
-                        <select value={rtoData.rtoOffice} onChange={(e) => setRtoData({...rtoData, rtoOffice: e.target.value})} className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold">
-                            <option>MH-12</option><option>MP-04</option><option>DL-01</option>
-                        </select>
-                    </div>
-                    <div className="space-y-3 px-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 block ml-2">Services</label>
-                      <div className="flex flex-wrap gap-2">
-                        {['RC Transfer', 'License Renewal', 'Vehicle Registration', 'NOC', 'Hypothecation Removal'].map(s => (
-                          <div key={s} onClick={() => {
-                            const n = rtoData.services.includes(s) ? rtoData.services.filter(x => x !== s) : [...rtoData.services, s];
-                            setRtoData({...rtoData, services: n});
-                          }} className={`px-4 py-2 rounded-full border-2 text-[10px] font-black uppercase transition-all ${rtoData.services.includes(s) ? 'border-[#C44545] bg-[#C44545] text-white' : 'border-slate-100 bg-white text-slate-400'}`}>{s}</div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="px-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Experience</label>
-                        <select value={rtoData.experience} onChange={(e) => setRtoData({...rtoData, experience: e.target.value})} className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold">
-                            <option>1-3 Years</option><option>3-5 Years</option><option>5+ Years</option>
-                        </select>
-                    </div>
-                    <button onClick={() => setStep(3)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-8">Next Step</button>
-                  </div>
-                )}
-                {step === 3 && (
-                  <div className="space-y-6 pt-4">
-                    <h3 className="text-xl font-black text-slate-900 mb-4 px-2">Step 3: Office Address.</h3>
-                    <input type="text" placeholder="Office Address" value={rtoData.officeAddress} onChange={(e) => setRtoData({...rtoData, officeAddress: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <input type="text" placeholder="City" value={rtoData.officeCity} onChange={(e) => setRtoData({...rtoData, officeCity: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <button onClick={() => fetchLiveLocation('rto')} className="w-full h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-[11px] border border-indigo-100 mt-4">
-                      <MapPin size={16} /> {rtoData.officeLocation ? "GPS Captured" : "Capture Office GPS"}
-                    </button>
-                    <button onClick={() => setStep(4)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-8">Next Step</button>
-                  </div>
-                )}
-                {step === 4 && (
-                  <div className="space-y-4 pt-4">
-                    <h3 className="text-xl font-black text-slate-900 mb-4 px-2">Step 4: Documents Upload.</h3>
-                    {['aadhaar', 'pan', 'regCertificate', 'officeProof'].map(k => (
-                      <div key={k} className="relative p-5 rounded-2xl border-2 border-dashed border-slate-200 bg-white flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${kycFiles[k] ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>{kycFiles[k] ? <CheckCircle2 size={16} /> : <FileText size={16} />}</div>
-                          <span className="text-[12px] font-black uppercase tracking-tight">{k === 'regCertificate' ? 'Registration Certificate' : k === 'officeProof' ? 'Office Proof' : k.toUpperCase()}</span>
-                        </div>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setKycFiles({...kycFiles, [k]: e.target.files[0]})} />
-                      </div>
-                    ))}
-                    <button onClick={() => setStep(5)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-6">Next Step</button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Legal Flow */}
-            {role === 'legal' && (
-              <>
-                {step === 2 && (
-                  <div className="space-y-6 pt-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-[#C44545] ml-2">Step 2: Professional Details</h3>
-                    <input type="text" placeholder="Bar Registration Number" value={legalData.barRegNumber} onChange={(e) => setLegalData({...legalData, barRegNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <div className="space-y-3 px-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 block ml-2">Practice Areas</label>
-                      <div className="flex flex-wrap gap-2">
-                        {['Traffic Violations', 'Accidental Claims', 'Insurance Cases', 'Motor Accident Cases', 'Vehicle Seizure Cases'].map(s => (
-                          <div key={s} onClick={() => {
-                            const n = legalData.practiceAreas.includes(s) ? legalData.practiceAreas.filter(x => x !== s) : [...legalData.practiceAreas, s];
-                            setLegalData({...legalData, practiceAreas: n});
-                          }} className={`px-4 py-2 rounded-full border-2 text-[10px] font-black uppercase transition-all ${legalData.practiceAreas.includes(s) ? 'border-[#C44545] bg-[#C44545] text-white' : 'border-slate-100 bg-white text-slate-400'}`}>{s}</div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="px-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Experience</label>
-                        <select value={legalData.experience} onChange={(e) => setLegalData({...legalData, experience: e.target.value})} className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-6 font-bold">
-                            <option>1-3 Years</option><option>3-5 Years</option><option>5+ Years</option>
-                        </select>
-                    </div>
-                    <button onClick={() => setStep(3)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
-                  </div>
-                )}
-                {step === 3 && (
-                  <div className="space-y-6 pt-4">
-                    <h3 className="text-xl font-black text-slate-900 mb-4 px-2">Step 3: Office Address.</h3>
-                    <input type="text" placeholder="Office Name" value={legalData.officeName} onChange={(e) => setLegalData({...legalData, officeName: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <input type="text" placeholder="Visiting Address" value={legalData.visitingAddress} onChange={(e) => setLegalData({...legalData, visitingAddress: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <input type="text" placeholder="City" value={legalData.city} onChange={(e) => setLegalData({...legalData, city: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <button onClick={() => fetchLiveLocation('legal')} className="w-full h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-[11px] border border-emerald-100 mt-4">
-                      <MapPin size={16} /> {legalData.gpsLocation ? "GPS Captured" : "Capture Office GPS"}
-                    </button>
-                    <button onClick={() => setStep(4)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
-                  </div>
-                )}
-                {step === 4 && (
-                  <div className="space-y-6 pt-4 text-center">
-                    <h3 className="text-xl font-black text-slate-900">Step 4: Consultation Mode</h3>
-                    {['Online', 'Offline', 'Both'].map(t => (
-                      <div key={t} onClick={() => setLegalData({...legalData, consultationType: t})} className={`p-5 rounded-2xl border-2 flex items-center justify-between cursor-pointer ${legalData.consultationType === t ? 'border-[#C44545] bg-rose-50' : 'border-slate-100 bg-white'}`}>
-                        <span className="font-black uppercase text-sm">{t} Consultation</span>
-                        <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${legalData.consultationType === t ? 'bg-[#C44545] border-[#C44545] text-white' : 'border-slate-200'}`}>{legalData.consultationType === t && <CheckCircle2 size={12} />}</div>
-                      </div>
-                    ))}
-                    <button onClick={() => setStep(5)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
-                  </div>
-                )}
-                {step === 5 && (
-                  <div className="space-y-4 pt-4">
-                    <h3 className="text-xl font-black text-slate-900 mb-4 px-2">Step 5: Documents Upload.</h3>
-                    {['aadhaar', 'pan', 'barCertificate', 'advocateId'].map(k => (
-                      <div key={k} className="relative p-5 rounded-2xl border-2 border-dashed border-slate-200 bg-white flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${kycFiles[k] ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}>{kycFiles[k] ? <CheckCircle2 size={16} /> : <FileText size={16} />}</div>
-                          <span className="text-[12px] font-black uppercase tracking-tight">{k === 'barCertificate' ? 'Bar Certificate' : k === 'advocateId' ? 'Advocate ID' : k.toUpperCase()}</span>
-                        </div>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setKycFiles({...kycFiles, [k]: e.target.files[0]})} />
-                      </div>
-                    ))}
-                    <button onClick={() => setStep(6)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase mt-4">Next Step</button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Common Final Step for Roles with 4 or more steps */}
-            {((role === 'rto' && step === 5) || (role === 'legal' && step === 6) || (role === 'driver' && step === 4) || (role === 'towing' && step === 4)) && (
-              <div className="space-y-4 pt-4">
-                <h3 className="text-xl font-black text-slate-900 mb-4 px-2">Step {step}: Bank Details.</h3>
-                <input type="text" placeholder="Account Holder Name" value={bankData.accountHolderName} onChange={(e) => setBankData({...bankData, accountHolderName: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                <input type="text" placeholder="Bank Name" value={bankData.bankName} onChange={(e) => setBankData({...bankData, bankName: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                <input type="text" placeholder="Account Number" value={bankData.accountNumber} onChange={(e) => setBankData({...bankData, accountNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                <input type="text" placeholder="IFSC Code" value={bankData.ifscCode} onChange={(e) => setBankData({...bankData, ifscCode: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                <input type="text" placeholder="UPI ID" value={bankData.upiId} onChange={(e) => setBankData({...bankData, upiId: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                <button onClick={handleFinalSubmit} className="w-full bg-[#C44545] text-white h-20 rounded-[2.5rem] font-black uppercase mt-6 shadow-xl">Finish Registration</button>
+                <button onClick={handleFinalSubmit} className="w-full bg-[#C44545] text-white h-20 rounded-[2.5rem] font-black uppercase mt-6 shadow-xl shadow-[#C44545]/20 flex items-center justify-center gap-3">Finish Registration <Check size={20} strokeWidth={3} /></button>
               </div>
             )}
 

@@ -1,4 +1,6 @@
 const Vendor = require('../models/Vendor');
+const User = require('../models/User');
+const ServiceRequest = require('../models/ServiceRequest');
 const bcrypt = require('bcryptjs');
 
 exports.sendOTP = async (req, res) => {
@@ -24,9 +26,15 @@ exports.registerVendor = async (req, res) => {
     } = req.body;
 
     // Check if user exists
-    const existingVendor = await Vendor.findOne({ $or: [{ email }, { mobile }] });
-    if (existingVendor) {
-      return res.status(400).json({ message: 'Vendor with this email or mobile already exists' });
+    const checkQuery = { mobile };
+    if (email) {
+      const existingEmail = await Vendor.findOne({ email });
+      if (existingEmail) return res.status(400).json({ message: 'Vendor with this email already exists' });
+    }
+    
+    const existingMobile = await Vendor.findOne({ mobile });
+    if (existingMobile) {
+      return res.status(400).json({ message: 'Vendor with this mobile already exists' });
     }
 
     // Prepare Document paths from req.files (if any)
@@ -56,14 +64,14 @@ exports.registerVendor = async (req, res) => {
       legalDetails: legalData ? JSON.parse(legalData) : {},
       bankDetails: bankData ? JSON.parse(bankData) : {},
       kycDocuments: docs,
-      status: 'pending',
-      isApproved: false
+      status: 'approved',
+      isApproved: true
     });
 
     await newVendor.save();
 
     res.status(201).json({ 
-        message: 'Vendor registered successfully. Profile is under review.',
+        message: 'Vendor registered and activated successfully!',
         vendorId: newVendor._id 
     });
 
@@ -82,6 +90,13 @@ exports.loginVendor = async (req, res) => {
         if (!vendor) return res.status(404).json({ message: 'Vendor not registered with this mobile number' });
 
         // Check Status
+        if (vendor.isBlocked) {
+            return res.status(403).json({ 
+                message: 'Your account has been blocked by the administrator. Please contact support.',
+                status: 'blocked'
+            });
+        }
+
         if (vendor.status === 'pending') {
             return res.status(403).json({ 
                 message: 'Your profile is pending for approval. Please wait for admin review.',
@@ -193,7 +208,7 @@ exports.toggleStatus = async (req, res) => {
 exports.getVendors = async (req, res) => {
     try {
         const { role, state, district } = req.query;
-        let query = { status: 'approved' }; // Only show approved vendors
+        let query = { status: 'approved', isOnline: true }; // Only show approved and online vendors
 
         if (role) {
             // Map plural frontend categories to singular backend roles
@@ -221,7 +236,45 @@ exports.getVendors = async (req, res) => {
             .select('name mobile role profileImage rating totalReviews address status isOnline createdAt')
             .sort({ rating: -1, createdAt: -1 });
 
-        res.status(200).json({ success: true, vendors });
+        // Privacy Masking Logic
+        let maskedVendors = vendors;
+        const authUser = req.user; // Requires protect middleware to be used in routes
+
+        if (!authUser) {
+            // Not logged in: Mask all
+            maskedVendors = vendors.map(v => ({
+                ...v._doc,
+                mobile: v.mobile ? `${v.mobile.substring(0, 3)}XXXXX${v.mobile.substring(v.mobile.length - 2)}` : 'XXXXXXXXXX'
+            }));
+        } else {
+            const user = await User.findById(authUser.id);
+            const isPrime = user.subscription?.plan === 'Prime' && user.subscription?.expiresAt > new Date();
+
+            if (isPrime) {
+                // Prime user: Full access
+                maskedVendors = vendors;
+            } else {
+                // Non-prime: Check individual unlocks
+                const unlockedRequests = await ServiceRequest.find({
+                    requesterId: authUser.id,
+                    paymentStatus: 'success',
+                    vendor: { $in: vendors.map(v => v._id) }
+                });
+
+                const unlockedVendorIds = unlockedRequests.map(r => r.vendor?.toString());
+
+                maskedVendors = vendors.map(v => {
+                    const isUnlocked = unlockedVendorIds.includes(v._id.toString());
+                    return {
+                        ...v._doc,
+                        mobile: isUnlocked ? v.mobile : `${v.mobile.substring(0, 3)}XXXXX${v.mobile.substring(v.mobile.length - 2)}`,
+                        isUnlocked
+                    };
+                });
+            }
+        }
+
+        res.status(200).json({ success: true, vendors: maskedVendors });
     } catch (error) {
         console.error("Error fetching vendors:", error);
         res.status(500).json({ success: false, message: 'Error fetching vendors' });

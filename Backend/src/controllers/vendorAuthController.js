@@ -88,26 +88,120 @@ exports.registerVendor = async (req, res, next) => {
   }
 };
 
-// @desc    Send OTP for Vendor
+// @desc    Login Vendor with Mobile & Password
+// @route   POST /api/vendor/login
+// @access  Public
+exports.vendorLogin = async (req, res, next) => {
+  try {
+    const { mobile, password } = req.body;
+
+    if (!mobile || !password) {
+      res.status(400);
+      throw new Error('Please provide mobile and password');
+    }
+
+    const vendor = await Vendor.findOne({ mobile }).select('+password');
+    if (!vendor) {
+      res.status(401);
+      throw new Error('Invalid mobile number');
+    }
+
+    const isMatch = await vendor.comparePassword(password);
+    if (!isMatch) {
+      res.status(401);
+      throw new Error('Invalid password');
+    }
+
+    sendTokenResponse(vendor, 200, res);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Send OTP for Vendor (Forgot Password)
 // @route   POST /api/vendor/send-otp
+// @access  Public
 exports.sendVendorOTP = async (req, res, next) => {
   try {
-    const { mobile, isRegistration } = req.body;
-    if (isRegistration) {
-      const exists = await Vendor.findOne({ mobile });
-      if (exists) {
-        res.status(400);
-        throw new Error('Mobile already registered');
-      }
+    const { mobile } = req.body;
+    
+    if (!mobile) {
+      res.status(400);
+      throw new Error('Please provide a mobile number');
+    }
+
+    const vendor = await Vendor.findOne({ mobile });
+    if (!vendor) {
+      res.status(404);
+      throw new Error('No vendor account found with this mobile number');
     }
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    console.log(`VENDOR OTP for ${mobile}: ${otp}`);
+    const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
-    global.vendorOTPs = global.vendorOTPs || {};
-    global.vendorOTPs[mobile] = otp;
+    console.log("----------------------------");
+    console.log(`VENDOR FORGOT PASSWORD OTP for ${mobile}: ${otp}`);
+    console.log("----------------------------");
+
+    vendor.otp = otp;
+    vendor.otpExpire = otpExpire;
+    await vendor.save();
 
     res.status(200).json({ success: true, message: 'OTP sent to terminal' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Verify OTP for Vendor Password Reset
+// @route   POST /api/vendor/verify-reset-otp
+// @access  Public
+exports.verifyVendorResetOTP = async (req, res, next) => {
+  try {
+    const { mobile, otp } = req.body;
+
+    if (!mobile || !otp) {
+      res.status(400);
+      throw new Error('Please provide mobile and OTP');
+    }
+
+    const vendor = await Vendor.findOne({ mobile });
+    if (!vendor || vendor.otp !== otp || vendor.otpExpire < Date.now()) {
+      res.status(400);
+      throw new Error('Invalid or expired OTP');
+    }
+
+    res.status(200).json({ success: true, message: 'OTP verified successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Reset Vendor Password
+// @route   POST /api/vendor/reset-password
+// @access  Public
+exports.resetVendorPassword = async (req, res, next) => {
+  try {
+    const { mobile, otp, password } = req.body;
+
+    if (!mobile || !otp || !password) {
+      res.status(400);
+      throw new Error('Please provide all details');
+    }
+
+    const vendor = await Vendor.findOne({ mobile });
+    if (!vendor || vendor.otp !== otp || vendor.otpExpire < Date.now()) {
+      res.status(400);
+      throw new Error('Invalid or expired OTP');
+    }
+
+    // Update password
+    vendor.password = password;
+    vendor.otp = undefined;
+    vendor.otpExpire = undefined;
+    await vendor.save();
+
+    res.status(200).json({ success: true, message: 'Password reset successfully' });
   } catch (err) {
     next(err);
   }

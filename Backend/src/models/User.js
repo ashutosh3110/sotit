@@ -46,10 +46,18 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  fcmToken: {
+    type: String,
+    default: null,
+  },
   otp: String,
   otpExpire: Date,
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+  subscription: {
+    plan: { type: String, enum: ['none', 'Prime'], default: 'none' },
+    expiresAt: { type: Date }
+  },
   createdAt: {
     type: Date,
     default: Date.now,

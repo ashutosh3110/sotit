@@ -87,13 +87,6 @@ const VendorSettings = () => {
                       </div>
                       <ChevronRight size={16} className="text-slate-300" strokeWidth={3} />
                    </Link>
-                   <Link to="/vendor/wallet" className="flex items-center justify-between p-6 border-b border-slate-50 active:bg-neutral-50 transition-colors group">
-                      <div className="flex items-center gap-5">
-                         <div className="h-10 w-10 bg-rose-50 rounded-xl flex items-center justify-center text-[#C44545] shadow-inner"><Wallet size={20} strokeWidth={2.5} /></div>
-                         <span className="text-slate-700">Wallet & Earnings</span>
-                      </div>
-                      <ChevronRight size={16} className="text-slate-300" strokeWidth={3} />
-                   </Link>
                    <Link to="/vendor/support" className="flex items-center justify-between p-6 active:bg-neutral-50 transition-colors group">
                       <div className="flex items-center gap-5">
                          <div className="h-10 w-10 bg-rose-50 rounded-xl flex items-center justify-center text-[#C44545] shadow-inner"><HelpCircle size={20} strokeWidth={2.5} /></div>

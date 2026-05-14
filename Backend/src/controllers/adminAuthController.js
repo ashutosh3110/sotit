@@ -82,6 +82,22 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
+// @desc    Update Admin FCM Token
+// @route   PUT /api/admin/update-fcm
+// @access  Private (Admin)
+exports.updateFCMToken = async (req, res, next) => {
+    try {
+        const { fcmToken } = req.body;
+        const adminId = req.admin.id;
+
+        await Admin.findByIdAndUpdate(adminId, { fcmToken });
+
+        res.status(200).json({ success: true, message: 'Admin FCM Token updated' });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // Get token from model, create cookie and send response
 const sendTokenResponse = (admin, statusCode, res) => {
   // Create token

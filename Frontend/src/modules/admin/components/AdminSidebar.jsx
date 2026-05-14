@@ -9,16 +9,12 @@ const AdminSidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
   const menuItems = [
-    { label: "Overview", path: "/admin", icon: LayoutDashboard },
-    { label: "Manage Users", path: "/admin/users", icon: Users },
-    { label: "Manage Providers", path: "/admin/vendors", icon: ShieldCheck },
-    { label: "Pending Approvals", path: "/admin/approvals", icon: ShieldCheck },
+    { label: "Registered Vendors", path: "/admin/vendors", icon: ShieldCheck },
     { label: "Driver Ratings", path: "/admin/ratings", icon: Briefcase },
     { label: "Job Board", path: "/admin/jobs", icon: Briefcase },
     { label: "Manage Banners", path: "/admin/banners", icon: Globe },
     { label: "Help & Support", path: "/admin/support", icon: MessageCircle },
     { label: "Manage FAQs", path: "/admin/faqs", icon: HelpCircle },
-    { label: "Wallet Center", path: "/admin/wallet", icon: Wallet },
     { label: "Settings", path: "/admin/settings", icon: Settings },
   ];
 
@@ -53,7 +49,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto min-h-0 custom-scrollbar">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;

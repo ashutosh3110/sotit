@@ -2,7 +2,9 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Vendor = require('../models/Vendor');
+const Admin = require('../models/Admin');
 const WalletTransaction = require('../models/WalletTransaction');
+const { sendPushNotification } = require('../utils/firebase');
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -85,6 +87,25 @@ exports.verifyPayment = async (req, res) => {
                 const vendor = await Vendor.findById(transaction.vendorId);
                 vendor.walletBalance = (vendor.walletBalance || 0) + transaction.amount;
                 await vendor.save();
+
+                // Send Notification to Admin
+                try {
+                    const admins = await Admin.find({ fcmToken: { $ne: null } });
+                    const adminTokens = admins.map(a => a.fcmToken);
+                    if (adminTokens.length > 0) {
+                        const notificationPromises = adminTokens.map(token => 
+                            sendPushNotification(
+                                token,
+                                "Vendor Wallet Recharge! 🛠️",
+                                `Expert ${vendor.name} added ₹${transaction.amount} to their wallet.`,
+                                { type: 'vendor_recharge', vendorId: vendor._id.toString() }
+                            )
+                        );
+                        await Promise.allSettled(notificationPromises);
+                    }
+                } catch (err) {
+                    console.error("Admin Notification Error (Vendor):", err);
+                }
                 
                 res.json({
                     success: true,
@@ -95,6 +116,25 @@ exports.verifyPayment = async (req, res) => {
                 const user = await User.findById(transaction.userId);
                 user.walletBalance = (user.walletBalance || 0) + transaction.amount;
                 await user.save();
+
+                // Send Notification to Admin
+                try {
+                    const admins = await Admin.find({ fcmToken: { $ne: null } });
+                    const adminTokens = admins.map(a => a.fcmToken);
+                    if (adminTokens.length > 0) {
+                        const notificationPromises = adminTokens.map(token => 
+                            sendPushNotification(
+                                token,
+                                "New Wallet Recharge! 💰",
+                                `${user.name} added ₹${transaction.amount} to their wallet.`,
+                                { type: 'wallet_recharge', userId: user._id.toString() }
+                            )
+                        );
+                        await Promise.allSettled(notificationPromises);
+                    }
+                } catch (err) {
+                    console.error("Admin Notification Error:", err);
+                }
 
                 res.json({
                     success: true,

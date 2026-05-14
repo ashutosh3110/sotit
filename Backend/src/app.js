@@ -8,8 +8,17 @@ const app = express(); // Backend server refresh for FAQ/Tickets
 
 // Middleware
 app.use(express.json());
+
+const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : [];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(helmet());
@@ -31,6 +40,7 @@ const bannerRoutes = require('./routes/bannerRoutes');
 const faqRoutes = require('./routes/faqRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const walletRoutes = require('./routes/walletRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/banners', bannerRoutes);
@@ -41,6 +51,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/services', serviceRoutes);
 
 // Error Handling
 app.use(notFound);
