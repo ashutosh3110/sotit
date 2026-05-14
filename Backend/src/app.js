@@ -9,11 +9,19 @@ const app = express(); // Backend server refresh for FAQ/Tickets
 // Middleware
 app.use(express.json());
 
-const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : [];
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'https://sootit.com',
+  'http://sootit.com',
+  'https://www.sootit.com',
+  'https://api.sootit.com'
+];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.includes('sootit.com')) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
