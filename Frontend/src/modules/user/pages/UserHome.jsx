@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { getUserData } from "../utils/userStore";
 import { requestForToken, onMessageListener } from "../../../utils/firebase";
 import toast from "react-hot-toast";
+import logo from "../../../assets/logo.png";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -59,7 +60,75 @@ const Home = () => {
       fetchProfile();
   }, [user?.profile?.token]);
 
-  // Firebase FCM Setup for Customer
+  // Razorpay Upgrade Logic
+  const handleUpgrade = async () => {
+    const userData = getUserData();
+    if (!userData?.profile?.token) return toast.error("Please login first");
+
+    const tid = toast.loading("Initiating Upgrade...");
+    try {
+        // 1. Create Order
+        const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/subscriptions/create-order`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userData.profile.token}`
+            }
+        });
+        const orderData = await orderRes.json();
+        
+        if (!orderRes.ok) throw new Error(orderData.message || "Failed to create order");
+
+        // 2. Open Razorpay
+        const options = {
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+            amount: orderData.order.amount,
+            currency: orderData.order.currency,
+            name: "Sootit Prime",
+            description: "1 Month Premium Membership",
+            image: logo,
+            order_id: orderData.order.id,
+            handler: async (response) => {
+                const verifyTid = toast.loading("Verifying Payment...", { id: tid });
+                try {
+                    const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/subscriptions/verify-payment`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${userData.profile.token}`
+                        },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    });
+                    const verifyData = await verifyRes.json();
+                    
+                    if (verifyRes.ok && verifyData.success) {
+                        toast.success("Welcome to Sootit Prime! 🚀", { id: verifyTid });
+                        fetchProfile(); // Refresh profile data
+                    } else {
+                        toast.error(verifyData.message || "Verification failed", { id: verifyTid });
+                    }
+                } catch (err) {
+                    toast.error("Payment verification failed", { id: verifyTid });
+                }
+            },
+            prefill: {
+                name: user.profile.name,
+                contact: user.profile.mobile
+            },
+            theme: { color: "#C44545" }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+    } catch (error) {
+        toast.error(error.message || "Upgrade failed", { id: tid });
+    }
+  };
+
   useEffect(() => {
     const userToken = user?.profile?.token;
     console.log("[FCM] Checking for setup. User logged in:", !!userToken);
@@ -223,8 +292,7 @@ const Home = () => {
           ) : (
               <motion.div 
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate('/user/find')}
-                className="bg-slate-900 rounded-[3rem] p-1 relative overflow-hidden group cursor-pointer shadow-2xl shadow-slate-900/40"
+                className="bg-slate-900 rounded-[3rem] p-1 relative overflow-hidden group shadow-2xl shadow-slate-900/40"
               >
                 {/* Animated Gradient Background */}
                 <motion.div 
@@ -265,7 +333,10 @@ const Home = () => {
                         ))}
                     </div>
 
-                    <button className="w-full py-5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-900 rounded-[1.8rem] text-xs font-black uppercase tracking-[0.25em] shadow-[0_10px_30px_rgba(245,158,11,0.3)] hover:shadow-[0_15px_40px_rgba(245,158,11,0.5)] transition-all">
+                    <button 
+                        onClick={handleUpgrade}
+                        className="w-full py-5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-900 rounded-[1.8rem] text-xs font-black uppercase tracking-[0.25em] shadow-[0_10px_30px_rgba(245,158,11,0.3)] hover:shadow-[0_15px_40px_rgba(245,158,11,0.5)] transition-all"
+                    >
                         Upgrade To Prime
                     </button>
                 </div>

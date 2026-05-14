@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 import logo from "../../../assets/logo.png";
 
-const VendorLogin = ({ isEmbedded = false }) => {
+const VendorLogin = ({ isEmbedded = false, onSwitchToRegister }) => {
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +18,12 @@ const VendorLogin = ({ isEmbedded = false }) => {
   const [forgotStep, setForgotStep] = useState(1); // 1: Mobile, 2: OTP, 3: New Password
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [newPassword, setNewPassword] = useState("");
+
+  const toggleForgot = (val) => {
+    setIsForgot(val);
+    setForgotStep(1);
+    setOtp(["", "", "", ""]);
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -50,6 +56,7 @@ const VendorLogin = ({ isEmbedded = false }) => {
   const handleSendForgotOTP = async () => {
     if (phoneNumber.length !== 10) return toast.error("Enter valid mobile number");
     setIsLoading(true);
+    console.log("Sending Forgot OTP for:", phoneNumber);
     try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/vendors/send-otp`, {
             method: 'POST',
@@ -57,13 +64,15 @@ const VendorLogin = ({ isEmbedded = false }) => {
             body: JSON.stringify({ mobile: phoneNumber })
         });
         const data = await res.json();
-        if (data.success) {
+        console.log("Send OTP Response:", data);
+        if (res.ok && data.success) {
             toast.success("OTP sent to terminal");
             setForgotStep(2);
         } else {
             toast.error(data.message || "Failed to send OTP");
         }
     } catch (error) {
+        console.error("Forgot OTP Error:", error);
         toast.error("Error sending OTP");
     } finally {
         setIsLoading(false);
@@ -74,6 +83,7 @@ const VendorLogin = ({ isEmbedded = false }) => {
     const otpValue = otp.join("");
     if (otpValue.length !== 4) return toast.error("Enter 4-digit OTP");
     setIsLoading(true);
+    console.log("Verifying OTP:", otpValue);
     try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/vendors/verify-reset-otp`, {
             method: 'POST',
@@ -81,13 +91,15 @@ const VendorLogin = ({ isEmbedded = false }) => {
             body: JSON.stringify({ mobile: phoneNumber, otp: otpValue })
         });
         const data = await res.json();
-        if (data.success) {
+        console.log("Verify OTP Response:", data);
+        if (res.ok && data.success) {
             toast.success("OTP Verified");
             setForgotStep(3);
         } else {
             toast.error(data.message || "Invalid OTP");
         }
     } catch (error) {
+        console.error("Verify OTP Error:", error);
         toast.error("Error verifying OTP");
     } finally {
         setIsLoading(false);
@@ -97,6 +109,7 @@ const VendorLogin = ({ isEmbedded = false }) => {
   const handleResetPassword = async () => {
     if (newPassword.length < 6) return toast.error("Password must be 6+ chars");
     setIsLoading(true);
+    console.log("Resetting password for:", phoneNumber);
     try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/vendors/reset-password`, {
             method: 'POST',
@@ -104,15 +117,18 @@ const VendorLogin = ({ isEmbedded = false }) => {
             body: JSON.stringify({ mobile: phoneNumber, otp: otp.join(""), password: newPassword })
         });
         const data = await res.json();
-        if (data.success) {
+        console.log("Reset Response:", data);
+        if (res.ok && data.success) {
             toast.success("Password Reset Success! Please login.");
             setIsForgot(false);
             setForgotStep(1);
+            setOtp(["", "", "", ""]);
             setPassword("");
         } else {
             toast.error(data.message || "Failed to reset");
         }
     } catch (error) {
+        console.error("Reset Error:", error);
         toast.error("Error resetting password");
     } finally {
         setIsLoading(false);
@@ -181,7 +197,7 @@ const VendorLogin = ({ isEmbedded = false }) => {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between ml-2">
                             <label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em]">Secret Password</label>
-                            <button type="button" onClick={() => setIsForgot(true)} className="text-[10px] font-black uppercase text-[#C44545] tracking-[0.1em] border-b border-[#C44545]/30">Forgot?</button>
+                            <button type="button" onClick={() => toggleForgot(true)} className="text-[10px] font-black uppercase text-[#C44545] tracking-[0.1em] border-b border-[#C44545]/30">Forgot?</button>
                         </div>
                         <div className="relative group">
                             <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#C44545] transition-colors">
@@ -207,7 +223,7 @@ const VendorLogin = ({ isEmbedded = false }) => {
             </motion.div>
           ) : (
             <motion.div key="vendor-forgot-password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <button onClick={() => { setIsForgot(false); setForgotStep(1); }} className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                <button onClick={() => toggleForgot(false)} className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
                     <ArrowLeft size={14} /> Back to Login
                 </button>
                 
@@ -250,7 +266,7 @@ const VendorLogin = ({ isEmbedded = false }) => {
                                     key={i} id={`vendor-forgot-otp-${i}`} type="text" maxLength={1} value={digit}
                                     onChange={(e) => handleOtpChange(i, e.target.value)}
                                     onKeyUp={(e) => e.key === 'Backspace' && i > 0 && !digit && document.getElementById(`vendor-forgot-otp-${i-1}`).focus()}
-                                    className="w-full h-16 bg-white border border-black/[0.03] rounded-2xl text-center text-xl font-black text-[#C44545] focus:outline-none focus:border-[#C44545]/20 transition-all"
+                                    className="w-full h-16 bg-slate-50 border-2 border-slate-200 rounded-2xl text-center text-2xl font-black text-[#C44545] focus:outline-none focus:border-[#C44545]/40 focus:bg-rose-50/50 transition-all shadow-sm"
                                 />
                             ))}
                         </div>
@@ -292,7 +308,11 @@ const VendorLogin = ({ isEmbedded = false }) => {
         <div className="text-center mt-10">
           <p className="text-[14px] font-bold text-neutral-600 uppercase tracking-widest">
              Not a registered vendor? 
-             <Link to="/vendor/register" className="text-[#C44545] ml-2 border-b-2 border-[#C44545]/30 pb-0.5">Apply here</Link>
+             {onSwitchToRegister ? (
+               <button onClick={onSwitchToRegister} className="text-[#C44545] ml-2 border-b-2 border-[#C44545]/30 pb-0.5">Apply here</button>
+             ) : (
+               <Link to="/vendor/register" className="text-[#C44545] ml-2 border-b-2 border-[#C44545]/30 pb-0.5">Apply here</Link>
+             )}
           </p>
         </div>
       </motion.div>

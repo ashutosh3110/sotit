@@ -2,9 +2,12 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { registerVendor, loginVendor, sendOTP } = require('../controllers/vendorController');
+const { registerVendor, getVendorProfile, updateVendorProfile, updateVendorKYC, toggleStatus, getVendors } = require('../controllers/vendorController');
+const { vendorLogin, sendVendorOTP, verifyVendorResetOTP, resetVendorPassword } = require('../controllers/vendorAuthController');
 
-router.post('/send-otp', sendOTP);
+router.post('/send-otp', sendVendorOTP);
+router.post('/verify-reset-otp', verifyVendorResetOTP);
+router.post('/reset-password', resetVendorPassword);
 
 const { storage } = require('../config/cloudinary');
 
@@ -24,8 +27,7 @@ router.post('/register', upload.fields([
     { name: 'advocateId', maxCount: 1 }
 ]), registerVendor);
 
-router.post('/login', loginVendor);
-const { getVendorProfile, updateVendorProfile, updateVendorKYC } = require('../controllers/vendorController');
+router.post('/login', vendorLogin);
 router.get('/profile/:id', getVendorProfile);
 router.put('/profile/:id', updateVendorProfile);
 router.put('/kyc/:id', upload.fields([
@@ -41,7 +43,6 @@ router.put('/kyc/:id', upload.fields([
     { name: 'officeProof', maxCount: 1 }
 ]), updateVendorKYC);
 
-const { toggleStatus, getVendors } = require('../controllers/vendorController');
 const { optionalProtect } = require('../middlewares/authMiddleware');
 
 router.get('/all', optionalProtect, getVendors);

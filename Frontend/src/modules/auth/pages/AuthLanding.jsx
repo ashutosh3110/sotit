@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Briefcase, ShieldCheck, Star } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import UserLogin from '../../user/pages/UserLogin';
 import UserRegister from '../../user/pages/UserRegister';
 import VendorLogin from '../../vendor/pages/VendorLogin';
@@ -9,8 +10,19 @@ import VendorRegister from '../../vendor/pages/VendorRegister';
 import logo from "../../../assets/logo.png";
 
 const AuthLanding = () => {
-  const [activeTab, setActiveTab] = useState('user'); // 'user' or 'vendor'
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab') === 'vendor' ? 'vendor' : 'user';
+
+  const [activeTab, setActiveTab] = useState(initialTab); // 'user' or 'vendor'
   const [formType, setFormType] = useState('login'); // 'login' or 'register'
+
+  useEffect(() => {
+    const tab = queryParams.get('tab');
+    if (tab === 'vendor' || tab === 'user') {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);

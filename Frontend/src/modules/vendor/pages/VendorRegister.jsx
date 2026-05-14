@@ -5,7 +5,7 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
 import { State, City } from "country-state-city";
 
-const VendorRegister = () => {
+const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
   const [role, setRole] = useState('driver');
   const [step, setStep] = useState(0); 
@@ -247,7 +247,7 @@ const VendorRegister = () => {
         if (!response.ok) throw new Error(data.message || "Registration failed");
 
         toast.success(data.message || "Registration Successful!", { id: tid });
-        navigate('/vendor/login');
+        navigate('/auth?tab=vendor');
     } catch (error) {
         toast.error(error.message || "Registration failed", { id: tid });
     } finally {
@@ -329,6 +329,14 @@ const VendorRegister = () => {
                     </div>
                   ))}
                 </div>
+                {onSwitchToLogin && (
+                  <div className="text-center mt-6">
+                    <p className="text-[13px] font-black text-neutral-500 uppercase tracking-[0.2em]">
+                      Already a member? 
+                      <button onClick={onSwitchToLogin} className="text-[#C44545] ml-2 border-b-2 border-[#C44545]/30 pb-0.5">Login Here</button>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

@@ -88,7 +88,7 @@ const AppRoutes = () => {
 
           {/* User App Module */}
           <Route path="/user" element={<ModuleWrapper type="user"><UserHome /></ModuleWrapper>} />
-          <Route path="/user/login" element={<ModuleWrapper type="user"><UserLogin /></ModuleWrapper>} />
+          <Route path="/user/login" element={<Navigate to="/auth?tab=user" replace />} />
           <Route path="/user/register" element={<ModuleWrapper type="user"><UserRegister /></ModuleWrapper>} />
           <Route path="/user/profile" element={<ModuleWrapper type="user"><UserProfile /></ModuleWrapper>} />
           <Route path="/user/profile/edit" element={<ModuleWrapper type="user"><UserPersonalInfo /></ModuleWrapper>} />
@@ -106,7 +106,7 @@ const AppRoutes = () => {
           
           {/* Vendor App Module (Drivers, Mechanics, RTO, Legal, Towing) */}
           <Route path="/vendor" element={<ModuleWrapper type="vendor"><VendorHome /></ModuleWrapper>} />
-          <Route path="/vendor/login" element={<ModuleWrapper type="vendor"><VendorLogin /></ModuleWrapper>} />
+          <Route path="/vendor/login" element={<Navigate to="/auth?tab=vendor" replace />} />
           <Route path="/vendor/register" element={<ModuleWrapper type="vendor"><VendorRegister /></ModuleWrapper>} />
           <Route path="/vendor/register/personal" element={<ModuleWrapper type="vendor"><VendorPersonal /></ModuleWrapper>} />
           <Route path="/vendor/register/expertise" element={<ModuleWrapper type="vendor"><VendorExpertise /></ModuleWrapper>} />

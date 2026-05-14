@@ -38,7 +38,7 @@ const VendorSettings = () => {
 
   const handleLogout = () => {
     logoutVendor();
-    navigate('/');
+    navigate('/auth?tab=vendor');
   };
 
   return (
