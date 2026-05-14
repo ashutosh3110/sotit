@@ -1,14 +1,18 @@
 const admin = require('firebase-admin');
 
 try {
-    admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        }),
-    });
-    console.log('[FIREBASE] Admin SDK Initialized Successfully');
+    if (process.env.FIREBASE_PRIVATE_KEY) {
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            }),
+        });
+        console.log('[FIREBASE] Admin SDK Initialized Successfully');
+    } else {
+        console.warn('[FIREBASE] Admin SDK NOT initialized: FIREBASE_PRIVATE_KEY is missing in .env');
+    }
 } catch (error) {
     console.error('[FIREBASE] Admin SDK Initialization Failed:', error);
 }
