@@ -50,6 +50,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  platform: {
+    type: String,
+    enum: ['app', 'web', null],
+    default: null,
+  },
   otp: String,
   otpExpire: Date,
   resetPasswordToken: String,

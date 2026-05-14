@@ -107,6 +107,11 @@ const vendorSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  platform: {
+    type: String,
+    enum: ['app', 'web', null],
+    default: null
+  },
   isOnline: {
     type: Boolean,
     default: true

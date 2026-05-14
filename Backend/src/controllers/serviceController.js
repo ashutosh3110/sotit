@@ -170,10 +170,10 @@ exports.getUserHistory = async (req, res) => {
 
 exports.updateFCMToken = async (req, res) => {
     try {
-        const { fcmToken } = req.body;
+        const { fcmToken, platform } = req.body;
         const userId = req.user.id;
-        await User.findByIdAndUpdate(userId, { fcmToken });
-        await Vendor.findByIdAndUpdate(userId, { fcmToken });
+        await User.findByIdAndUpdate(userId, { fcmToken, platform });
+        await Vendor.findByIdAndUpdate(userId, { fcmToken, platform });
         res.status(200).json({ success: true, message: 'FCM Token registered successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error updating FCM token' });
