@@ -38,8 +38,8 @@ const AppHero = ({ user, onServiceSelect, activeRole }) => {
         { icon: Car, label: "Drivers", role: 'driver', color: "#3b82f6", bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-100" },
         { icon: Wrench, label: "Mechanics", role: 'mechanic', color: "#d97706", bg: "bg-amber-600", text: "text-white", border: "border-amber-700" },
         { icon: Truck, label: "Towing", role: 'towing', color: "#059669", bg: "bg-emerald-800", text: "text-white", border: "border-emerald-900" },
-        { icon: FileText, label: "RTO", role: 'rto', color: "#2563eb", bg: "bg-blue-800", text: "text-white", border: "border-blue-900" },
-        { icon: Briefcase, label: "Legal", role: 'legal', color: "#ef4444", bg: "bg-stone-900", text: "text-white", border: "border-stone-800" },
+        { icon: FileText, label: "RTO Agent", role: 'rto', color: "#2563eb", bg: "bg-blue-800", text: "text-white", border: "border-blue-900" },
+        { icon: Briefcase, label: "Legal Advisor", role: 'legal', color: "#ef4444", bg: "bg-stone-900", text: "text-white", border: "border-stone-800" },
     ];
 
     return (

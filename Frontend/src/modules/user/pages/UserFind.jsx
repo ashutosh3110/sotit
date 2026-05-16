@@ -92,11 +92,11 @@ const UserFind = () => {
     }, [selectedState]);
 
     const categories = [
-        { id: 'Drivers', icon: <Navigation size={18} />, placeholder: 'Search drivers nearby...' },
-        { id: 'Mechanics', icon: <Wrench size={18} />, placeholder: 'Search expert mechanics...' },
-        { id: 'Towing', icon: <Truck size={18} />, placeholder: 'Search towing service...' },
-        { id: 'Legal', icon: <Briefcase size={18} />, placeholder: 'Search legal advisors...' },
-        { id: 'RTO', icon: <FileText size={18} />, placeholder: 'Search RTO agents...' }
+        { id: 'Drivers', icon: <Navigation size={18} />, label: 'Drivers', placeholder: 'Search drivers nearby...' },
+        { id: 'Mechanics', icon: <Wrench size={18} />, label: 'Mechanics', placeholder: 'Search expert mechanics...' },
+        { id: 'Towing', icon: <Truck size={18} />, label: 'Towing', placeholder: 'Search towing service...' },
+        { id: 'Legal', icon: <Briefcase size={18} />, label: 'Legal Advisor', placeholder: 'Search legal advisors...' },
+        { id: 'RTO', icon: <FileText size={18} />, label: 'RTO Agent', placeholder: 'Search RTO agents...' }
     ];
 
     // Fetch User Profile for Subscription Check
@@ -612,7 +612,7 @@ const UserFind = () => {
             <div className="mt-8 overflow-x-auto no-scrollbar px-6 flex gap-3 pb-4">
                 {categories.map((cat) => (
                     <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all ${selectedCategory === cat.id ? 'bg-[#C44545] text-white shadow-xl shadow-[#C44545]/20 scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:border-slate-200'}`}>
-                        {cat.icon} {cat.id}
+                        {cat.icon} {cat.label || cat.id}
                     </button>
                 ))}
             </div>
