@@ -3,7 +3,8 @@ import { ArrowLeft, Navigation, Wrench, Shield, Briefcase, FileText, Truck, Phon
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
-import { State, City } from "country-state-city";
+import { State } from "country-state-city";
+import { getDistrictsByState } from 'india-states-districts';
 
 const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
@@ -401,12 +402,12 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
                         <CustomDropdown 
                           label="City / District"
-                          options={address.isoCode ? City.getCitiesOfState('IN', address.isoCode) : []}
+                          options={address.state ? getDistrictsByState(address.state) : []}
                           value={address.city}
                           placeholder="Select City/District"
                           icon={MapPin}
-                          disabled={!address.isoCode}
-                          onChange={(c) => setAddress({...address, city: c.name})}
+                          disabled={!address.state}
+                          onChange={(c) => setAddress({...address, city: c})}
                         />
 
                         <input type="tel" placeholder="Pincode" value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
@@ -447,15 +448,15 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                                                   <span className="text-[9px] font-black text-[#C44545]">{profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.length || 0} Picked</span>
                                               </div>
                                               <div className="grid grid-cols-1 gap-2">
-                                                  {City.getCitiesOfState('IN', state.isoCode).slice(0, 50).map(city => { 
-                                                      const isDistSelected = profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.includes(city.name);
+                                                  {getDistrictsByState(state.name).map(district => { 
+                                                      const isDistSelected = profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.includes(district);
                                                       return (
                                                           <div 
-                                                              key={city.name}
-                                                              onClick={() => toggleDistrictSelection(state.isoCode, city.name)}
+                                                              key={district}
+                                                              onClick={() => toggleDistrictSelection(state.isoCode, district)}
                                                               className={`p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isDistSelected ? 'border-[#C44545]/30 bg-white text-[#C44545]' : 'border-slate-100 text-slate-500 bg-slate-50/50'}`}
                                                           >
-                                                              <span className="text-[11px] font-bold">{city.name}</span>
+                                                              <span className="text-[11px] font-bold">{district}</span>
                                                               {isDistSelected ? <CheckCircle2 size={16} className="fill-[#C44545] text-white" /> : <div className="h-4 w-4 rounded-full border-2 border-slate-200" />}
                                                           </div>
                                                       );

@@ -24,7 +24,8 @@ import {
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "../../../context/LocationContext";
-import { State, City } from "country-state-city";
+import { State } from "country-state-city";
+import { getDistrictsByState } from 'india-states-districts';
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
@@ -88,7 +89,7 @@ const UserFind = () => {
     // Get districts of selected state
     const availableDistricts = useMemo(() => {
         if (!selectedState) return [];
-        return City.getCitiesOfState('IN', selectedState.isoCode);
+        return getDistrictsByState(selectedState.name) || [];
     }, [selectedState]);
 
     const categories = [
@@ -597,9 +598,9 @@ const UserFind = () => {
                                 <button onClick={() => { setSelectedDistrict(''); setShowDistrictDropdown(false); }} className="w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 flex items-center justify-between">
                                     All Districts {!selectedDistrict && <Check size={14} className="text-[#C44545]" />}
                                 </button>
-                                {availableDistricts.map((city) => (
-                                    <button key={city.name} onClick={() => { setSelectedDistrict(city.name); setShowDistrictDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedDistrict === city.name ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
-                                        {city.name} {selectedDistrict === city.name && <Check size={14} />}
+                                {availableDistricts.map((district) => (
+                                    <button key={district} onClick={() => { setSelectedDistrict(district); setShowDistrictDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedDistrict === district ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                        {district} {selectedDistrict === district && <Check size={14} />}
                                     </button>
                                 ))}
                             </motion.div>
