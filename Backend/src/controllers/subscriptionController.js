@@ -7,12 +7,19 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// @desc    Create Subscription Order
+// @desc    Create Order for Subscription or Single Unlock
 // @route   POST /api/subscriptions/create-order
 // @access  Private
 exports.createSubscriptionOrder = async (req, res) => {
     try {
-        const amount = 99; // Fixed amount for Prime
+        const { planType, vendorId } = req.body; // planType: 'Daily', 'Monthly', 'Yearly', or 'Single'
+        let amount = 0;
+
+        if (planType === 'Daily') amount = 99;
+        else if (planType === 'Monthly') amount = 999;
+        else if (planType === 'Yearly') amount = 9999;
+        else if (planType === 'Single') amount = 9;
+        else return res.status(400).json({ success: false, message: "Invalid plan type" });
         
         const options = {
             amount: amount * 100, 
@@ -20,7 +27,8 @@ exports.createSubscriptionOrder = async (req, res) => {
             receipt: `receipt_sub_${Date.now()}`,
             notes: {
                 userId: req.user._id.toString(),
-                plan: 'Prime'
+                planType,
+                vendorId: vendorId || ""
             }
         };
 
@@ -28,15 +36,16 @@ exports.createSubscriptionOrder = async (req, res) => {
 
         res.json({
             success: true,
-            order
+            order,
+            amount
         });
     } catch (error) {
         console.error("Subscription Order Error:", error);
-        res.status(500).json({ success: false, message: "Could not create subscription order" });
+        res.status(500).json({ success: false, message: "Could not create order" });
     }
 };
 
-// @desc    Verify Subscription Payment
+// @desc    Verify Subscription or Single Unlock Payment
 // @route   POST /api/subscriptions/verify-payment
 // @access  Private
 exports.verifySubscriptionPayment = async (req, res) => {
@@ -44,7 +53,9 @@ exports.verifySubscriptionPayment = async (req, res) => {
         const { 
             razorpay_order_id, 
             razorpay_payment_id, 
-            razorpay_signature 
+            razorpay_signature,
+            planType,
+            vendorId
         } = req.body;
 
         const body = razorpay_order_id + "|" + razorpay_payment_id;
@@ -57,24 +68,33 @@ exports.verifySubscriptionPayment = async (req, res) => {
         const isAuthentic = expectedSignature === razorpay_signature;
 
         if (isAuthentic) {
-            // Update User Subscription
             const user = await User.findById(req.user._id);
             
-            // Set expiry to 30 days from now
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + 30);
+            if (planType === 'Single' && vendorId) {
+                // Unlock single vendor
+                if (!user.unlockedVendors.includes(vendorId)) {
+                    user.unlockedVendors.push(vendorId);
+                }
+            } else {
+                // Update Membership
+                const expiresAt = new Date();
+                if (planType === 'Daily') expiresAt.setDate(expiresAt.getDate() + 1);
+                else if (planType === 'Monthly') expiresAt.setDate(expiresAt.getDate() + 30);
+                else if (planType === 'Yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
-            user.subscription = {
-                plan: 'Prime',
-                expiresAt: expiresAt
-            };
+                user.subscription = {
+                    plan: planType,
+                    expiresAt: expiresAt
+                };
+            }
 
             await user.save();
 
             res.json({
                 success: true,
-                message: "Membership upgraded to Prime successfully",
-                subscription: user.subscription
+                message: planType === 'Single' ? "Expert unlocked successfully" : "Membership upgraded successfully",
+                subscription: user.subscription,
+                unlockedVendors: user.unlockedVendors
             });
         } else {
             res.status(400).json({ success: false, message: "Invalid payment signature" });

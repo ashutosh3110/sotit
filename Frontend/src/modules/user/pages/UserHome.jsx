@@ -61,11 +61,11 @@ const Home = () => {
   }, [user?.profile?.token]);
 
   // Razorpay Upgrade Logic
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (planType) => {
     const userData = getUserData();
     if (!userData?.profile?.token) return toast.error("Please login first");
 
-    const tid = toast.loading("Initiating Upgrade...");
+    const tid = toast.loading(`Initiating ${planType} Upgrade...`);
     try {
         // 1. Create Order
         const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/subscriptions/create-order`, {
@@ -73,7 +73,8 @@ const Home = () => {
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${userData.profile.token}`
-            }
+            },
+            body: JSON.stringify({ planType })
         });
         const orderData = await orderRes.json();
         
@@ -84,8 +85,8 @@ const Home = () => {
             key: import.meta.env.VITE_RAZORPAY_KEY_ID,
             amount: orderData.order.amount,
             currency: orderData.order.currency,
-            name: "Sootit Prime",
-            description: "1 Month Premium Membership",
+            name: `Sootit ${planType}`,
+            description: `${planType} Membership Plan`,
             image: logo,
             order_id: orderData.order.id,
             handler: async (response) => {
@@ -100,13 +101,14 @@ const Home = () => {
                         body: JSON.stringify({
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature
+                            razorpay_signature: response.razorpay_signature,
+                            planType
                         })
                     });
                     const verifyData = await verifyRes.json();
                     
                     if (verifyRes.ok && verifyData.success) {
-                        toast.success("Welcome to Sootit Prime! 🚀", { id: verifyTid });
+                        toast.success(`Welcome to Sootit ${planType}! 🚀`, { id: verifyTid });
                         fetchProfile(); // Refresh profile data
                     } else {
                         toast.error(verifyData.message || "Verification failed", { id: verifyTid });
@@ -243,16 +245,14 @@ const Home = () => {
                 </div>
             )}
           </div>
-        </section>
-
-        {/* Sootit Prime Membership Card - Ultra Premium Redesign */}
+        </sect        {/* Sootit Membership Section */}
         <section>
           <div className="flex items-center justify-between mb-5 px-1">
             <h3 className="text-[11px] font-black uppercase text-slate-400 tracking-[0.25em] leading-none flex items-center gap-2">
                <Zap size={12} className="text-amber-500 fill-amber-500" /> Exclusive Membership
             </h3>
           </div>
-          {profile?.subscription?.plan === 'Prime' ? (
+          {['Daily', 'Monthly', 'Yearly'].includes(profile?.subscription?.plan) && new Date(profile.subscription.expiresAt) > new Date() ? (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -267,11 +267,8 @@ const Home = () => {
                             </div>
                             <div>
                                 <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-1">Status: Active</p>
-                                <h4 className="text-white text-2xl font-black tracking-tight uppercase">Sootit Prime</h4>
+                                <h4 className="text-white text-2xl font-black tracking-tight uppercase">Sootit {profile.subscription.plan}</h4>
                             </div>
-                        </div>
-                        <div className="bg-white/5 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-                           <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest">VIP Member</span>
                         </div>
                     </div>
                     
@@ -283,66 +280,49 @@ const Home = () => {
                                 {new Date(profile.subscription.expiresAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
                             </p>
                         </div>
-                        <div className="h-1.5 w-24 bg-slate-700 rounded-full overflow-hidden">
-                             <motion.div initial={{ width: 0 }} animate={{ width: '80%' }} className="h-full bg-emerald-500" />
-                        </div>
                     </div>
                 </div>
               </motion.div>
           ) : (
-              <motion.div 
-                whileTap={{ scale: 0.98 }}
-                className="bg-slate-900 rounded-[3rem] p-1 relative overflow-hidden group shadow-2xl shadow-slate-900/40"
-              >
-                {/* Animated Gradient Background */}
-                <motion.div 
-                  animate={{ 
-                    rotate: [0, 360],
-                  }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,#C44545_0%,#F59E0B_25%,#C44545_50%,#F59E0B_75%,#C44545_100%)] opacity-30 blur-3xl group-hover:opacity-60 transition-opacity"
-                />
-
-                <div className="relative z-10 bg-slate-900/90 backdrop-blur-3xl rounded-[2.9rem] p-8 border border-white/10">
-                    <div className="flex items-start justify-between mb-8">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="h-1.5 w-1.5 bg-amber-500 rounded-full animate-pulse" />
-                                <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em]">Premium Experience</span>
-                            </div>
-                            <h4 className="text-white text-3xl font-black tracking-tighter leading-none mb-2">Get Prime.</h4>
-                            <p className="text-slate-400 text-xs font-bold leading-relaxed max-w-[200px]">Unlock unlimited expert details and premium features.</p>
-                        </div>
-                        <div className="flex flex-col items-end">
-                            <span className="text-white text-3xl font-black tracking-tighter">₹99</span>
-                            <span className="text-slate-500 text-[10px] font-black uppercase tracking-tighter">/ month</span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                        {[
-                            { label: 'Unlimited Unlocks', icon: Zap },
-                            { label: 'Verified Experts', icon: ShieldCheck },
-                            { label: 'Priority Support', icon: Star },
-                            { label: 'Ad-Free Search', icon: Shield }
-                        ].map((item, i) => (
-                            <div key={i} className="flex items-center gap-2 bg-white/5 rounded-2xl p-3 border border-white/5">
-                                <item.icon size={14} className="text-amber-500" />
-                                <span className="text-white text-[9px] font-black uppercase tracking-tight">{item.label}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <button 
-                        onClick={handleUpgrade}
-                        className="w-full py-5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-900 rounded-[1.8rem] text-xs font-black uppercase tracking-[0.25em] shadow-[0_10px_30px_rgba(245,158,11,0.3)] hover:shadow-[0_15px_40px_rgba(245,158,11,0.5)] transition-all"
+              <div className="space-y-4">
+                  {[
+                      { type: 'Daily', price: '99', period: 'Day', desc: 'Unlimited access for 24 hours' },
+                      { type: 'Monthly', price: '999', period: 'Month', desc: 'Unlimited access for 30 days' },
+                      { type: 'Yearly', price: '9999', period: 'Year', desc: 'Unlimited access for 365 days' }
+                  ].map((plan) => (
+                    <motion.div 
+                      key={plan.type}
+                      whileTap={{ scale: 0.98 }}
+                      className="bg-slate-900 rounded-[2rem] p-6 relative overflow-hidden group border border-white/5"
                     >
-                        Upgrade To Prime
-                    </button>
-                </div>
-              </motion.div>
+                      <div className="relative z-10 flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <div className="h-1.5 w-1.5 bg-amber-500 rounded-full" />
+                                <span className="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em]">{plan.type} Pass</span>
+                            </div>
+                            <h4 className="text-white text-xl font-black tracking-tighter leading-none mb-1">{plan.type} Access</h4>
+                            <p className="text-slate-400 text-[10px] font-bold leading-relaxed">{plan.desc}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                            <div className="text-right">
+                                <span className="text-white text-2xl font-black tracking-tighter">₹{plan.price}</span>
+                                <span className="text-slate-500 text-[8px] font-black uppercase ml-1">/ {plan.period}</span>
+                            </div>
+                            <button 
+                                onClick={() => handleUpgrade(plan.type)}
+                                className="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest"
+                            >
+                                Upgrade
+                            </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+              </div>
           )}
         </section>
+ection>
 
         {/* Emergency Grid - Compact */}
         <section>

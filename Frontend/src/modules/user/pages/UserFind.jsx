@@ -141,22 +141,22 @@ const UserFind = () => {
         }
     };
 
-    // --- Prime Subscription Logic ---
-    const handleSubscribe = async () => {
+    // --- Subscription Logic ---
+    const handleSubscribe = async (planType) => {
         const userData = JSON.parse(localStorage.getItem('user_data'));
         const token = userData?.profile?.token;
 
         if (!token) {
-            toast.error("Please login to subscribe");
+            toast.error("Please login first");
             navigate('/login');
             return;
         }
 
-        const tid = toast.loading("Initiating Prime Plan...");
+        const tid = toast.loading(`Initiating ${planType} Plan...`);
         try {
             const { data } = await axios.post(
-                `${import.meta.env.VITE_API_URL}/services/create-subscription-payment`,
-                {},
+                `${import.meta.env.VITE_API_URL}/subscriptions/create-order`,
+                { planType },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -166,20 +166,20 @@ const UserFind = () => {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: data.order.amount,
                 currency: data.order.currency,
-                name: "Sootit Prime",
-                description: "Monthly Unlimited Access",
+                name: `Sootit ${planType}`,
+                description: `${planType} Membership Access`,
                 order_id: data.order.id,
                 handler: async (response) => {
-                    const vtid = toast.loading("Activating Prime...");
+                    const vtid = toast.loading("Activating Access...");
                     try {
                         const verifyRes = await axios.post(
-                            `${import.meta.env.VITE_API_URL}/services/verify-subscription-payment`,
-                            response,
+                            `${import.meta.env.VITE_API_URL}/subscriptions/verify-payment`,
+                            { ...response, planType },
                             { headers: { Authorization: `Bearer ${token}` } }
                         );
 
                         if (verifyRes.data.success) {
-                            toast.success("Welcome to Prime! All details unlocked.", { id: vtid });
+                            toast.success("Access Activated! All details unlocked.", { id: vtid });
                             fetchUserProfile();
                             fetchVendors();
                         }
@@ -188,13 +188,13 @@ const UserFind = () => {
                     }
                 },
                 prefill: { name: userData.profile.name, contact: userData.profile.mobile },
-                theme: { color: "#0F172A" },
+                theme: { color: "#C44545" },
             };
 
             const rzp = new window.Razorpay(options);
             rzp.open();
         } catch (error) {
-            toast.error("Subscription failed", { id: tid });
+            toast.error("Process failed", { id: tid });
         }
     };
 
@@ -401,7 +401,7 @@ const UserFind = () => {
                                         onClick={() => handleHireExpert(selectedVendor._id, selectedVendor.role)}
                                         className="w-full py-5 bg-[#C44545] text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-[#C44545]/30 hover:scale-[1.02] active:scale-95 transition-all"
                                     >
-                                        Hire This Expert
+                                        {selectedVendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) ? "Connect Now" : "Unlock Contact (₹9)"}
                                     </button>
                                 </div>
                             </>
@@ -412,23 +412,23 @@ const UserFind = () => {
         );
     };
 
-    // Handle Hiring Expert with Razorpay
+    // Handle Hiring/Unlocking Expert with Razorpay (₹9)
     const handleHireExpert = async (vendorId, role) => {
         const userData = JSON.parse(localStorage.getItem('user_data'));
         const token = userData?.profile?.token;
 
         if (!token) {
-            toast.error("Please login to hire an expert");
+            toast.error("Please login to unlock contact");
             navigate('/login');
             return;
         }
 
-        const tid = toast.loading("Initiating payment...");
+        const tid = toast.loading("Initiating Unlock...");
         try {
-            // 1. Create Order
+            // 1. Create Order for Single Unlock (₹9)
             const { data } = await axios.post(
-                `${import.meta.env.VITE_API_URL}/services/create-payment`,
-                { vendorId, role },
+                `${import.meta.env.VITE_API_URL}/subscriptions/create-order`,
+                { planType: 'Single', vendorId },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -441,53 +441,41 @@ const UserFind = () => {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: data.order.amount,
                 currency: data.order.currency,
-                name: "Sootit Experts",
-                description: `Hiring ${role} Expert`,
+                name: "Sootit Expert Unlock",
+                description: `Unlock ${role} Contact`,
                 order_id: data.order.id,
                 handler: async (response) => {
-                    const vtid = toast.loading("Verifying payment...");
+                    const vtid = toast.loading("Verifying...");
                     try {
                         const verifyRes = await axios.post(
-                            `${import.meta.env.VITE_API_URL}/services/verify-payment`,
+                            `${import.meta.env.VITE_API_URL}/subscriptions/verify-payment`,
                             {
                                 ...response,
-                                vendorId,
-                                role
+                                planType: 'Single',
+                                vendorId
                             },
                             { headers: { Authorization: `Bearer ${token}` } }
                         );
 
                         if (verifyRes.data.success) {
-                            toast.success("Payment successful! Expert hired.", { id: vtid });
+                            toast.success("Contact Unlocked!", { id: vtid });
                             setShowProfileModal(false);
-                            fetchVendors(); // Refresh list if needed
+                            fetchVendors(); // Refresh list
                         } else {
-                            toast.error("Payment verification failed", { id: vtid });
+                            toast.error("Verification failed", { id: vtid });
                         }
                     } catch (err) {
-                        console.error("Verification Error:", err);
-                        toast.error("Payment verification failed", { id: vtid });
+                        toast.error("Verification failed", { id: vtid });
                     }
                 },
-                prefill: {
-                    name: userData.profile.name,
-                    contact: userData.profile.mobile,
-                },
-                theme: {
-                    color: "#C44545",
-                },
+                prefill: { name: userData.profile.name, contact: userData.profile.mobile },
+                theme: { color: "#C44545" },
             };
 
             const rzp = new window.Razorpay(options);
-            rzp.on('payment.failed', function (response) {
-                toast.error("Payment failed: " + response.error.description);
-            });
             rzp.open();
-
         } catch (error) {
-            console.error("Hire Error:", error);
-            const msg = error.response?.data?.message || error.message || "Failed to initiate payment";
-            toast.error(msg, { id: tid });
+            toast.error(error.message || "Unlock failed", { id: tid });
         }
     };
 
@@ -503,44 +491,50 @@ const UserFind = () => {
                 </div>
             </div>
 
-            {/* PRIME SUBSCRIPTION BANNER */}
-            {!userProfile?.subscription?.plan || userProfile.subscription.plan !== 'Prime' ? (
+            {/* MEMBERSHIP BANNER */}
+            {!['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) || new Date(userProfile.subscription.expiresAt) < new Date() ? (
                 <div className="px-6 mt-4">
-                    <motion.div 
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleSubscribe}
-                        className="bg-slate-900 rounded-[2.5rem] p-6 relative overflow-hidden group cursor-pointer shadow-2xl shadow-slate-900/20"
-                    >
-                        <div className="absolute top-0 right-0 h-32 w-32 bg-[#C44545] rounded-full blur-[60px] opacity-20 -mr-16 -mt-16 group-hover:opacity-40 transition-opacity" />
-                        <div className="relative z-10 flex items-center justify-between">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Zap size={14} className="text-[#C44545] fill-[#C44545]" />
-                                    <span className="text-[10px] font-black text-[#C44545] uppercase tracking-[0.2em]">Premium Access</span>
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
+                        {[
+                            { type: 'Daily', price: '99', period: 'Day' },
+                            { type: 'Monthly', price: '999', period: 'Month' },
+                            { type: 'Yearly', price: '9999', period: 'Year' }
+                        ].map(plan => (
+                            <motion.div 
+                                key={plan.type}
+                                whileTap={{ scale: 0.96 }}
+                                onClick={() => handleSubscribe(plan.type)}
+                                className="min-w-[200px] bg-slate-900 rounded-3xl p-5 relative overflow-hidden group cursor-pointer shadow-xl border border-white/5"
+                            >
+                                <div className="absolute top-0 right-0 h-20 w-20 bg-[#C44545] rounded-full blur-[40px] opacity-10 group-hover:opacity-30 transition-opacity" />
+                                <div className="relative z-10">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Zap size={12} className="text-[#C44545] fill-[#C44545]" />
+                                        <span className="text-[8px] font-black text-[#C44545] uppercase tracking-widest">{plan.type} Access</span>
+                                    </div>
+                                    <h3 className="text-white text-base font-black tracking-tight mb-3">Unlimited Details</h3>
+                                    <div className="flex items-end gap-1">
+                                        <span className="text-white text-xl font-black">₹{plan.price}</span>
+                                        <span className="text-white/40 text-[8px] font-black uppercase mb-1">/ {plan.period}</span>
+                                    </div>
                                 </div>
-                                <h3 className="text-white text-lg font-black tracking-tight leading-none mb-1">Unlock All Experts</h3>
-                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Get full contact details for all roles</p>
-                            </div>
-                            <div className="bg-white/10 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-md text-center">
-                                <p className="text-white text-xs font-black">₹99</p>
-                                <p className="text-white/50 text-[8px] font-black uppercase tracking-tighter">/ Month</p>
-                            </div>
-                        </div>
-                    </motion.div>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
             ) : (
                 <div className="px-6 mt-4">
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="h-10 w-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg">
-                            <ShieldCheck size={20} />
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] p-5 flex items-center gap-4">
+                        <div className="h-12 w-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                            <ShieldCheck size={24} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Prime Member</p>
-                            <p className="text-xs font-bold text-slate-900">Unlimited Access Active</p>
+                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Sootit {userProfile.subscription.plan}</p>
+                            <p className="text-sm font-black text-slate-900 tracking-tight">Unlimited Access Active</p>
                         </div>
                         <div className="ml-auto text-right">
-                            <p className="text-[8px] font-black text-slate-400 uppercase">Expires</p>
-                            <p className="text-[10px] font-black text-slate-900">{new Date(userProfile.subscription.expiresAt).toLocaleDateString()}</p>
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Valid Until</p>
+                            <p className="text-[11px] font-black text-slate-900">{new Date(userProfile.subscription.expiresAt).toLocaleDateString()}</p>
                         </div>
                     </div>
                 </div>
@@ -652,18 +646,18 @@ const UserFind = () => {
                                             <div className="flex items-center gap-1.5"><Clock size={14} /><span className="text-xs font-bold uppercase">{vendor.isOnline ? 'Online' : 'Offline'}</span></div>
                                         </div>
                                         <div className="mt-3 flex items-center gap-2">
-                                            <div className={`px-4 py-2 rounded-xl flex items-center gap-3 border ${vendor.isUnlocked || (userProfile?.subscription?.plan === 'Prime' && new Date(userProfile.subscription.expiresAt) > new Date()) ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
-                                                {vendor.isUnlocked || (userProfile?.subscription?.plan === 'Prime' && new Date(userProfile.subscription.expiresAt) > new Date()) ? (
+                                            <div className={`px-4 py-2 rounded-xl flex items-center gap-3 border ${vendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                                                {vendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) ? (
                                                     <CheckCircle2 size={14} className="text-emerald-600" />
                                                 ) : (
                                                     <Zap size={14} className="text-slate-400" />
                                                 )}
-                                                <span className={`text-xs font-black tracking-widest ${vendor.isUnlocked || (userProfile?.subscription?.plan === 'Prime' && new Date(userProfile.subscription.expiresAt) > new Date()) ? 'text-emerald-700' : 'text-slate-500'}`}>
+                                                <span className={`text-xs font-black tracking-widest ${vendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) ? 'text-emerald-700' : 'text-slate-500'}`}>
                                                     {vendor.mobile}
                                                 </span>
                                             </div>
-                                            {!vendor.isUnlocked && (!userProfile?.subscription?.plan || userProfile.subscription.plan !== 'Prime') && (
-                                                <span className="text-[9px] font-black uppercase text-[#C44545] tracking-tighter">Click Hire to Unlock</span>
+                                            {!vendor.isUnlocked && !(['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) && (
+                                                <span className="text-[9px] font-black uppercase text-[#C44545] tracking-tighter">Pay ₹9 to View Contact</span>
                                             )}
                                         </div>
                                         <div className="flex gap-2 mt-4">

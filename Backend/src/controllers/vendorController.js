@@ -248,20 +248,14 @@ exports.getVendors = async (req, res) => {
             }));
         } else {
             const user = await User.findById(authUser.id);
-            const isPrime = user.subscription?.plan === 'Prime' && user.subscription?.expiresAt > new Date();
+            const hasActivePlan = ['Daily', 'Monthly', 'Yearly'].includes(user.subscription?.plan) && user.subscription?.expiresAt > new Date();
 
-            if (isPrime) {
-                // Prime user: Full access
+            if (hasActivePlan) {
+                // Member user: Full access
                 maskedVendors = vendors;
             } else {
-                // Non-prime: Check individual unlocks
-                const unlockedRequests = await ServiceRequest.find({
-                    requesterId: authUser.id,
-                    paymentStatus: 'success',
-                    vendor: { $in: vendors.map(v => v._id) }
-                });
-
-                const unlockedVendorIds = unlockedRequests.map(r => r.vendor?.toString());
+                // Non-member: Check individual unlocks from User model
+                const unlockedVendorIds = user.unlockedVendors?.map(id => id.toString()) || [];
 
                 maskedVendors = vendors.map(v => {
                     const isUnlocked = unlockedVendorIds.includes(v._id.toString());

@@ -60,9 +60,13 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   subscription: {
-    plan: { type: String, enum: ['none', 'Prime'], default: 'none' },
+    plan: { type: String, enum: ['none', 'Daily', 'Monthly', 'Yearly'], default: 'none' },
     expiresAt: { type: Date }
   },
+  unlockedVendors: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vendor'
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
