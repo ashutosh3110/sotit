@@ -296,7 +296,7 @@ const Home = () => {
                     <motion.div 
                       key={plan.type}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => plan.isNav ? navigate(`/user/category/driver`) : null}
+                      onClick={() => plan.isNav ? navigate(`/user/find`) : null}
                       className="bg-slate-900 rounded-[2rem] p-6 relative overflow-hidden group border border-white/5"
                     >
                       <div className="relative z-10 flex items-center justify-between">
@@ -316,7 +316,7 @@ const Home = () => {
                             <button 
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    plan.isNav ? navigate(`/user/category/driver`) : handleUpgrade(plan.type);
+                                    plan.isNav ? navigate(`/user/find`) : handleUpgrade(plan.type);
                                 }}
                                 className="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest"
                             >
