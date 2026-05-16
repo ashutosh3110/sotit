@@ -245,7 +245,9 @@ const Home = () => {
                 </div>
             )}
           </div>
-        </sect        {/* Sootit Membership Section */}
+        </section>
+
+        {/* Sootit Membership Section */}
         <section>
           <div className="flex items-center justify-between mb-5 px-1">
             <h3 className="text-[11px] font-black uppercase text-slate-400 tracking-[0.25em] leading-none flex items-center gap-2">
@@ -322,7 +324,6 @@ const Home = () => {
               </div>
           )}
         </section>
-ection>
 
         {/* Emergency Grid - Compact */}
         <section>
