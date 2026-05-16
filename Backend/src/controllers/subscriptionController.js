@@ -13,6 +13,18 @@ const razorpay = new Razorpay({
 exports.createSubscriptionOrder = async (req, res) => {
     try {
         const { planType, vendorId } = req.body; // planType: 'Daily', 'Monthly', 'Yearly', or 'Single'
+        
+        // Check if user already has an active membership
+        const user = await User.findById(req.user._id);
+        const hasActivePlan = ['Daily', 'Monthly', 'Yearly'].includes(user.subscription?.plan) && user.subscription?.expiresAt > new Date();
+
+        if (hasActivePlan) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "You already have an active membership. No need to upgrade right now." 
+            });
+        }
+
         let amount = 0;
 
         if (planType === 'Daily') amount = 99;
