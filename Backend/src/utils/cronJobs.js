@@ -63,21 +63,23 @@ const initCronJobs = () => {
         }
     });
 
-    // SUBSCRIPTION EXPIRE CHECK: Run every day at midnight (00:00)
-    cron.schedule('0 0 * * *', async () => {
-        console.log('--- Running Subscription Expiry Check (Daily at Midnight) ---');
+    // SUBSCRIPTION EXPIRE CHECK: Run every hour to catch short-term (Daily) plans
+    cron.schedule('0 * * * *', async () => {
+        console.log('--- Running Subscription Expiry Check (Hourly) ---');
         try {
             const now = new Date();
             const result = await User.updateMany(
                 { 
-                    'subscription.plan': 'Prime',
+                    'subscription.plan': { $in: ['Daily', 'Monthly', 'Yearly', 'Prime'] },
                     'subscription.expiresAt': { $lt: now } 
                 },
                 { 
                     $set: { 'subscription.plan': 'none' } 
                 }
             );
-            console.log(`Checked subscriptions. ${result.modifiedCount || 0} expired memberships reset.`);
+            if (result.modifiedCount > 0) {
+                console.log(`Checked subscriptions. ${result.modifiedCount} expired memberships reset.`);
+            }
         } catch (error) {
             console.error('Subscription Cron Error:', error);
         }
