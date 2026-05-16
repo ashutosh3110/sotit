@@ -25,7 +25,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "../../../context/LocationContext";
 import { State } from "country-state-city";
-import { getDistrictsByState } from 'india-states-districts';
+import { indiaData } from '../../../utils/indiaData';
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
@@ -83,13 +83,13 @@ const UserFind = () => {
         }
     };
 
-    // Get all Indian States
-    const allStates = useMemo(() => State.getStatesOfCountry('IN'), []);
+    // Get all Indian States from our local data
+    const allStates = useMemo(() => Object.keys(indiaData).sort(), []);
     
     // Get districts of selected state
     const availableDistricts = useMemo(() => {
         if (!selectedState) return [];
-        return getDistrictsByState(selectedState.name) || [];
+        return indiaData[selectedState.name] || [];
     }, [selectedState]);
 
     const categories = [
@@ -573,9 +573,9 @@ const UserFind = () => {
                                 <button onClick={() => { setSelectedState(null); setSelectedDistrict(''); setShowStateDropdown(false); }} className="w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 flex items-center justify-between">
                                     All States {!selectedState && <Check size={14} className="text-[#C44545]" />}
                                 </button>
-                                {allStates.map((state) => (
-                                    <button key={state.isoCode} onClick={() => { setSelectedState(state); setSelectedDistrict(''); setShowStateDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedState?.isoCode === state.isoCode ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
-                                        {state.name} {selectedState?.isoCode === state.isoCode && <Check size={14} />}
+                                {Object.keys(indiaData).map((stateName) => (
+                                    <button key={stateName} onClick={() => { setSelectedState({name: stateName}); setSelectedDistrict(''); setShowStateDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedState?.name === stateName ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                        {stateName} {selectedState?.name === stateName && <Check size={14} />}
                                     </button>
                                 ))}
                             </motion.div>
@@ -598,7 +598,7 @@ const UserFind = () => {
                                 <button onClick={() => { setSelectedDistrict(''); setShowDistrictDropdown(false); }} className="w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 flex items-center justify-between">
                                     All Districts {!selectedDistrict && <Check size={14} className="text-[#C44545]" />}
                                 </button>
-                                {availableDistricts.map((district) => (
+                                {(indiaData[selectedState?.name] || []).map((district) => (
                                     <button key={district} onClick={() => { setSelectedDistrict(district); setShowDistrictDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedDistrict === district ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
                                         {district} {selectedDistrict === district && <Check size={14} />}
                                     </button>

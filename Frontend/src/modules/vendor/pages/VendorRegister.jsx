@@ -13,7 +13,11 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // --- Constants ---
-  const allStates = useMemo(() => State.getStatesOfCountry('IN'), []);
+  const allStatesRaw = useMemo(() => State.getStatesOfCountry('IN'), []);
+  const allStates = useMemo(() => Object.keys(indiaData).sort().map(name => ({
+      name,
+      isoCode: allStatesRaw.find(s => s.name === name)?.isoCode || name
+  })), [allStatesRaw]);
   const mechanicServices = ['General Service', 'Engine Repair', 'Brake Service', 'Electrical Work', 'AC Service', 'Suspension & Steering', 'Oil & Filter Change', 'Body Work & Paint', 'Clutch & Gearbox', 'Battery & Charging'];
   const rtoServices = ['RC Transfer', 'Driving License', 'Vehicle Insurance', 'Hypothecation Addition/Removal', 'NOC Certificate', 'Fitness Certificate', 'Permit Work', 'Address Change', 'Duplicate RC', 'Tax Payment'];
   const legalPractices = ['Criminal Law', 'Civil Law', 'Property Law', 'Family Law', 'Corporate Law', 'Accident Claims', 'Taxation Law', 'Consumer Court', 'Cyber Law', 'Labor Law'];
@@ -402,7 +406,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
                         <CustomDropdown 
                           label="City / District"
-                          options={address.state ? getDistrictsByState(address.state) : []}
+                          options={address.state ? indiaData[address.state] || [] : []}
                           value={address.city}
                           placeholder="Select City/District"
                           icon={MapPin}
@@ -448,7 +452,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                                                   <span className="text-[9px] font-black text-[#C44545]">{profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.length || 0} Picked</span>
                                               </div>
                                               <div className="grid grid-cols-1 gap-2">
-                                                  {getDistrictsByState(state.name).map(district => { 
+                                                  {(indiaData[state.name] || []).map(district => { 
                                                       const isDistSelected = profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.includes(district);
                                                       return (
                                                           <div 
