@@ -288,6 +288,7 @@ const Home = () => {
           ) : (
               <div className="space-y-4">
                   {[
+                      { type: 'Single', price: '9', period: 'Expert', desc: 'Unlock any one expert contact', isNav: true },
                       { type: 'Daily', price: '99', period: 'Day', desc: 'Unlimited access for 24 hours' },
                       { type: 'Monthly', price: '999', period: 'Month', desc: 'Unlimited access for 30 days' },
                       { type: 'Yearly', price: '9999', period: 'Year', desc: 'Unlimited access for 365 days' }
@@ -295,15 +296,16 @@ const Home = () => {
                     <motion.div 
                       key={plan.type}
                       whileTap={{ scale: 0.98 }}
+                      onClick={() => plan.isNav ? navigate(`/user/category/driver`) : null}
                       className="bg-slate-900 rounded-[2rem] p-6 relative overflow-hidden group border border-white/5"
                     >
                       <div className="relative z-10 flex items-center justify-between">
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <div className="h-1.5 w-1.5 bg-amber-500 rounded-full" />
-                                <span className="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em]">{plan.type} Pass</span>
+                                <span className="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em]">{plan.type === 'Single' ? 'Pay Per View' : `${plan.type} Pass`}</span>
                             </div>
-                            <h4 className="text-white text-xl font-black tracking-tighter leading-none mb-1">{plan.type} Access</h4>
+                            <h4 className="text-white text-xl font-black tracking-tighter leading-none mb-1">{plan.type === 'Single' ? 'Single Unlock' : `${plan.type} Access`}</h4>
                             <p className="text-slate-400 text-[10px] font-bold leading-relaxed">{plan.desc}</p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
@@ -312,10 +314,13 @@ const Home = () => {
                                 <span className="text-slate-500 text-[8px] font-black uppercase ml-1">/ {plan.period}</span>
                             </div>
                             <button 
-                                onClick={() => handleUpgrade(plan.type)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    plan.isNav ? navigate(`/user/category/driver`) : handleUpgrade(plan.type);
+                                }}
                                 className="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest"
                             >
-                                Upgrade
+                                {plan.isNav ? 'Find Experts' : 'Upgrade'}
                             </button>
                         </div>
                       </div>
