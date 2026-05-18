@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
 import { State } from "country-state-city";
-import { getDistrictsByState } from 'india-states-districts';
+import { indiaData } from '../../../utils/indiaData';
 
 const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
