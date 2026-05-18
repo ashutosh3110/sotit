@@ -48,11 +48,16 @@ exports.registerVendor = async (req, res, next) => {
     const banking = typeof data.banking === 'string' ? JSON.parse(data.banking) : data.banking;
     const vehicleInfo = typeof data.vehicleInfo === 'string' ? JSON.parse(data.vehicleInfo) : data.vehicleInfo;
 
+    let sanitizedEmail = data.email;
+    if (sanitizedEmail === "" || (typeof sanitizedEmail === 'string' && sanitizedEmail.trim() === "")) {
+      sanitizedEmail = undefined;
+    }
+
     // Create Vendor
     const vendor = await Vendor.create({
       name: data.name,
       mobile: data.mobile,
-      email: data.email,
+      email: sanitizedEmail,
       password: data.password || '123456',
       role: data.role || 'driver',
       profilePicture: uploads.profilePicture,

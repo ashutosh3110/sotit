@@ -132,10 +132,15 @@ exports.register = async (req, res, next) => {
       fs.unlinkSync(req.file.path);
     }
 
+    let sanitizedEmail = email;
+    if (sanitizedEmail === "" || (typeof sanitizedEmail === 'string' && sanitizedEmail.trim() === "")) {
+      sanitizedEmail = undefined;
+    }
+
     // Create user
     const user = await User.create({
       name,
-      email,
+      email: sanitizedEmail,
       password,
       mobile,
       location,

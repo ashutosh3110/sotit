@@ -227,7 +227,9 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('mobile', mobile);
-        formData.append('email', email);
+        if (email && email.trim() !== "") {
+            formData.append('email', email.trim());
+        }
         formData.append('password', password || mobile);
         formData.append('role', role);
         formData.append('address', JSON.stringify(address));
