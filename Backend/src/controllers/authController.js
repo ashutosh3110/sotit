@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const OTPVerification = require('../models/OTPVerification');
 const jwt = require('jsonwebtoken');
 
 const cloudinary = require('../utils/cloudinary');
@@ -115,11 +116,18 @@ exports.resetPassword = async (req, res, next) => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, mobile, location } = req.body;
+    const { name, email, password, mobile, location, otp } = req.body;
 
-    if (!mobile || !password || !name) {
+    if (!mobile || !password || !name || !otp) {
        res.status(400);
-       throw new Error('Please provide name, mobile and password');
+       throw new Error('Please provide name, mobile, password and OTP');
+    }
+
+    // Verify OTP
+    const otpRecord = await OTPVerification.findOne({ mobile });
+    if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
+      res.status(400);
+      throw new Error('Invalid or expired OTP');
     }
 
     // Check if mobile already exists
@@ -152,6 +160,9 @@ exports.register = async (req, res, next) => {
       location,
       profilePicture,
     });
+
+    // Delete OTP record since it is verified
+    await OTPVerification.deleteOne({ mobile });
 
     sendTokenResponse(user, 201, res);
   } catch (err) {
@@ -253,4 +264,53 @@ const sendTokenResponse = (user, statusCode, res) => {
       walletBalance: user.walletBalance,
     },
   });
+};
+
+// @desc    Send OTP for User Registration
+// @route   POST /api/auth/register-send-otp
+// @access  Public
+exports.sendRegisterOTP = async (req, res, next) => {
+  try {
+    const { mobile } = req.body;
+
+    if (!mobile) {
+      res.status(400);
+      throw new Error('Please provide a mobile number');
+    }
+
+    // Check if mobile already exists in User collection
+    const existingUser = await User.findOne({ mobile });
+    if (existingUser) {
+      res.status(400);
+      throw new Error('Mobile number already registered');
+    }
+
+    // Generate 4-digit OTP
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    const otp = isRealOtp ? Math.floor(1000 + Math.random() * 9000).toString() : '1234';
+    const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+    console.log("----------------------------");
+    console.log(`REGISTRATION OTP for ${mobile}: ${otp}`);
+    console.log("----------------------------");
+
+    // Send OTP via SMS India Hub
+    const smsService = require('../utils/smsService');
+    const smsResult = await smsService.sendOTP(mobile, otp);
+
+    // Save to OTPVerification collection
+    await OTPVerification.findOneAndUpdate(
+      { mobile },
+      { otp, otpExpire },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: smsResult.success ? (isRealOtp ? 'OTP sent successfully to your mobile' : 'Mock OTP generated successfully') : 'OTP sent successfully (Check console)',
+      otp // keeping otp in response for testing/development if needed
+    });
+  } catch (err) {
+    next(err);
+  }
 };

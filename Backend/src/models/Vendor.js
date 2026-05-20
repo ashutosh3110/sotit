@@ -126,6 +126,7 @@ const vendorSchema = new mongoose.Schema({
   },
   otp: String,
   otpExpire: Date,
+  remark: String,
   createdAt: {
     type: Date,
     default: Date.now

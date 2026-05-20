@@ -128,7 +128,7 @@ exports.vendorLogin = async (req, res, next) => {
 // @access  Public
 exports.sendVendorOTP = async (req, res, next) => {
   try {
-    const { mobile } = req.body;
+    const { mobile, type } = req.body;
     
     if (!mobile) {
       res.status(400);
@@ -136,20 +136,39 @@ exports.sendVendorOTP = async (req, res, next) => {
     }
 
     const vendor = await Vendor.findOne({ mobile });
+
+    if (type === 'register') {
+      if (vendor) {
+        res.status(400);
+        throw new Error('Mobile number already registered as a vendor');
+      }
+    } else {
+      if (!vendor) {
+        res.status(404);
+        throw new Error('Vendor not registered with this mobile number');
+      }
+    }
     
     const isRealOtp = process.env.REAL_OTP === 'true';
     const otp = isRealOtp ? Math.floor(1000 + Math.random() * 9000).toString() : '1234';
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
     console.log("----------------------------");
-    console.log(`VENDOR OTP for ${mobile}: ${otp}`);
+    console.log(`VENDOR OTP (${type || 'reset'}) for ${mobile}: ${otp}`);
     console.log("----------------------------");
 
     // Send OTP via SMS India Hub
     const smsService = require('../utils/smsService');
     const smsResult = await smsService.sendOTP(mobile, otp);
 
-    if (vendor) {
+    if (type === 'register') {
+      const OTPVerification = require('../models/OTPVerification');
+      await OTPVerification.findOneAndUpdate(
+        { mobile },
+        { otp, otpExpire },
+        { upsert: true, new: true }
+      );
+    } else {
       vendor.otp = otp;
       vendor.otpExpire = otpExpire;
       await vendor.save();

@@ -22,11 +22,23 @@ exports.registerVendor = async (req, res) => {
         name, mobile, email, password, role, 
         address, liveLocation, 
         profData, mechanicData, rtoData, legalData, 
-        bankData 
+        bankData,
+        otp,
+        remark
     } = req.body;
 
+    if (!mobile || !otp) {
+      return res.status(400).json({ message: 'Mobile and OTP are required' });
+    }
+
+    // Verify OTP
+    const OTPVerification = require('../models/OTPVerification');
+    const otpRecord = await OTPVerification.findOne({ mobile });
+    if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
     // Check if user exists
-    const checkQuery = { mobile };
     if (email) {
       const existingEmail = await Vendor.findOne({ email });
       if (existingEmail) return res.status(400).json({ message: 'Vendor with this email already exists' });
@@ -53,7 +65,7 @@ exports.registerVendor = async (req, res) => {
     const newVendor = new Vendor({
       name,
       mobile,
-      email,
+      email: email || undefined,
       password, // Hashing is handled by model pre-save hook
       role,
       address: address ? JSON.parse(address) : {},
@@ -65,10 +77,14 @@ exports.registerVendor = async (req, res) => {
       bankDetails: bankData ? JSON.parse(bankData) : {},
       kycDocuments: docs,
       status: 'approved',
-      isApproved: true
+      isApproved: true,
+      remark
     });
 
     await newVendor.save();
+
+    // Delete OTP record since it is verified
+    await OTPVerification.deleteOne({ mobile });
 
     res.status(201).json({ 
         message: 'Vendor registered and activated successfully!',

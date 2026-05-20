@@ -33,6 +33,9 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [address, setAddress] = useState({ street: "", city: "", state: "", isoCode: "", pincode: "" });
   const [liveLocation, setLiveLocation] = useState(null);
+  const [customLanguage, setCustomLanguage] = useState("");
+  const [customVehicleClass, setCustomVehicleClass] = useState("");
+  const [remark, setRemark] = useState("");
 
   const [profData, setProfData] = useState({
     dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Full Time", languages: ["Hindi"],
@@ -154,7 +157,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/send-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mobile })
+            body: JSON.stringify({ mobile, type: 'register' })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -219,7 +222,67 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     }, { enableHighAccuracy: true, timeout: 5000 });
   };
 
+  const handleSelectRole = (roleId) => {
+    setName("");
+    setMobile("");
+    setEmail("");
+    setProfileImg(null);
+    setProfileFile(null);
+    setPassword("");
+    setOtp(["", "", "", ""]);
+    setIsOtpSent(false);
+    setAddress({ street: "", city: "", state: "", isoCode: "", pincode: "" });
+    setLiveLocation(null);
+    setCustomLanguage("");
+    setCustomVehicleClass("");
+    setRemark("");
+
+    setProfData({
+      dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Full Time", languages: ["Hindi"],
+      serviceStates: [], 
+      aadhaarNumber: ""
+    });
+    setMechanicData({
+      specialties: [], serviceType: "Both", garageName: "", garageAddress: "", garageLocation: null,
+      vehicleExpertise: [], experienceRange: "1-3 Years", workingHours: "9 AM - 7 PM", emergencySupport: false, serviceRadius: "10 KM"
+    });
+    setRtoData({
+      rtoOffice: "", services: [], experience: "1-3 Years", officeAddress: "", officeCity: "", officeLocation: null
+    });
+    setLegalData({
+      barRegNumber: "", practiceAreas: [], experience: "1-3 Years", officeName: "", visitingAddress: "", city: "", gpsLocation: null, consultationType: "Both"
+    });
+    setBankData({ accountHolderName: "", bankName: "", accountNumber: "", ifscCode: "", upiId: "" });
+    setKycFiles({ 
+      aadhaar: null, pan: null, selfie: null, policeVerification: null, dlFile: null, 
+      garagePhoto: null, shopLicense: null, barCertificate: null, advocateId: null,
+      regCertificate: null, officeProof: null
+    });
+
+    setRole(roleId);
+    setStep(1);
+  };
+
+  const handleNextStep = () => {
+    if (!name || !mobile || !address.street || !address.state || !address.city || !address.pincode) {
+        return toast.error("Please fill all required personal & address fields");
+    }
+    if (!isOtpSent) {
+        return toast.error("Please click 'Verify' to send OTP to your mobile number");
+    }
+    const enteredOtp = otp.join("");
+    if (enteredOtp.length !== 4) {
+        return toast.error("Please enter the 4-digit OTP code");
+    }
+    setStep(2);
+  };
+
   const handleFinalSubmit = async () => {
+    const enteredOtp = otp.join("");
+    if (!enteredOtp || enteredOtp.length !== 4) {
+        return toast.error("Please enter the 4-digit verification OTP");
+    }
+
     setIsLoading(true);
     const tid = toast.loading("Creating Partner Profile...");
 
@@ -232,6 +295,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         }
         formData.append('password', password || mobile);
         formData.append('role', role);
+        formData.append('otp', enteredOtp);
+        formData.append('remark', remark);
         formData.append('address', JSON.stringify(address));
         formData.append('liveLocation', JSON.stringify(liveLocation));
         formData.append('profData', JSON.stringify(profData));
@@ -330,7 +395,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     { id: 'rto', label: 'RTO Agent', icon: FileText, desc: 'Paperwork assistant' },
                     { id: 'legal', label: 'Legal Advisor', icon: Briefcase, desc: 'Vehicle law expert' },
                   ].map((r) => (
-                    <div key={r.id} onClick={() => { setRole(r.id); setStep(1); }} className={`p-5 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-5 ${role === r.id ? 'border-[#C44545] bg-[#C44545] text-white' : 'border-neutral-200 bg-white'}`}>
+                    <div key={r.id} onClick={() => handleSelectRole(r.id)} className={`p-5 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-5 ${role === r.id ? 'border-[#C44545] bg-[#C44545] text-white' : 'border-neutral-200 bg-white'}`}>
                       <div className={`h-12 w-12 rounded-2xl flex items-center justify-center ${role === r.id ? 'bg-white/10' : 'bg-neutral-100'}`}><r.icon size={22} /></div>
                       <div><p className="text-[15px] font-black uppercase">{r.label}</p><p className="text-[12px] opacity-70 font-bold">{r.desc}</p></div>
                     </div>
@@ -432,52 +497,60 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     <p className="text-[12px] font-bold text-slate-400">Select multiple states and their districts.</p>
                   </div>
                   
-                  <div className="space-y-4">
+                   <div className="space-y-4">
                       <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Available States</label>
                       <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto p-4 border border-slate-200 rounded-[2rem] bg-white no-scrollbar shadow-inner">
                           {allStates.map(state => {
                               const isSelected = profData.serviceStates.some(s => s.isoCode === state.isoCode);
                               return (
-                                  <div key={state.isoCode} className="space-y-3">
-                                      <div 
-                                          onClick={() => toggleStateSelection(state)}
-                                          className={`p-4 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-600 hover:bg-slate-50'}`}
-                                      >
-                                          <span className="text-[12px] font-black uppercase">{state.name}</span>
-                                          {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                      </div>
-
-                                      {isSelected && (
-                                          <div className="pl-6 space-y-2 pb-4 border-l-2 border-rose-100 ml-4">
-                                              <div className="flex items-center justify-between mb-2 pr-2">
-                                                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Select Districts</span>
-                                                  <span className="text-[9px] font-black text-[#C44545]">{profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.length || 0} Picked</span>
-                                              </div>
-                                              <div className="grid grid-cols-1 gap-2">
-                                                  {(indiaData[state.name] || []).map(district => { 
-                                                      const isDistSelected = profData.serviceStates.find(s => s.isoCode === state.isoCode)?.districts.includes(district);
-                                                      return (
-                                                          <div 
-                                                              key={district}
-                                                              onClick={() => toggleDistrictSelection(state.isoCode, district)}
-                                                              className={`p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isDistSelected ? 'border-[#C44545]/30 bg-white text-[#C44545]' : 'border-slate-100 text-slate-500 bg-slate-50/50'}`}
-                                                          >
-                                                              <span className="text-[11px] font-bold">{district}</span>
-                                                              {isDistSelected ? <CheckCircle2 size={16} className="fill-[#C44545] text-white" /> : <div className="h-4 w-4 rounded-full border-2 border-slate-200" />}
-                                                          </div>
-                                                      );
-                                                  })}
-                                              </div>
-                                          </div>
-                                      )}
+                                  <div 
+                                      key={state.isoCode}
+                                      onClick={() => toggleStateSelection(state)}
+                                      className={`p-4 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-600 hover:bg-slate-50'}`}
+                                  >
+                                      <span className="text-[12px] font-black uppercase">{state.name}</span>
+                                      {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
                                   </div>
                               );
                           })}
                       </div>
                   </div>
+
+                  {profData.serviceStates.length > 0 && (
+                      <div className="space-y-4 mt-6">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Select Districts for Chosen States</label>
+                          <div className="space-y-4">
+                              {profData.serviceStates.map(selectedState => {
+                                  return (
+                                      <div key={selectedState.isoCode} className="p-5 border border-slate-200 rounded-[2rem] bg-white shadow-sm">
+                                          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                                              <span className="text-[12px] font-black uppercase text-slate-900">{selectedState.name} Districts</span>
+                                              <span className="text-[10px] font-black text-[#C44545] bg-rose-50 px-3 py-1 rounded-full uppercase tracking-wider">{selectedState.districts.length} Selected</span>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1 no-scrollbar">
+                                              {(indiaData[selectedState.name] || []).map(district => { 
+                                                  const isDistSelected = selectedState.districts.includes(district);
+                                                  return (
+                                                      <div 
+                                                          key={district}
+                                                          onClick={() => toggleDistrictSelection(selectedState.isoCode, district)}
+                                                          className={`p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isDistSelected ? 'border-[#C44545]/30 bg-rose-50/20 text-[#C44545]' : 'border-slate-100 text-slate-500 bg-slate-50/50'}`}
+                                                      >
+                                                          <span className="text-[11px] font-bold truncate pr-1">{district}</span>
+                                                          {isDistSelected ? <CheckCircle2 size={16} className="fill-[#C44545] text-white flex-shrink-0" /> : <div className="h-4 w-4 rounded-full border-2 border-slate-200 flex-shrink-0" />}
+                                                      </div>
+                                                  );
+                                              })}
+                                          </div>
+                                      </div>
+                                  );
+                              })}
+                          </div>
+                      </div>
+                  )}
                 </div>
 
-                <button onClick={() => setStep(2)} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 mt-6">Next Step <ArrowRight size={18} /></button>
+                <button onClick={handleNextStep} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 mt-6">Next Step <ArrowRight size={18} /></button>
               </div>
             )}
 
@@ -632,19 +705,66 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     <div className="space-y-3 px-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Classes (Multiple Select)</label>
                       <div className="flex flex-col gap-2">
-                        {['Bike', 'Car', 'Truck', 'Other'].map(c => (
+                        {['Bike', 'Car', 'Truck', 'Other'].map(c => {
+                          const isSelected = profData.vehicleClasses.includes(c);
+                          return (
+                            <div 
+                              key={c} 
+                              onClick={() => {
+                                const n = isSelected ? profData.vehicleClasses.filter(x => x !== c) : [...profData.vehicleClasses, c];
+                                setProfData({...profData, vehicleClasses: n});
+                              }} 
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{c}</span>
+                              {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          );
+                        })}
+
+                        {/* Render custom added vehicle classes */}
+                        {profData.vehicleClasses.filter(c => !['Bike', 'Car', 'Truck', 'Other'].includes(c)).map(c => (
                           <div 
-                            key={c} 
+                            key={c}
                             onClick={() => {
-                              const n = profData.vehicleClasses.includes(c) ? profData.vehicleClasses.filter(x => x !== c) : [...profData.vehicleClasses, c];
+                              const n = profData.vehicleClasses.filter(x => x !== c);
                               setProfData({...profData, vehicleClasses: n});
-                            }} 
-                            className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${profData.vehicleClasses.includes(c) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
+                            }}
+                            className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
                           >
                             <span className="text-[12px] font-black uppercase">{c}</span>
-                            {profData.vehicleClasses.includes(c) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            <CheckSquare size={20} />
                           </div>
                         ))}
+                      </div>
+
+                      {/* Input box to add custom vehicle class */}
+                      <div className="flex gap-2 mt-2">
+                        <input 
+                          type="text" 
+                          placeholder="Add Custom Vehicle (e.g. Auto, Crane)" 
+                          value={customVehicleClass} 
+                          onChange={(e) => setCustomVehicleClass(e.target.value)} 
+                          className="flex-1 bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none"
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if (customVehicleClass.trim()) {
+                              const cVal = customVehicleClass.trim();
+                              if (!profData.vehicleClasses.includes(cVal)) {
+                                setProfData({
+                                  ...profData,
+                                  vehicleClasses: [...profData.vehicleClasses, cVal]
+                                });
+                              }
+                              setCustomVehicleClass("");
+                            }
+                          }}
+                          className="bg-[#C44545] text-white px-6 rounded-2xl text-[10px] font-black uppercase hover:bg-[#C44545]/90 transition-colors"
+                        >
+                          Add
+                        </button>
                       </div>
                     </div>
                   )}
@@ -668,24 +788,84 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                   <div className="space-y-3 px-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Languages Known (Multiple Select)</label>
                     <div className="flex flex-col gap-2">
-                      {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(lang => (
+                      {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(lang => {
+                        const isSelected = profData.languages.includes(lang);
+                        return (
+                          <div 
+                            key={lang}
+                            onClick={() => {
+                              const n = isSelected 
+                                ? profData.languages.filter(x => x !== lang) 
+                                : [...profData.languages, lang];
+                              setProfData({...profData, languages: n});
+                            }}
+                            className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                          >
+                            <span className="text-[12px] font-black uppercase">{lang}</span>
+                            {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                          </div>
+                        );
+                      })}
+                      
+                      {/* Render custom added languages */}
+                      {profData.languages.filter(l => !['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].includes(l)).map(lang => (
                         <div 
                           key={lang}
                           onClick={() => {
-                            const n = profData.languages.includes(lang) 
-                              ? profData.languages.filter(x => x !== lang) 
-                              : [...profData.languages, lang];
+                            const n = profData.languages.filter(x => x !== lang);
                             setProfData({...profData, languages: n});
                           }}
-                          className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${profData.languages.includes(lang) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                          className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
                         >
                           <span className="text-[12px] font-black uppercase">{lang}</span>
-                          {profData.languages.includes(lang) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                          <CheckSquare size={20} />
                         </div>
                       ))}
                     </div>
+
+                    {/* Input box to add custom language */}
+                    <div className="flex gap-2 mt-2">
+                      <input 
+                        type="text" 
+                        placeholder="Add Custom Language (e.g. French)" 
+                        value={customLanguage} 
+                        onChange={(e) => setCustomLanguage(e.target.value)} 
+                        className="flex-1 bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (customLanguage.trim()) {
+                            const lang = customLanguage.trim();
+                            if (!profData.languages.includes(lang)) {
+                              setProfData({
+                                ...profData,
+                                languages: [...profData.languages, lang]
+                              });
+                            }
+                            setCustomLanguage("");
+                          }
+                        }}
+                        className="bg-[#C44545] text-white px-6 rounded-2xl text-[10px] font-black uppercase hover:bg-[#C44545]/90 transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {/* Remark/Note section at the end of Step 2 */}
+                <div className="px-2 mt-4">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Remark / Note</label>
+                  <textarea 
+                    placeholder="Add any remarks or notes here..." 
+                    value={remark} 
+                    onChange={(e) => setRemark(e.target.value)} 
+                    rows={3} 
+                    className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold placeholder:text-slate-300 focus:outline-none resize-none"
+                  />
+                </div>
+
                 <button onClick={handleFinalSubmit} className="w-full bg-[#C44545] text-white h-20 rounded-[2.5rem] font-black uppercase mt-6 shadow-xl shadow-[#C44545]/20 flex items-center justify-center gap-3">Finish Registration <Check size={20} strokeWidth={3} /></button>
               </div>
             )}

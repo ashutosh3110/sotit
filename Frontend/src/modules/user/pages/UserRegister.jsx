@@ -21,6 +21,8 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   
   const [addressDetails, setAddressDetails] = useState({
     house: "",
@@ -64,6 +66,34 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
       return;
     }
 
+    if (!isOtpSent) {
+      const loadToast = toast.loading("Sending verification OTP...");
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register-send-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success(data.message || "OTP sent to your mobile number!", { id: loadToast });
+          setIsOtpSent(true);
+        } else {
+          toast.error(data.message || "Failed to send OTP", { id: loadToast });
+        }
+      } catch (error) {
+        console.error("OTP Send Error:", error);
+        toast.error("Failed to send OTP. Try again.", { id: loadToast });
+      }
+      return;
+    }
+
+    const enteredOtp = otp.join("");
+    if (enteredOtp.length !== 4) {
+      toast.error("Please enter the 4-digit OTP");
+      return;
+    }
+
     const formData = new FormData();
     formData.append('name', name);
     formData.append('mobile', mobile);
@@ -72,6 +102,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     }
     formData.append('password', password);
     formData.append('location', address);
+    formData.append('otp', enteredOtp);
     if (profileFile) {
       formData.append('profilePicture', profileFile);
     }
@@ -302,6 +333,52 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       </div>
                     </div>
 
+                    {isOtpSent && (
+                      <div className="space-y-3 pt-2">
+                        <div className="flex justify-between items-center px-1">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-[#C44545]">Enter Verification OTP</label>
+                          <button 
+                            type="button" 
+                            onClick={async () => {
+                              setIsOtpSent(false);
+                              setOtp(["", "", "", ""]);
+                              setTimeout(() => handleRegister(), 100);
+                            }}
+                            className="text-[10px] font-black uppercase tracking-wider text-rose-500 hover:underline"
+                          >
+                            Resend OTP
+                          </button>
+                        </div>
+                        <div className="flex gap-3 justify-center">
+                          {otp.map((digit, idx) => (
+                            <input 
+                              key={idx} 
+                              id={`otp-${idx}`}
+                              type="tel" 
+                              maxLength={1} 
+                              value={digit} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const newOtp = [...otp];
+                                newOtp[idx] = val;
+                                setOtp(newOtp);
+                                
+                                if (val && idx < 3) {
+                                  document.getElementById(`otp-${idx + 1}`)?.focus();
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
+                                  document.getElementById(`otp-${idx - 1}`)?.focus();
+                                }
+                              }}
+                              className="w-12 h-14 bg-rose-50 border-2 border-[#C44545]/10 rounded-2xl text-center text-xl font-black text-[#C44545] focus:border-[#C44545] focus:outline-none transition-all" 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="pt-4">
                         <button 
                           type="button" 
@@ -310,7 +387,9 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                         >
                           <div className="flex items-center gap-3">
                             <ShieldCheck size={20} className="text-white/40" />
-                            <span className="text-white text-[13px] font-black uppercase tracking-[0.2em]">Create Account</span>
+                            <span className="text-white text-[13px] font-black uppercase tracking-[0.2em]">
+                              {isOtpSent ? "Verify & Register" : "Create Account"}
+                            </span>
                           </div>
                           <div className="h-8 w-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors">
                             <ArrowRight size={18} strokeWidth={3} className="text-white group-hover:text-slate-900" />

@@ -75,8 +75,12 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Encrypt password using bcrypt
+// Encrypt password using bcrypt and clean empty email fields
 userSchema.pre('save', async function () {
+  if (this.email === "" || this.email === null) {
+    this.email = undefined;
+  }
+
   if (!this.isModified('password')) {
     return;
   }

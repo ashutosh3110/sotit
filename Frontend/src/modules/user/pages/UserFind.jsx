@@ -378,6 +378,17 @@ const UserFind = () => {
                                         </div>
                                     </div>
 
+                                    {selectedVendor.professionalDetails?.availability && (
+                                        <div className="mb-8 px-2">
+                                            <div className="p-4 bg-slate-50 rounded-2xl flex items-center justify-between border border-slate-100/50">
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Availability Status</span>
+                                                <span className="text-xs font-black uppercase text-[#C44545] bg-rose-50 border border-rose-100 px-3 py-1 rounded-full">
+                                                    {selectedVendor.professionalDetails.availability}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Languages Known Section */}
                                     {selectedVendor.professionalDetails?.languages?.length > 0 && (
                                         <div className="mb-8 px-2">
