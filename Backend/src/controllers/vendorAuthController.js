@@ -123,7 +123,7 @@ exports.vendorLogin = async (req, res, next) => {
   }
 };
 
-// @desc    Send OTP for Vendor (Forgot Password)
+// @desc    Send OTP for Vendor (Forgot Password / Registration)
 // @route   POST /api/vendor/send-otp
 // @access  Public
 exports.sendVendorOTP = async (req, res, next) => {
@@ -136,23 +136,30 @@ exports.sendVendorOTP = async (req, res, next) => {
     }
 
     const vendor = await Vendor.findOne({ mobile });
-    if (!vendor) {
-      res.status(404);
-      throw new Error('No vendor account found with this mobile number');
-    }
-
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    const otp = isRealOtp ? Math.floor(1000 + Math.random() * 9000).toString() : '1234';
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
     console.log("----------------------------");
-    console.log(`VENDOR FORGOT PASSWORD OTP for ${mobile}: ${otp}`);
+    console.log(`VENDOR OTP for ${mobile}: ${otp}`);
     console.log("----------------------------");
 
-    vendor.otp = otp;
-    vendor.otpExpire = otpExpire;
-    await vendor.save();
+    // Send OTP via SMS India Hub
+    const smsService = require('../utils/smsService');
+    const smsResult = await smsService.sendOTP(mobile, otp);
 
-    res.status(200).json({ success: true, message: 'OTP sent to terminal' });
+    if (vendor) {
+      vendor.otp = otp;
+      vendor.otpExpire = otpExpire;
+      await vendor.save();
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: smsResult.success ? (isRealOtp ? 'OTP sent successfully to your mobile' : 'Mock OTP generated successfully') : 'OTP sent successfully (Check console)',
+      otp // keeping otp in response for testing/development if needed
+    });
   } catch (err) {
     next(err);
   }

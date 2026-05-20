@@ -58,16 +58,15 @@ const AdminSidebar = ({ isOpen, onClose }) => {
                 key={item.path}
                 to={item.path}
                 onClick={() => { if(window.innerWidth < 1024) onClose(); }}
-                className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all group ${isActive ? 'bg-[#C44545] text-white shadow-xl shadow-[#C44545]/20' : 'text-neutral-400 hover:bg-neutral-50'}`}
+                className={`flex items-center gap-3.5 px-4.5 py-3.5 rounded-xl transition-all duration-200 group ${isActive ? 'bg-[#C44545] text-white shadow-lg shadow-[#C44545]/15' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
               >
-                <Icon size={20} strokeWidth={isActive ? 3 : 2.5} className={isActive ? 'text-white' : 'text-neutral-300 group-hover:text-slate-900'} />
-                <span className="text-[13px] font-black uppercase tracking-widest">{item.label}</span>
+                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700 transition-colors'} />
+                <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-semibold'} tracking-normal`}>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer */}
         <div className="p-6 border-t border-slate-50">
           <button 
             onClick={() => {
@@ -78,9 +77,9 @@ const AdminSidebar = ({ isOpen, onClose }) => {
                 onClose();
               }, 1000);
             }}
-            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-red-500 hover:bg-red-50 transition-all font-black uppercase tracking-widest text-[12px]"
+            className="w-full flex items-center gap-3.5 px-4.5 py-3.5 rounded-xl text-red-600 hover:bg-red-50/70 transition-all font-bold text-[13px] tracking-normal"
           >
-            <LogOut size={20} strokeWidth={3} />
+            <LogOut size={18} strokeWidth={2} />
             Logout
           </button>
         </div>

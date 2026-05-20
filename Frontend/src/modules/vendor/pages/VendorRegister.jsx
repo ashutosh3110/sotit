@@ -628,7 +628,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     <input type="text" placeholder="Aadhaar Number" value={profData.aadhaarNumber} onChange={(e) => setProfData({...profData, aadhaarNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                   </div>
 
-                  {role === 'driver' && (
+                  {(role === 'driver' || role === 'towing') && (
                     <div className="space-y-3 px-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Classes (Multiple Select)</label>
                       <div className="flex flex-col gap-2">

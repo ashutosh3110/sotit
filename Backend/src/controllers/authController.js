@@ -24,12 +24,17 @@ exports.sendOTP = async (req, res, next) => {
     }
 
     // Generate 4-digit OTP
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    const otp = isRealOtp ? Math.floor(1000 + Math.random() * 9000).toString() : '1234';
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
     console.log("----------------------------");
     console.log(`FORGOT PASSWORD OTP for ${mobile}: ${otp}`);
     console.log("----------------------------");
+
+    // Send OTP via SMS India Hub
+    const smsService = require('../utils/smsService');
+    const smsResult = await smsService.sendOTP(mobile, otp);
 
     user.otp = otp;
     user.otpExpire = otpExpire;
@@ -37,7 +42,8 @@ exports.sendOTP = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'OTP sent to terminal',
+      message: smsResult.success ? (isRealOtp ? 'OTP sent successfully to your mobile' : 'Mock OTP generated successfully') : 'OTP sent successfully (Check console)',
+      otp // keeping otp in response for testing/development if needed
     });
   } catch (err) {
     next(err);

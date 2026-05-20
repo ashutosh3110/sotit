@@ -95,61 +95,62 @@ const AdminFAQs = () => {
         <div className="flex min-h-screen bg-slate-50 font-inter">
             <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} activePage="faqs" />
 
-            <div className="flex-1 lg:ml-64 p-8">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden h-10 w-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-800 shadow-sm active:scale-95 transition-all shrink-0">
-                            <Menu size={20} />
-                        </button>
-                        <div>
-                            <h1 className="text-3xl font-black text-slate-900 tracking-tighter">Manage FAQs.</h1>
-                            <p className="text-slate-500 text-sm font-medium mt-1">Configure support content for users and vendors</p>
+            <div className="flex-1 lg:ml-72 p-8">
+                <div className="max-w-[1400px] mx-auto w-full">
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                        <div className="flex items-center gap-4 w-full md:w-auto">
+                            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden h-10 w-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-800 shadow-sm active:scale-95 transition-all shrink-0">
+                                <Menu size={20} />
+                            </button>
+                            <div>
+                                <h1 className="text-3xl font-black text-slate-900 tracking-tighter">Manage FAQs.</h1>
+                                <p className="text-slate-500 text-sm font-medium mt-1">Configure support content for users and vendors</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <div className="relative group">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#C44545] transition-colors" size={16} />
+                                <input 
+                                    type="text"
+                                    placeholder="Search FAQs..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-11 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-[#C44545]/5 focus:border-[#C44545] transition-all w-full md:w-80 shadow-sm"
+                                />
+                            </div>
+                            <button 
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="bg-[#C44545] text-white px-5 py-3 rounded-xl flex items-center gap-2 font-bold text-xs shadow-lg shadow-[#C44545]/15 hover:scale-105 transition-all active:scale-95"
+                            >
+                                <Plus size={16} strokeWidth={2.5} />
+                                Add FAQ
+                            </button>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <div className="relative group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#C44545] transition-colors" size={18} />
-                            <input 
-                                type="text"
-                                placeholder="Search FAQs..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-[#C44545]/5 focus:border-[#C44545] transition-all w-full md:w-80 shadow-sm"
-                            />
-                        </div>
+                    {/* Tabs */}
+                    <div className="flex items-center gap-2 p-1.5 bg-slate-200/50 rounded-xl w-fit mb-8">
                         <button 
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="bg-[#C44545] text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#C44545]/20 hover:scale-105 transition-all active:scale-95"
+                            onClick={() => setActiveTab('customer')}
+                            className={`px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${activeTab === 'customer' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            <Plus size={16} strokeWidth={3} />
-                            Add FAQ
+                            <div className="flex items-center gap-2">
+                                <User size={14} />
+                                Customers
+                            </div>
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('vendor')}
+                            className={`px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${activeTab === 'vendor' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <Store size={14} />
+                                Vendors
+                            </div>
                         </button>
                     </div>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex items-center gap-2 p-1.5 bg-slate-200/50 rounded-2xl w-fit mb-8">
-                    <button 
-                        onClick={() => setActiveTab('customer')}
-                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'customer' ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <div className="flex items-center gap-2">
-                            <User size={14} />
-                            Customers
-                        </div>
-                    </button>
-                    <button 
-                        onClick={() => setActiveTab('vendor')}
-                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'vendor' ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <div className="flex items-center gap-2">
-                            <Store size={14} />
-                            Vendors
-                        </div>
-                    </button>
-                </div>
 
                 {/* FAQ List */}
                 <div className="space-y-4">
@@ -200,6 +201,7 @@ const AdminFAQs = () => {
                     </AnimatePresence>
                 </div>
             </div>
+        </div>
 
             {/* Add FAQ Modal */}
             <AnimatePresence>

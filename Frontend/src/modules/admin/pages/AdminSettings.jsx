@@ -32,35 +32,27 @@ const AdminSettings = () => {
           </div>
         </header>
 
-        <div className="p-6">
+        <div className="p-6 max-w-[1400px] mx-auto w-full">
           <div className="space-y-4 max-w-2xl">
             {settingsOptions.map((option, i) => (
               <motion.div 
                 key={i}
-                whileTap={{ scale: 0.98 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => navigate(option.path)}
-                className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer group hover:border-[#C44545]/20 transition-all"
+                className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer group hover:border-[#C44545]/20 transition-all"
               >
                 <div className="flex items-center gap-5">
-                  <div className="h-12 w-12 bg-rose-50 rounded-2xl flex items-center justify-center text-[#C44545] border border-rose-100 group-hover:bg-[#C44545] group-hover:text-white transition-colors">
-                    <option.icon size={20} strokeWidth={2.5} />
+                  <div className="h-11 w-11 bg-rose-50 rounded-xl flex items-center justify-center text-[#C44545] border border-rose-100 group-hover:bg-[#C44545] group-hover:text-white transition-colors">
+                    <option.icon size={18} strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black tracking-tight text-slate-900">{option.label}</h3>
-                    <p className="text-[11px] font-bold text-neutral-400">{option.desc}</p>
+                    <h3 className="text-sm font-bold tracking-tight text-slate-850">{option.label}</h3>
+                    <p className="text-xs font-semibold text-slate-400">{option.desc}</p>
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-neutral-300 group-hover:text-[#C44545] transition-colors" />
+                <ChevronRight size={18} className="text-slate-300 group-hover:text-[#C44545] transition-colors" />
               </motion.div>
             ))}
-          </div>
-
-          <div className="mt-12 bg-[#C44545] p-8 rounded-[2.5rem] shadow-2xl shadow-[#C44545]/20 text-white relative overflow-hidden max-w-2xl">
-            <div className="relative z-10">
-              <h2 className="text-lg font-black tracking-tighter mb-1">Advanced Controls</h2>
-              <p className="text-white/60 text-[11px] font-bold uppercase tracking-widest mb-6">Restricted System Access</p>
-              <button className="bg-white text-[#C44545] px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-black/10 active:scale-95 transition-all">Maintenance Mode</button>
-            </div>
           </div>
         </div>
       </div>

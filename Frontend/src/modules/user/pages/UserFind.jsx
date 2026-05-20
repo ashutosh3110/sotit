@@ -22,7 +22,7 @@ import {
     Loader2
 } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLocation } from "../../../context/LocationContext";
 import { State } from "country-state-city";
 import { indiaData } from '../../../utils/indiaData';
@@ -31,13 +31,46 @@ import { toast } from "react-hot-toast";
 
 const UserFind = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { location: userLoc, fetchLocation } = useLocation();
-    const [selectedCategory, setSelectedCategory] = useState('Drivers');
+
+    // Map URL role/category parameter to category key (Drivers, Mechanics, Towing, Legal, RTO)
+    const getInitialCategory = useMemo(() => {
+        const cat = searchParams.get('category') || searchParams.get('role');
+        if (!cat) return 'Drivers';
+        const lowerCat = cat.toLowerCase();
+        if (lowerCat === 'driver') return 'Drivers';
+        if (lowerCat === 'mechanic') return 'Mechanics';
+        if (lowerCat === 'towing') return 'Towing';
+        if (lowerCat === 'legal') return 'Legal';
+        if (lowerCat === 'rto') return 'RTO';
+        return 'Drivers';
+    }, [searchParams]);
+
+    const [selectedCategory, setSelectedCategory] = useState(getInitialCategory);
     const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        setSelectedCategory(getInitialCategory);
+    }, [getInitialCategory]);
     
     // Location States
     const [selectedState, setSelectedState] = useState(null); // Stores { name, isoCode }
     const [selectedDistrict, setSelectedDistrict] = useState('');
+
+    // Role Specific Filter States
+    const [selectedVehicleClass, setSelectedVehicleClass] = useState('');
+    const [selectedSpecialty, setSelectedSpecialty] = useState('');
+    const [selectedPracticeArea, setSelectedPracticeArea] = useState('');
+    const [selectedRtoService, setSelectedRtoService] = useState('');
+    
+    // Reset role-specific filters when category changes
+    useEffect(() => {
+        setSelectedVehicleClass('');
+        setSelectedSpecialty('');
+        setSelectedPracticeArea('');
+        setSelectedRtoService('');
+    }, [selectedCategory]);
     
     // Data States
     const [vendors, setVendors] = useState([]);
@@ -49,8 +82,13 @@ const UserFind = () => {
     // UI States
     const [showStateDropdown, setShowStateDropdown] = useState(false);
     const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
+    const [showVehicleClassDropdown, setShowVehicleClassDropdown] = useState(false);
+    const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
+    const [showPracticeAreaDropdown, setShowPracticeAreaDropdown] = useState(false);
+    const [showRtoServiceDropdown, setShowRtoServiceDropdown] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showRequirementModal, setShowRequirementModal] = useState(false);
+    const [showLanguagesModal, setShowLanguagesModal] = useState(false);
     const dropdownRef = useRef(null);
 
     const handlePostRequirement = async (details) => {
@@ -127,6 +165,10 @@ const UserFind = () => {
             if (selectedCategory) params.append('role', selectedCategory);
             if (selectedState) params.append('state', selectedState.name);
             if (selectedDistrict) params.append('district', selectedDistrict);
+            if (selectedVehicleClass) params.append('vehicleClass', selectedVehicleClass);
+            if (selectedSpecialty) params.append('specialty', selectedSpecialty);
+            if (selectedPracticeArea) params.append('practiceArea', selectedPracticeArea);
+            if (selectedRtoService) params.append('rtoService', selectedRtoService);
 
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/vendors/all?${params.toString()}`, {
                 headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -205,12 +247,13 @@ const UserFind = () => {
 
     useEffect(() => {
         fetchVendors();
-    }, [selectedCategory, selectedState, selectedDistrict]);
+    }, [selectedCategory, selectedState, selectedDistrict, selectedVehicleClass, selectedSpecialty, selectedPracticeArea, selectedRtoService]);
 
     // Fetch Full Profile for Modal
     const handleViewProfile = async (vendorId) => {
         setIsFetchingProfile(true);
         setShowProfileModal(true);
+        setShowLanguagesModal(false);
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/vendors/profile/${vendorId}`);
             setSelectedVendor(response.data);
@@ -233,6 +276,10 @@ const UserFind = () => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setShowStateDropdown(false);
                 setShowDistrictDropdown(false);
+                setShowVehicleClassDropdown(false);
+                setShowSpecialtyDropdown(false);
+                setShowPracticeAreaDropdown(false);
+                setShowRtoServiceDropdown(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -334,14 +381,17 @@ const UserFind = () => {
                                     {/* Languages Known Section */}
                                     {selectedVendor.professionalDetails?.languages?.length > 0 && (
                                         <div className="mb-8 px-2">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <Globe size={14} className="text-[#C44545]" />
-                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Languages Known</h4>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {selectedVendor.professionalDetails.languages.map(lang => (
-                                                    <span key={lang} className="px-3 py-1.5 bg-white border border-slate-100 rounded-lg text-[10px] font-black text-slate-600 shadow-sm uppercase">{lang}</span>
-                                                ))}
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Globe size={14} className="text-[#C44545]" />
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Languages Known</h4>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setShowLanguagesModal(true)}
+                                                    className="px-3 py-1 bg-[#C44545] text-white rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm hover:bg-[#C44545]/90 transition-all"
+                                                >
+                                                    All
+                                                </button>
                                             </div>
                                         </div>
                                     )}
@@ -480,9 +530,55 @@ const UserFind = () => {
         }
     };
 
+    // --- Languages Modal Component ---
+    const LanguagesModal = () => {
+        if (!showLanguagesModal || !selectedVendor) return null;
+
+        return (
+            <AnimatePresence>
+                <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowLanguagesModal(false)}
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                    />
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        className="relative w-full max-w-[280px] bg-white rounded-[2rem] p-6 shadow-2xl z-10 border border-slate-100"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <Globe size={16} className="text-[#C44545]" />
+                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-900">Languages</h4>
+                            </div>
+                            <button 
+                                onClick={() => setShowLanguagesModal(false)}
+                                className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 justify-center py-2">
+                            {selectedVendor.professionalDetails?.languages?.map(lang => (
+                                <span key={lang} className="px-4 py-2 bg-rose-50 border border-rose-100 rounded-xl text-xs font-black text-[#C44545] shadow-sm uppercase">
+                                    {lang}
+                                </span>
+                            ))}
+                        </div>
+                    </motion.div>
+                </div>
+            </AnimatePresence>
+        );
+    };
+
     return (
         <div className="bg-[#F8FAFC] min-h-screen font-inter pb-32 overflow-x-hidden">
             <VendorProfileModal />
+            <LanguagesModal />
             
             {/* STICKY TOP HEADER */}
             <div className="sticky top-0 z-[100] bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 py-8">
@@ -497,23 +593,33 @@ const UserFind = () => {
                 <div className="px-6 mt-4">
                     <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
                         {[
-                            { type: 'Daily', price: '99', period: 'Day' },
-                            { type: 'Monthly', price: '999', period: 'Month' },
-                            { type: 'Yearly', price: '9999', period: 'Year' }
+                            { type: 'Single', price: '9', period: 'Expert', title: 'Single Unlock', label: 'Unlock One' },
+                            { type: 'Daily', price: '99', period: 'Day', title: 'Unlimited Details', label: 'Daily Access' },
+                            { type: 'Monthly', price: '999', period: 'Month', title: 'Unlimited Details', label: 'Monthly Access' },
+                            { type: 'Yearly', price: '9999', period: 'Year', title: 'Unlimited Details', label: 'Yearly Access' }
                         ].map(plan => (
                             <motion.div 
                                 key={plan.type}
                                 whileTap={{ scale: 0.96 }}
-                                onClick={() => handleSubscribe(plan.type)}
+                                onClick={() => {
+                                    if (plan.type === 'Single') {
+                                        toast('Select any expert below to unlock their details for ₹9!', {
+                                            icon: '💡',
+                                            duration: 4000
+                                        });
+                                    } else {
+                                        handleSubscribe(plan.type);
+                                    }
+                                }}
                                 className="min-w-[200px] bg-slate-900 rounded-3xl p-5 relative overflow-hidden group cursor-pointer shadow-xl border border-white/5"
                             >
                                 <div className="absolute top-0 right-0 h-20 w-20 bg-[#C44545] rounded-full blur-[40px] opacity-10 group-hover:opacity-30 transition-opacity" />
                                 <div className="relative z-10">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Zap size={12} className="text-[#C44545] fill-[#C44545]" />
-                                        <span className="text-[8px] font-black text-[#C44545] uppercase tracking-widest">{plan.type} Access</span>
+                                        <span className="text-[8px] font-black text-[#C44545] uppercase tracking-widest">{plan.label}</span>
                                     </div>
-                                    <h3 className="text-white text-base font-black tracking-tight mb-3">Unlimited Details</h3>
+                                    <h3 className="text-white text-base font-black tracking-tight mb-3">{plan.title}</h3>
                                     <div className="flex items-end gap-1">
                                         <span className="text-white text-xl font-black">₹{plan.price}</span>
                                         <span className="text-white/40 text-[8px] font-black uppercase mb-1">/ {plan.period}</span>
@@ -608,6 +714,286 @@ const UserFind = () => {
                     </AnimatePresence>
                 </div>
             </div>
+
+            {/* ROLE SPECIFIC FILTERS */}
+            {selectedCategory === 'Drivers' && (
+                <div className="px-6 mt-4 relative">
+                    <button 
+                        onClick={() => {
+                            setShowVehicleClassDropdown(!showVehicleClassDropdown);
+                            setShowSpecialtyDropdown(false);
+                            setShowStateDropdown(false);
+                            setShowDistrictDropdown(false);
+                        }} 
+                        className={`w-full flex items-center justify-between bg-white border ${showVehicleClassDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
+                    >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <Navigation size={16} className={showVehicleClassDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
+                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
+                                {selectedVehicleClass === 'Bike' ? '2 Wheeler' : selectedVehicleClass === 'Car' ? '4 Wheeler' : selectedVehicleClass || 'All Vehicle Types'}
+                            </span>
+                        </div>
+                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${showVehicleClassDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                        {showVehicleClassDropdown && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                exit={{ opacity: 0, y: 10 }} 
+                                className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
+                            >
+                                {[
+                                    { value: '', label: 'All Vehicle Types' },
+                                    { value: 'Bike', label: '2 Wheeler' },
+                                    { value: 'Car', label: '4 Wheeler' },
+                                    { value: 'Truck', label: 'Truck' },
+                                    { value: 'Other', label: 'Other' }
+                                ].map((opt) => (
+                                    <button 
+                                        key={opt.value} 
+                                        onClick={() => { 
+                                            setSelectedVehicleClass(opt.value); 
+                                            setShowVehicleClassDropdown(false); 
+                                        }} 
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedVehicleClass === opt.value ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    >
+                                        {opt.label} {selectedVehicleClass === opt.value && <Check size={14} />}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
+
+            {selectedCategory === 'Mechanics' && (
+                <div className="px-6 mt-4 relative">
+                    <button 
+                        onClick={() => {
+                            setShowSpecialtyDropdown(!showSpecialtyDropdown);
+                            setShowVehicleClassDropdown(false);
+                            setShowStateDropdown(false);
+                            setShowDistrictDropdown(false);
+                        }} 
+                        className={`w-full flex items-center justify-between bg-white border ${showSpecialtyDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
+                    >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <Wrench size={16} className={showSpecialtyDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
+                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedSpecialty ? 'text-slate-900' : 'text-slate-400'}`}>
+                                {selectedSpecialty || 'All Specialties'}
+                            </span>
+                        </div>
+                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${showSpecialtyDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                        {showSpecialtyDropdown && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                exit={{ opacity: 0, y: 10 }} 
+                                className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
+                            >
+                                <button 
+                                    onClick={() => { 
+                                        setSelectedSpecialty(''); 
+                                        setShowSpecialtyDropdown(false); 
+                                    }} 
+                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedSpecialty === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                >
+                                    All Specialties {selectedSpecialty === '' && <Check size={14} />}
+                                </button>
+                                {[
+                                    'General Service', 'Engine Repair', 'Brake Service', 'Electrical Work', 'AC Service', 
+                                    'Suspension & Steering', 'Oil & Filter Change', 'Body Work & Paint', 'Clutch & Gearbox', 'Battery & Charging'
+                                ].map((opt) => (
+                                    <button 
+                                        key={opt} 
+                                        onClick={() => { 
+                                            setSelectedSpecialty(opt); 
+                                            setShowSpecialtyDropdown(false); 
+                                        }} 
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedSpecialty === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    >
+                                        {opt} {selectedSpecialty === opt && <Check size={14} />}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
+
+            {selectedCategory === 'Towing' && (
+                <div className="px-6 mt-4 relative">
+                    <button 
+                        onClick={() => {
+                            setShowVehicleClassDropdown(!showVehicleClassDropdown);
+                            setShowSpecialtyDropdown(false);
+                            setShowPracticeAreaDropdown(false);
+                            setShowRtoServiceDropdown(false);
+                            setShowStateDropdown(false);
+                            setShowDistrictDropdown(false);
+                        }} 
+                        className={`w-full flex items-center justify-between bg-white border ${showVehicleClassDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
+                    >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <Truck size={16} className={showVehicleClassDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
+                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
+                                {selectedVehicleClass === 'Bike' ? '2 Wheeler' : selectedVehicleClass === 'Car' ? '4 Wheeler' : selectedVehicleClass || 'All Vehicle Types'}
+                            </span>
+                        </div>
+                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${showVehicleClassDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                        {showVehicleClassDropdown && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                exit={{ opacity: 0, y: 10 }} 
+                                className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
+                            >
+                                {[
+                                    { value: '', label: 'All Vehicle Types' },
+                                    { value: 'Bike', label: '2 Wheeler' },
+                                    { value: 'Car', label: '4 Wheeler' },
+                                    { value: 'Truck', label: 'Truck' },
+                                    { value: 'Other', label: 'Other' }
+                                ].map((opt) => (
+                                    <button 
+                                        key={opt.value} 
+                                        onClick={() => { 
+                                            setSelectedVehicleClass(opt.value); 
+                                            setShowVehicleClassDropdown(false); 
+                                        }} 
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedVehicleClass === opt.value ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    >
+                                        {opt.label} {selectedVehicleClass === opt.value && <Check size={14} />}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
+
+            {selectedCategory === 'Legal' && (
+                <div className="px-6 mt-4 relative">
+                    <button 
+                        onClick={() => {
+                            setShowPracticeAreaDropdown(!showPracticeAreaDropdown);
+                            setShowVehicleClassDropdown(false);
+                            setShowSpecialtyDropdown(false);
+                            setShowRtoServiceDropdown(false);
+                            setShowStateDropdown(false);
+                            setShowDistrictDropdown(false);
+                        }} 
+                        className={`w-full flex items-center justify-between bg-white border ${showPracticeAreaDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
+                    >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <Briefcase size={16} className={showPracticeAreaDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
+                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedPracticeArea ? 'text-slate-900' : 'text-slate-400'}`}>
+                                {selectedPracticeArea || 'All Practice Areas'}
+                            </span>
+                        </div>
+                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${showPracticeAreaDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                        {showPracticeAreaDropdown && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                exit={{ opacity: 0, y: 10 }} 
+                                className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
+                            >
+                                <button 
+                                    onClick={() => { 
+                                        setSelectedPracticeArea(''); 
+                                        setShowPracticeAreaDropdown(false); 
+                                    }} 
+                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedPracticeArea === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                >
+                                    All Practice Areas {selectedPracticeArea === '' && <Check size={14} />}
+                                </button>
+                                {[
+                                    'Criminal Law', 'Civil Law', 'Property Law', 'Family Law', 'Corporate Law', 
+                                    'Accident Claims', 'Taxation Law', 'Consumer Court', 'Cyber Law', 'Labor Law'
+                                ].map((opt) => (
+                                    <button 
+                                        key={opt} 
+                                        onClick={() => { 
+                                            setSelectedPracticeArea(opt); 
+                                            setShowPracticeAreaDropdown(false); 
+                                        }} 
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedPracticeArea === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    >
+                                        {opt} {selectedPracticeArea === opt && <Check size={14} />}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
+
+            {selectedCategory === 'RTO' && (
+                <div className="px-6 mt-4 relative">
+                    <button 
+                        onClick={() => {
+                            setShowRtoServiceDropdown(!showRtoServiceDropdown);
+                            setShowVehicleClassDropdown(false);
+                            setShowSpecialtyDropdown(false);
+                            setShowPracticeAreaDropdown(false);
+                            setShowStateDropdown(false);
+                            setShowDistrictDropdown(false);
+                        }} 
+                        className={`w-full flex items-center justify-between bg-white border ${showRtoServiceDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
+                    >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <FileText size={16} className={showRtoServiceDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
+                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedRtoService ? 'text-slate-900' : 'text-slate-400'}`}>
+                                {selectedRtoService || 'All RTO Services'}
+                            </span>
+                        </div>
+                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${showRtoServiceDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                        {showRtoServiceDropdown && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                exit={{ opacity: 0, y: 10 }} 
+                                className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
+                            >
+                                <button 
+                                    onClick={() => { 
+                                        setSelectedRtoService(''); 
+                                        setShowRtoServiceDropdown(false); 
+                                    }} 
+                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedRtoService === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                >
+                                    All RTO Services {selectedRtoService === '' && <Check size={14} />}
+                                </button>
+                                {[
+                                    'RC Transfer', 'Driving License', 'Vehicle Insurance', 'Hypothecation Addition/Removal', 
+                                    'NOC Certificate', 'Fitness Certificate', 'Permit Work', 'Address Change', 'Duplicate RC', 'Tax Payment'
+                                ].map((opt) => (
+                                    <button 
+                                        key={opt} 
+                                        onClick={() => { 
+                                            setSelectedRtoService(opt); 
+                                            setShowRtoServiceDropdown(false); 
+                                        }} 
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedRtoService === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    >
+                                        {opt} {selectedRtoService === opt && <Check size={14} />}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
 
             {/* CATEGORY SECTION */}
             <div className="mt-8 overflow-x-auto no-scrollbar px-6 flex gap-3 pb-4">

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Menu, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminSidebar from "../components/AdminSidebar";
 
 const AdminSubSettings = ({ title, description, children, onSave, isLoading }) => {
@@ -82,26 +82,98 @@ export const AdminNotifications = () => (
     </AdminSubSettings>
 );
 
-export const AdminPlatform = () => (
-    <AdminSubSettings 
-        title="Platform Settings" 
-        description="Update general platform information, currency settings, and system maintenance windows." 
-    >
-        <div className="space-y-6">
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Platform Name</label>
-                <input type="text" defaultValue="Sootit Admin" className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" />
+export const AdminPlatform = () => {
+    const [platformName, setPlatformName] = useState("Sootit Admin");
+    const [systemCurrency, setSystemCurrency] = useState("INR (₹)");
+    const [supportEmail, setSupportEmail] = useState("support@sootit.com");
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`);
+                const data = await response.json();
+                if (data.success && data.data) {
+                    setPlatformName(data.data.platformName || "Sootit Admin");
+                    setSystemCurrency(data.data.systemCurrency || "INR (₹)");
+                    setSupportEmail(data.data.supportEmail || "support@sootit.com");
+                }
+            } catch (error) {
+                console.error("Error fetching settings:", error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    const handleSave = async () => {
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('admin_token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ platformName, systemCurrency, supportEmail }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success("Settings updated successfully!");
+            } else {
+                toast.error(data.message || "Failed to update settings");
+            }
+        } catch (error) {
+            console.error("Settings update error:", error);
+            toast.error("Server connection failed");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <AdminSubSettings 
+            title="Platform Settings" 
+            description="Update general platform information, currency settings, and system support contact email." 
+            onSave={handleSave}
+            isLoading={isLoading}
+        >
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Platform Name</label>
+                    <input 
+                        type="text" 
+                        value={platformName} 
+                        onChange={(e) => setPlatformName(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">System Currency</label>
+                    <select 
+                        value={systemCurrency} 
+                        onChange={(e) => setSystemCurrency(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all"
+                    >
+                        <option>INR (₹)</option>
+                        <option>USD ($)</option>
+                    </select>
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Support Contact Email</label>
+                    <input 
+                        type="email" 
+                        value={supportEmail} 
+                        onChange={(e) => setSupportEmail(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                        placeholder="e.g. support@sootit.com"
+                    />
+                </div>
             </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">System Currency</label>
-                <select className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all">
-                    <option>INR (₹)</option>
-                    <option>USD ($)</option>
-                </select>
-            </div>
-        </div>
-    </AdminSubSettings>
-);
+        </AdminSubSettings>
+    );
+};
 
 import toast from "react-hot-toast";
 

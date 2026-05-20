@@ -37,6 +37,8 @@ const ticketRoutes = require('./routes/ticketRoutes');
 const walletRoutes = require('./routes/walletRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/banners', bannerRoutes);
@@ -49,6 +51,8 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error Handling
 app.use(notFound);

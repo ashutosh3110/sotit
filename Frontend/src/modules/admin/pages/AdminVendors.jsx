@@ -86,47 +86,73 @@ const AdminVendors = () => {
         </header>
 
         <section className="px-6 py-8 flex-1 overflow-y-auto">
-            <div className="relative group mb-8">
-                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none"><Search size={14} className="text-neutral-400" /></div>
-                <input 
-                    type="text" placeholder="Search by name, role or ID..." value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-10 pr-4 text-[13px] font-bold focus:border-[#C44545]/20 focus:outline-none transition-all shadow-sm"
-                />
-            </div>
-
-            {loading ? (
-                <div className="flex items-center justify-center py-20">
-                    <div className="h-10 w-10 border-4 border-[#C44545]/20 border-t-[#C44545] rounded-full animate-spin" />
+            <div className="max-w-[1400px] mx-auto w-full">
+                {/* Search Bar */}
+                <div className="relative group mb-8">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                        <Search size={16} className="text-slate-400" />
+                    </div>
+                    <input 
+                        type="text" 
+                        placeholder="Search by name, role or ID..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-sm font-medium focus:border-[#C44545]/20 focus:outline-none transition-all shadow-sm"
+                    />
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredVendors.map((vendor) => (
-                        <motion.div key={vendor._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm hover:border-[#C44545]/20 transition-all flex flex-col justify-between">
-                            <div>
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 bg-neutral-50 rounded-2xl flex items-center justify-center text-[#C44545] font-black border border-black/5 uppercase shadow-inner text-lg">{vendor.name?.[0]}</div>
-                                        <div>
-                                            <h3 className="text-sm font-black tracking-tight text-slate-900 truncate max-w-[120px]">{vendor.name}</h3>
-                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md border mt-1 block w-fit bg-emerald-50 text-emerald-600 border-emerald-100">{vendor.role}</span>
+
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="h-10 w-10 border-4 border-[#C44545]/20 border-t-[#C44545] rounded-full animate-spin" />
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredVendors.map((vendor) => (
+                            <motion.div 
+                                key={vendor._id} 
+                                layout 
+                                initial={{ opacity: 0 }} 
+                                animate={{ opacity: 1 }} 
+                                className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-[#C44545]/20 transition-all flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-12 w-12 bg-rose-50/50 rounded-xl flex items-center justify-center text-[#C44545] font-bold border border-rose-100 uppercase shadow-inner text-lg">
+                                                {vendor.name?.[0]}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-base font-bold tracking-tight text-slate-800 truncate max-w-[140px]">{vendor.name}</h3>
+                                                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-lg border mt-1 block w-fit bg-emerald-50 text-emerald-600 border-emerald-100 capitalize">{vendor.role}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1 shrink-0">
+                                            <div className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-lg text-[10px] font-semibold border border-emerald-100">Verified</div>
+                                            {vendor.isBlocked && <div className="bg-red-50 text-red-600 px-2 py-0.5 rounded-lg text-[10px] font-semibold border border-red-100">Blocked</div>}
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-1 shrink-0">
-                                        <div className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-emerald-100">Verified</div>
-                                        {vendor.isBlocked && <div className="bg-red-50 text-red-600 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-red-100">Blocked</div>}
+                                    <div className="space-y-3 mb-6 py-4 border-y border-slate-50">
+                                        <div className="flex items-center gap-3">
+                                            <MapPin size={14} className="text-[#C44545]" />
+                                            <span className="text-sm font-medium text-slate-600 truncate">{vendor.address?.city || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Phone size={14} className="text-[#C44545]" />
+                                            <span className="text-sm font-medium text-slate-600">{vendor.mobile}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="space-y-3 mb-6 py-4 border-y border-slate-50">
-                                    <div className="flex items-center gap-3"><MapPin size={12} className="text-[#C44545]" /><span className="text-[12px] font-bold text-slate-600 truncate">{vendor.address?.city || 'N/A'}</span></div>
-                                    <div className="flex items-center gap-3"><Phone size={12} className="text-[#C44545]" /><span className="text-[12px] font-bold text-slate-600">{vendor.mobile}</span></div>
-                                </div>
-                            </div>
-                            <button onClick={() => setSelectedEntity(vendor)} className="w-full bg-slate-900 text-white py-3.5 rounded-2xl font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all flex items-center justify-center gap-2">Full Detail <ExternalLink size={12} /></button>
-                        </motion.div>
-                    ))}
-                </div>
-            )}
+                                <button 
+                                    onClick={() => setSelectedEntity(vendor)} 
+                                    className="w-full bg-slate-900 hover:bg-[#C44545] text-white py-3 rounded-xl font-bold text-xs active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    View Profile Details <ExternalLink size={14} />
+                                </button>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </section>
       </div>
 

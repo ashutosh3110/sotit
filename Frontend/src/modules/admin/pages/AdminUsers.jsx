@@ -81,62 +81,64 @@ const AdminUsers = () => {
         </header>
 
         <section className="px-6 py-8 flex-1">
-            {/* Search Bar */}
-            <div className="relative group mb-8">
-                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <Search size={14} className="text-neutral-400 group-focus-within:text-[#C44545] transition-colors" />
+            <div className="max-w-[1400px] mx-auto w-full">
+                {/* Search Bar */}
+                <div className="relative group mb-8">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                        <Search size={16} className="text-slate-400" />
+                    </div>
+                    <input 
+                        type="text" 
+                        placeholder="Search users or providers..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-sm font-medium focus:border-[#C44545]/20 focus:outline-none transition-all placeholder:text-slate-300 shadow-sm"
+                    />
                 </div>
-                <input 
-                    type="text" 
-                    placeholder="Search users or providers..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-10 pr-4 text-[13px] font-bold focus:border-[#C44545]/20 focus:outline-none transition-all placeholder:text-neutral-300 shadow-sm"
-                />
-            </div>
 
-            {/* Users List */}
-            <div className="flex items-center justify-between mb-6 px-1">
-                <h2 className="text-xs font-black text-[#C44545] uppercase tracking-[0.2em]">Platform Members</h2>
-                <span className="text-[12px] font-bold text-neutral-500">{filteredUsers.length} total</span>
-            </div>
+                {/* Users List */}
+                <div className="flex items-center justify-between mb-6 px-1">
+                    <h2 className="text-xs font-bold text-[#C44545] uppercase tracking-[0.2em]">Platform Members</h2>
+                    <span className="text-xs font-semibold text-slate-500">{filteredUsers.length} total</span>
+                </div>
 
-            <div className="space-y-3">
-                {filteredUsers.map((user) => (
-                    <motion.div 
-                        key={user._id}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setSelectedEntity(user)}
-                        className="bg-white py-2 px-4 rounded-[1.5rem] border border-slate-200 shadow-sm space-y-2 hover:border-[#C44545]/20 transition-colors cursor-pointer"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-neutral-100 rounded-xl flex items-center justify-center text-neutral-900 border border-black/5 flex-shrink-0">
-                                <User size={20} strokeWidth={2.5} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex flex-col">
-                                        <h3 className="text-sm font-black tracking-tight text-[#C44545] truncate">{user.name}</h3>
-                                        <span className={`text-[10px] font-black uppercase tracking-widest mt-0.5 px-2 py-0.5 rounded-md inline-block w-fit ${
-                                            user.role === 'customer' ? 'bg-slate-100 text-slate-500' : 'bg-rose-50 text-[#C44545] border border-rose-100'
+                <div className="space-y-3">
+                    {filteredUsers.map((user) => (
+                        <motion.div 
+                            key={user._id}
+                            whileTap={{ scale: 0.99 }}
+                            onClick={() => setSelectedEntity(user)}
+                            className="bg-white py-3.5 px-5 rounded-xl border border-slate-200 shadow-sm space-y-2 hover:border-[#C44545]/20 transition-all cursor-pointer flex items-center justify-between"
+                        >
+                            <div className="flex items-center gap-4 w-full">
+                                <div className="h-10 w-10 bg-rose-50/50 text-[#C44545] rounded-xl flex items-center justify-center border border-rose-100 flex-shrink-0 font-bold uppercase">
+                                    {user.name?.[0] || <User size={18} />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex flex-col">
+                                            <h3 className="text-sm font-bold text-slate-800 truncate">{user.name}</h3>
+                                            <span className={`text-[10px] font-semibold uppercase tracking-wider mt-1 px-2 py-0.5 rounded-md inline-block w-fit ${
+                                                user.role === 'customer' ? 'bg-slate-100 text-slate-500' : 'bg-rose-50 text-[#C44545] border border-rose-100'
+                                            }`}>
+                                                {user.role}
+                                            </span>
+                                        </div>
+                                        <div className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold capitalize flex-shrink-0 border ${
+                                            user.isBlocked ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                         }`}>
-                                            {user.role}
-                                        </span>
+                                            {user.isBlocked ? 'Blocked' : 'Active'}
+                                        </div>
                                     </div>
-                                    <div className={`px-2 py-0.5 rounded-lg text-[11px] font-black uppercase tracking-widest flex-shrink-0 ${
-                                        user.isBlocked ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'
-                                    }`}>
-                                        {user.isBlocked ? 'Blocked' : 'Active'}
+                                    <div className="flex items-center gap-1.5 mt-2 text-slate-400">
+                                        <MapPin size={12} className="flex-shrink-0" />
+                                        <span className="text-[11px] font-semibold capitalize">{user.city || user.currentAddress || 'Location N/A'}</span>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-1 mt-2 text-neutral-400">
-                                    <MapPin size={10} className="flex-shrink-0" />
-                                    <span className="text-[11px] font-bold uppercase tracking-wider">{user.city || user.currentAddress || 'Location N/A'}</span>
                                 </div>
                             </div>
-                        </div>
-                    </motion.div>
-                ))}
+                        </motion.div>
+                    ))}
+                </div>
             </div>
         </section>
       </div>

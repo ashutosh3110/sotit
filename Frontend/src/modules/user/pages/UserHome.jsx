@@ -183,7 +183,10 @@ const Home = () => {
       <AppHero 
         user={user} 
         activeRole={activeRole} 
-        onServiceSelect={(role) => setActiveRole(role)} 
+        onServiceSelect={(role) => {
+          setActiveRole(role);
+          navigate(`/user/find?role=${role}`);
+        }} 
       />
 
       <div className="px-5 py-4 space-y-12">

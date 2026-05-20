@@ -57,6 +57,7 @@ const AdminWallet = lazy(() => import('./modules/admin/pages/AdminWallet'));
 const AdminLogin = lazy(() => import('./modules/admin/pages/AdminLogin'));
 const OwnerDashboard = lazy(() => import('./modules/owner/pages/OwnerDashboard'));
 const RequirementForm = lazy(() => import('./modules/owner/pages/RequirementForm'));
+const AboutContact = lazy(() => import('./modules/landing/pages/AboutContact'));
 import { AdminSecurity, AdminNotifications, AdminPlatform, AdminProfile } from './modules/admin/pages/AdminSubSettings';
 
 // Page Transition Component
@@ -83,6 +84,7 @@ const AppRoutes = () => {
         <Routes location={location} key={location.pathname}>
           {/* Main Auth Gateway */}
           <Route path="/" element={<WelcomePage />} />
+          <Route path="/about" element={<AboutContact />} />
           <Route path="/auth" element={<AuthLanding />} />
           <Route path="/user/auth" element={<Navigate to="/auth" replace />} />
 
@@ -149,13 +151,14 @@ const AppRoutes = () => {
 
 const AppContent = () => {
   const location = useLocation();
-  const authPaths = ['/', '/auth', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise'];
+  const authPaths = ['/', '/about', '/auth', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise'];
   const isAuthPage = authPaths.includes(location.pathname) || location.pathname.startsWith('/admin');
 
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isAboutPage = location.pathname === '/about';
 
   return (
-    <div className={`${!isAdminPage ? 'app-shell' : 'min-h-screen bg-slate-50'} border-x border-black/5 ring-1 ring-black/[0.02] ${!isAuthPage ? 'pb-20' : ''}`}>
+    <div className={`${(!isAdminPage && !isAboutPage) ? 'app-shell border-x border-black/5 ring-1 ring-black/[0.02]' : 'min-h-screen bg-slate-50'} ${!isAuthPage ? 'pb-20' : ''}`}>
       {!isAuthPage && <AppHeader />}
       <AppRoutes />
       {!isAuthPage && <UserBottomNav />}

@@ -207,7 +207,7 @@ exports.toggleStatus = async (req, res) => {
 
 exports.getVendors = async (req, res) => {
     try {
-        const { role, state, district } = req.query;
+        const { role, state, district, vehicleClass, specialty, practiceArea, rtoService } = req.query;
         let query = { status: 'approved', isOnline: true }; // Only show approved and online vendors
 
         if (role) {
@@ -230,6 +230,18 @@ exports.getVendors = async (req, res) => {
         }
         if (district) {
             query['address.city'] = { $regex: new RegExp(district, 'i') };
+        }
+        if (vehicleClass) {
+            query['professionalDetails.vehicleClasses'] = vehicleClass;
+        }
+        if (specialty) {
+            query['mechanicDetails.specialties'] = specialty;
+        }
+        if (practiceArea) {
+            query['legalDetails.practiceAreas'] = practiceArea;
+        }
+        if (rtoService) {
+            query['rtoDetails.services'] = rtoService;
         }
 
         const vendors = await Vendor.find(query)
