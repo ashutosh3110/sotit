@@ -80,13 +80,15 @@ exports.verifySubscriptionPayment = async (req, res) => {
         const isAuthentic = expectedSignature === razorpay_signature;
 
         if (isAuthentic) {
-            const user = await User.findById(req.user._id);
+            let updatedUser;
             
             if (planType === 'Single' && vendorId) {
-                // Unlock single vendor
-                if (!user.unlockedVendors.includes(vendorId)) {
-                    user.unlockedVendors.push(vendorId);
-                }
+                // Unlock single vendor using $addToSet to avoid duplicates and bypass validations
+                updatedUser = await User.findByIdAndUpdate(
+                    req.user._id,
+                    { $addToSet: { unlockedVendors: vendorId } },
+                    { new: true }
+                );
             } else {
                 // Update Membership
                 const expiresAt = new Date();
@@ -94,19 +96,27 @@ exports.verifySubscriptionPayment = async (req, res) => {
                 else if (planType === 'Monthly') expiresAt.setDate(expiresAt.getDate() + 30);
                 else if (planType === 'Yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
-                user.subscription = {
-                    plan: planType,
-                    expiresAt: expiresAt
-                };
+                updatedUser = await User.findByIdAndUpdate(
+                    req.user._id,
+                    { 
+                        subscription: {
+                            plan: planType,
+                            expiresAt: expiresAt
+                        }
+                    },
+                    { new: true }
+                );
             }
 
-            await user.save();
+            if (!updatedUser) {
+                return res.status(404).json({ success: false, message: "User not found" });
+            }
 
             res.json({
                 success: true,
                 message: planType === 'Single' ? "Expert unlocked successfully" : "Membership upgraded successfully",
-                subscription: user.subscription,
-                unlockedVendors: user.unlockedVendors
+                subscription: updatedUser.subscription,
+                unlockedVendors: updatedUser.unlockedVendors
             });
         } else {
             res.status(400).json({ success: false, message: "Invalid payment signature" });

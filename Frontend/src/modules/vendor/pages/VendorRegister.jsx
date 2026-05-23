@@ -32,10 +32,21 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [address, setAddress] = useState({ street: "", city: "", state: "", isoCode: "", pincode: "" });
+  const [houseNo, setHouseNo] = useState("");
+  const [streetName, setStreetName] = useState("");
+  const [landmark, setLandmark] = useState("");
   const [liveLocation, setLiveLocation] = useState(null);
   const [customLanguage, setCustomLanguage] = useState("");
   const [customVehicleClass, setCustomVehicleClass] = useState("");
   const [remark, setRemark] = useState("");
+
+  useEffect(() => {
+    const fullStreetAddress = [houseNo, streetName, landmark]
+      .map(val => val ? val.trim() : "")
+      .filter(Boolean)
+      .join(", ");
+    setAddress(prev => ({ ...prev, street: fullStreetAddress }));
+  }, [houseNo, streetName, landmark]);
 
   const [profData, setProfData] = useState({
     dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Full Time", languages: ["Hindi"],
@@ -62,6 +73,42 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     garagePhoto: null, shopLicense: null, barCertificate: null, advocateId: null,
     regCertificate: null, officeProof: null
   });
+
+  const formatDLNumber = (value) => {
+    const clean = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    let state = clean.slice(0, 2).replace(/[^A-Z]/g, "");
+    let rto = clean.slice(2, 4).replace(/[^0-9]/g, "");
+    let year = clean.slice(4, 8).replace(/[^0-9]/g, "");
+    let num = clean.slice(8, 15).replace(/[^0-9]/g, "");
+    
+    let result = "";
+    if (state) result += state;
+    if (clean.length > 2) {
+      if (rto) result += "-" + rto;
+      if (clean.length > 4) {
+        if (year) result += "-" + year;
+        if (clean.length > 8) {
+          if (num) result += "-" + num;
+        }
+      }
+    }
+    return result;
+  };
+
+  const formatAadhaarNumber = (value) => {
+    const clean = value.replace(/[^0-9]/g, "");
+    let result = "";
+    if (clean.length > 0) {
+      result += clean.slice(0, 4);
+      if (clean.length > 4) {
+        result += " " + clean.slice(4, 8);
+        if (clean.length > 8) {
+          result += " " + clean.slice(8, 12);
+        }
+      }
+    }
+    return result;
+  };
 
   // --- Custom Dropdown Component ---
   const CustomDropdown = ({ label, options, value, onChange, placeholder, icon: Icon, disabled }) => {
@@ -190,9 +237,17 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                 const fetchedStateName = data.address?.state || "";
                 const stateObj = allStates.find(s => s.name === fetchedStateName);
                 
+                const hNo = data.address?.house_number || data.address?.building || "";
+                const roadStr = data.address?.road || data.address?.suburb || fetchedAddress;
+                const landmarkStr = data.address?.neighbourhood || "";
+
+                setHouseNo(hNo);
+                setStreetName(roadStr);
+                setLandmark(landmarkStr);
+
                 setAddress(prev => ({
                     ...prev,
-                    street: fetchedAddress,
+                    street: [hNo, roadStr, landmarkStr].filter(Boolean).join(", "),
                     city: fetchedCity,
                     state: fetchedStateName,
                     isoCode: stateObj?.isoCode || prev.isoCode,
@@ -232,6 +287,9 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setOtp(["", "", "", ""]);
     setIsOtpSent(false);
     setAddress({ street: "", city: "", state: "", isoCode: "", pincode: "" });
+    setHouseNo("");
+    setStreetName("");
+    setLandmark("");
     setLiveLocation(null);
     setCustomLanguage("");
     setCustomVehicleClass("");
@@ -264,7 +322,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   };
 
   const handleNextStep = () => {
-    if (!name || !mobile || !address.street || !address.state || !address.city || !address.pincode) {
+    if (!name || !mobile || !streetName || !address.state || !address.city || !address.pincode) {
         return toast.error("Please fill all required personal & address fields");
     }
     if (!isOtpSent) {
@@ -278,6 +336,23 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   };
 
   const handleFinalSubmit = async () => {
+    if ((role === 'driver' || role === 'towing') && !profData.dlNumber) {
+        return toast.error("Please enter your Driving License Number");
+    }
+    if ((role === 'driver' || role === 'towing') && profData.dlNumber) {
+        const cleanDL = profData.dlNumber.replace(/[^A-Za-z0-9]/g, "");
+        if (cleanDL.length !== 15) {
+            return toast.error("Driving License number must be exactly 15 characters (e.g. MH-12-2015-0001234)");
+        }
+    }
+
+    if (profData.aadhaarNumber) {
+        const cleanAadhaar = profData.aadhaarNumber.replace(/[^0-9]/g, "");
+        if (cleanAadhaar.length !== 12) {
+            return toast.error("Aadhaar Number must be exactly 12 digits (e.g. 1234 5678 9012)");
+        }
+    }
+
     const enteredOtp = otp.join("");
     if (!enteredOtp || enteredOtp.length !== 4) {
         return toast.error("Please enter the 4-digit verification OTP");
@@ -425,10 +500,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                 </div>
                 <div className="space-y-4">
                   <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                  <div className="flex gap-2">
-                    <input type="tel" placeholder="Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} className="flex-1 bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                    <button onClick={handleSendOTP} className="bg-[#C44545] text-white px-6 rounded-2xl text-[10px] font-black uppercase">Verify</button>
-                  </div>
+                  <input type="tel" placeholder="Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                  <button type="button" onClick={handleSendOTP} className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all">Verify Mobile</button>
                   {isOtpSent && (
                     <div className="flex gap-3 justify-center py-2">
                       {otp.map((d, i) => (
@@ -451,14 +524,44 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     />
                   </div>
 
-                  <div className="pt-4 space-y-4 border-t border-slate-100">
+                  <div className="pt-6 space-y-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between px-2 mb-2">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#C44545]">Location Details</span>
+                        <span className="text-sm font-black text-slate-800">Your Address</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => fetchLiveLocation('personal')}
+                        className="flex items-center gap-1.5 bg-rose-50 border border-rose-100 text-[#C44545] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all shadow-sm"
+                      >
+                        <Navigation size={12} className="fill-[#C44545] text-white" /> Detect Location
+                      </button>
+                    </div>
+
                     <div className="space-y-4">
-                      <textarea 
-                        placeholder="Full Address (House No, Street, Landmark)" 
-                        rows={3}
-                        value={address.street} 
-                        onChange={(e) => setAddress({...address, street: e.target.value})} 
-                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold resize-none"
+                      <input 
+                        type="text" 
+                        placeholder="House / Flat No, Building Name" 
+                        value={houseNo} 
+                        onChange={(e) => setHouseNo(e.target.value)} 
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" 
+                      />
+
+                      <input 
+                        type="text" 
+                        placeholder="Street Address, Locality, Area" 
+                        value={streetName} 
+                        onChange={(e) => setStreetName(e.target.value)} 
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" 
+                      />
+
+                      <input 
+                        type="text" 
+                        placeholder="Landmark (Optional)" 
+                        value={landmark} 
+                        onChange={(e) => setLandmark(e.target.value)} 
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" 
                       />
                       
                       <div className="grid grid-cols-1 gap-4">
@@ -566,7 +669,14 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     <div className="px-2 space-y-4">
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Driving License Info</label>
-                        <input type="text" placeholder="DL Number" value={profData.dlNumber} onChange={(e) => setProfData({...profData, dlNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                        <input 
+                          type="text" 
+                          placeholder="DL Number (e.g. MH-12-2015-0001234)" 
+                          maxLength={18}
+                          value={profData.dlNumber} 
+                          onChange={(e) => setProfData({...profData, dlNumber: formatDLNumber(e.target.value)})} 
+                          className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold uppercase" 
+                        />
                       </div>
                       
                       <div className="space-y-1">
@@ -698,7 +808,14 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
                   <div className="px-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Identity Proof (Optional)</label>
-                    <input type="text" placeholder="Aadhaar Number" value={profData.aadhaarNumber} onChange={(e) => setProfData({...profData, aadhaarNumber: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
+                    <input 
+                      type="text" 
+                      placeholder="Aadhaar Number (e.g. 1234 5678 9012)" 
+                      maxLength={14}
+                      value={profData.aadhaarNumber} 
+                      onChange={(e) => setProfData({...profData, aadhaarNumber: formatAadhaarNumber(e.target.value)})} 
+                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" 
+                    />
                   </div>
 
                   {(role === 'driver' || role === 'towing') && (
@@ -739,33 +856,31 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       </div>
 
                       {/* Input box to add custom vehicle class */}
-                      <div className="flex gap-2 mt-2">
-                        <input 
-                          type="text" 
-                          placeholder="Add Custom Vehicle (e.g. Auto, Crane)" 
-                          value={customVehicleClass} 
-                          onChange={(e) => setCustomVehicleClass(e.target.value)} 
-                          className="flex-1 bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none"
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            if (customVehicleClass.trim()) {
-                              const cVal = customVehicleClass.trim();
-                              if (!profData.vehicleClasses.includes(cVal)) {
-                                setProfData({
-                                  ...profData,
-                                  vehicleClasses: [...profData.vehicleClasses, cVal]
-                                });
-                              }
-                              setCustomVehicleClass("");
+                      <input 
+                        type="text" 
+                        placeholder="Add Custom Vehicle (e.g. Auto, Crane)" 
+                        value={customVehicleClass} 
+                        onChange={(e) => setCustomVehicleClass(e.target.value)} 
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (customVehicleClass.trim()) {
+                            const cVal = customVehicleClass.trim();
+                            if (!profData.vehicleClasses.includes(cVal)) {
+                              setProfData({
+                                ...profData,
+                                vehicleClasses: [...profData.vehicleClasses, cVal]
+                              });
                             }
-                          }}
-                          className="bg-[#C44545] text-white px-6 rounded-2xl text-[10px] font-black uppercase hover:bg-[#C44545]/90 transition-colors"
-                        >
-                          Add
-                        </button>
-                      </div>
+                            setCustomVehicleClass("");
+                          }
+                        }}
+                        className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm"
+                      >
+                        Add Vehicle Class
+                      </button>
                     </div>
                   )}
 

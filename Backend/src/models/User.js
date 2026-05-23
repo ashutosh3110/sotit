@@ -55,6 +55,10 @@ const userSchema = new mongoose.Schema({
     enum: ['app', 'web', null],
     default: null,
   },
+  isBlocked: {
+    type: Boolean,
+    default: false,
+  },
   otp: String,
   otpExpire: Date,
   resetPasswordToken: String,

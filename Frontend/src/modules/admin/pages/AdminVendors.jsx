@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Phone, Menu, Mail, ShieldCheck, ArrowLeft, ExternalLink, Filter, User, Briefcase, Landmark, CreditCard, Info, FileText, X, Clock, Zap, Wrench, AlertCircle, HelpCircle } from "lucide-react";
+import { Search, MapPin, Phone, Menu, Mail, ShieldCheck, ArrowLeft, ExternalLink, Filter, User, Briefcase, Landmark, CreditCard, Info, FileText, X, Clock, Zap, Wrench, AlertCircle, HelpCircle, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import AdminSidebar from "../components/AdminSidebar";
+import toast from "react-hot-toast";
 
 const AdminVendors = () => {
   const navigate = useNavigate();

@@ -87,14 +87,18 @@ exports.toggleVendorBlock = async (req, res) => {
         const vendor = await Vendor.findById(vendorId);
         if (!vendor) return res.status(404).json({ message: 'Vendor not found' });
 
-        vendor.isBlocked = !vendor.isBlocked;
-        await vendor.save();
+        const updatedVendor = await Vendor.findByIdAndUpdate(
+            vendorId,
+            { isBlocked: !vendor.isBlocked },
+            { new: true }
+        );
 
         res.status(200).json({ 
-            message: `Vendor ${vendor.isBlocked ? 'blocked' : 'unblocked'} successfully`, 
-            vendor 
+            message: `Vendor ${updatedVendor.isBlocked ? 'blocked' : 'unblocked'} successfully`, 
+            vendor: updatedVendor 
         });
     } catch (error) {
+        console.error("Error toggling vendor block status:", error);
         res.status(500).json({ message: 'Error toggling block status' });
     }
 };
@@ -112,11 +116,37 @@ exports.updateVendorRating = async (req, res) => {
             return res.status(400).json({ message: 'Driver ratings are automated and cannot be set manually.' });
         }
 
-        vendor.rating = rating;
-        await vendor.save();
+        const updatedVendor = await Vendor.findByIdAndUpdate(
+            vendorId,
+            { rating },
+            { new: true }
+        );
 
-        res.status(200).json({ message: 'Rating updated successfully', vendor });
+        res.status(200).json({ message: 'Rating updated successfully', vendor: updatedVendor });
     } catch (error) {
+        console.error("Error updating rating:", error);
         res.status(500).json({ message: 'Error updating rating' });
+    }
+};
+
+exports.toggleUserBlock = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { isBlocked: !user.isBlocked },
+            { new: true }
+        );
+
+        res.status(200).json({
+            message: `User ${updatedUser.isBlocked ? 'blocked' : 'unblocked'} successfully`,
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error("Error toggling user block status:", error);
+        res.status(500).json({ message: 'Error toggling block status' });
     }
 };

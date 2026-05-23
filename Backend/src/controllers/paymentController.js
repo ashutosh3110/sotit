@@ -270,12 +270,17 @@ exports.verifySubscriptionPayment = async (req, res) => {
             return res.status(400).json({ success: false, message: "Payment verification failed" });
         }
 
-        const user = await User.findById(req.user.id);
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 30);
 
-        user.subscription = { plan: 'Prime', expiresAt: expiresAt };
-        await user.save();
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user.id,
+            { subscription: { plan: 'Prime', expiresAt: expiresAt } },
+            { new: true }
+        );
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
 
         await WalletTransaction.create({
             userId: req.user.id,

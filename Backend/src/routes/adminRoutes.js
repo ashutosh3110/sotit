@@ -1,6 +1,6 @@
 const express = require('express');
 const { adminLogin, updateProfile, updateFCMToken } = require('../controllers/adminAuthController');
-const { getPendingVendors, getAllVendors, getAllUsers, getMasterDirectory, updateVendorStatus, toggleVendorBlock, updateVendorRating } = require('../controllers/adminController');
+const { getPendingVendors, getAllVendors, getAllUsers, getMasterDirectory, updateVendorStatus, toggleVendorBlock, updateVendorRating, toggleUserBlock } = require('../controllers/adminController');
 const { adminProtect } = require('../middlewares/adminAuthMiddleware');
 
 const router = express.Router();
@@ -13,6 +13,7 @@ router.put('/update-fcm', adminProtect, updateFCMToken);
 // Management
 router.get('/test', (req, res) => res.json({ message: "Admin routes working" }));
 router.get('/users', adminProtect, getAllUsers);
+router.put('/users/:userId/toggle-block', adminProtect, toggleUserBlock);
 router.get('/vendors', adminProtect, getAllVendors);
 router.get('/vendors/pending', adminProtect, getPendingVendors);
 router.put('/vendors/:vendorId/status', adminProtect, updateVendorStatus);

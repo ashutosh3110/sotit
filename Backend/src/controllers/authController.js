@@ -193,6 +193,11 @@ exports.login = async (req, res, next) => {
       throw new Error('Invalid mobile number');
     }
 
+    if (user.isBlocked) {
+      res.status(403);
+      throw new Error('Your account is blocked. Please contact support.');
+    }
+
     // Check if password matches
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {

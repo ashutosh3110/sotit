@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import logo from "../../../assets/logo.png";
 import AdminSidebar from "../components/AdminSidebar";
+import toast from "react-hot-toast";
 
 /**
  * Admin Users List Page
@@ -272,11 +273,34 @@ const AdminUsers = () => {
                           <button className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-black/10 active:scale-95 transition-all">
                               Send Message
                           </button>
-                          <button className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] border-2 transition-all active:scale-95 ${
-                              selectedEntity.isBlocked 
-                              ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
-                              : 'bg-rose-50 border-rose-100 text-rose-600'
-                          }`}>
+                          <button 
+                              onClick={async () => {
+                                  const tid = toast.loading(`${selectedEntity.isBlocked ? 'Unblocking' : 'Blocking'} user...`);
+                                  try {
+                                      const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/users/${selectedEntity._id}/toggle-block`, {
+                                          method: 'PUT',
+                                          headers: { 
+                                              'Authorization': `Bearer ${localStorage.getItem('admin_token')}` 
+                                          }
+                                      });
+                                      const data = await res.json();
+                                      if (res.ok) {
+                                          toast.success(data.message, { id: tid });
+                                          setSelectedEntity(data.user);
+                                          setUsersList(prev => prev.map(u => u._id === data.user._id ? data.user : u));
+                                      } else {
+                                          toast.error(data.message, { id: tid });
+                                      }
+                                  } catch (err) {
+                                      toast.error("Action failed", { id: tid });
+                                  }
+                              }}
+                              className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] border-2 transition-all active:scale-95 ${
+                                  selectedEntity.isBlocked 
+                                  ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
+                                  : 'bg-rose-50 border-rose-100 text-rose-600'
+                              }`}
+                          >
                               {selectedEntity.isBlocked ? 'Unblock' : 'Block User'}
                           </button>
                       </div>

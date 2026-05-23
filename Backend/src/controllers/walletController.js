@@ -85,8 +85,13 @@ exports.verifyPayment = async (req, res) => {
             // Update Balance based on userType
             if (transaction.userType === 'vendor') {
                 const vendor = await Vendor.findById(transaction.vendorId);
-                vendor.walletBalance = (vendor.walletBalance || 0) + transaction.amount;
-                await vendor.save();
+                if (!vendor) return res.status(404).json({ message: 'Vendor not found' });
+
+                const updatedVendor = await Vendor.findByIdAndUpdate(
+                    transaction.vendorId,
+                    { walletBalance: (vendor.walletBalance || 0) + transaction.amount },
+                    { new: true }
+                );
 
                 // Send Notification to Admin
                 try {
@@ -97,8 +102,8 @@ exports.verifyPayment = async (req, res) => {
                             sendPushNotification(
                                 token,
                                 "Vendor Wallet Recharge! 🛠️",
-                                `Expert ${vendor.name} added ₹${transaction.amount} to their wallet.`,
-                                { type: 'vendor_recharge', vendorId: vendor._id.toString() }
+                                `Expert ${updatedVendor.name} added ₹${transaction.amount} to their wallet.`,
+                                { type: 'vendor_recharge', vendorId: updatedVendor._id.toString() }
                             )
                         );
                         await Promise.allSettled(notificationPromises);
@@ -110,12 +115,17 @@ exports.verifyPayment = async (req, res) => {
                 res.json({
                     success: true,
                     message: "Vendor Payment verified successfully",
-                    balance: vendor.walletBalance
+                    balance: updatedVendor.walletBalance
                 });
             } else {
                 const user = await User.findById(transaction.userId);
-                user.walletBalance = (user.walletBalance || 0) + transaction.amount;
-                await user.save();
+                if (!user) return res.status(404).json({ message: 'User not found' });
+
+                const updatedUser = await User.findByIdAndUpdate(
+                    transaction.userId,
+                    { walletBalance: (user.walletBalance || 0) + transaction.amount },
+                    { new: true }
+                );
 
                 // Send Notification to Admin
                 try {
