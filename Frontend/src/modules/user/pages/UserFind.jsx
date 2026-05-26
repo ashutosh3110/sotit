@@ -484,7 +484,7 @@ const UserFind = () => {
                                         onClick={() => handleHireExpert(selectedVendor._id, selectedVendor.role)}
                                         className="w-full py-5 bg-[#C44545] text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-[#C44545]/30 hover:scale-[1.02] active:scale-95 transition-all"
                                     >
-                                        {selectedVendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) ? "Connect Now" : "Unlock Contact (₹1)"}
+                                        {selectedVendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) ? "Connect Now" : "Unlock Contact (₹9)"}
                                     </button>
                                 </div>
                             </>
@@ -625,7 +625,7 @@ const UserFind = () => {
                 <div className="px-6 mt-4">
                     <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
                         {[
-                            { type: 'Single', price: '1', period: 'Expert', title: 'Single Unlock', label: 'Unlock One' },
+                            { type: 'Single', price: '9', period: 'Expert', title: 'Single Unlock', label: 'Unlock One' },
                             { type: 'Daily', price: '99', period: 'Day', title: 'Unlimited Details', label: 'Daily Access' },
                             { type: 'Monthly', price: '999', period: 'Month', title: 'Unlimited Details', label: 'Monthly Access' },
                             { type: 'Yearly', price: '9999', period: 'Year', title: 'Unlimited Details', label: 'Yearly Access' }

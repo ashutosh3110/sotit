@@ -30,7 +30,7 @@ exports.createSubscriptionOrder = async (req, res) => {
         if (planType === 'Daily') amount = 99;
         else if (planType === 'Monthly') amount = 999;
         else if (planType === 'Yearly') amount = 9999;
-        else if (planType === 'Single') amount = 1; // TESTING: ₹1 (change back to 9 after test)
+        else if (planType === 'Single') amount = 9;
         else return res.status(400).json({ success: false, message: "Invalid plan type" });
         
         const options = {
