@@ -939,33 +939,31 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     </div>
 
                     {/* Input box to add custom language */}
-                    <div className="flex gap-2 mt-2">
-                      <input 
-                        type="text" 
-                        placeholder="Add Custom Language (e.g. French)" 
-                        value={customLanguage} 
-                        onChange={(e) => setCustomLanguage(e.target.value)} 
-                        className="flex-1 bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          if (customLanguage.trim()) {
-                            const lang = customLanguage.trim();
-                            if (!profData.languages.includes(lang)) {
-                              setProfData({
-                                ...profData,
-                                languages: [...profData.languages, lang]
-                              });
-                            }
-                            setCustomLanguage("");
+                    <input 
+                      type="text" 
+                      placeholder="Add Custom Language (e.g. French)" 
+                      value={customLanguage} 
+                      onChange={(e) => setCustomLanguage(e.target.value)} 
+                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        if (customLanguage.trim()) {
+                          const lang = customLanguage.trim();
+                          if (!profData.languages.includes(lang)) {
+                            setProfData({
+                              ...profData,
+                              languages: [...profData.languages, lang]
+                            });
                           }
-                        }}
-                        className="bg-[#C44545] text-white px-6 rounded-2xl text-[10px] font-black uppercase hover:bg-[#C44545]/90 transition-colors"
-                      >
-                        Add
-                      </button>
-                    </div>
+                          setCustomLanguage("");
+                        }
+                      }}
+                      className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm"
+                    >
+                      Add Language
+                    </button>
                   </div>
                 </div>
 
