@@ -19,8 +19,12 @@ const AuthLanding = () => {
 
   useEffect(() => {
     const tab = queryParams.get('tab');
+    const role = queryParams.get('role');
     if (tab === 'vendor' || tab === 'user') {
       setActiveTab(tab);
+    }
+    if (role === 'owner') {
+      setFormType('register');
     }
   }, [location.search]);
 

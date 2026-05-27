@@ -271,6 +271,17 @@ const UserFind = () => {
         fetchVendors();
     }, [selectedCategory, selectedState, selectedDistrict, selectedVehicleClass, selectedSpecialty, selectedPracticeArea, selectedRtoService]);
 
+    // Redirect to Owner Form if no experts are found in the selected location/category
+    useEffect(() => {
+        if (!isLoading && vendors.length === 0) {
+            const timer = setTimeout(() => {
+                toast("No experts available in this area. Redirecting to Vehicle Owner form...", { icon: 'ℹ️', duration: 3000 });
+                navigate('/auth?tab=vendor&role=owner&autofill=true');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading, vendors.length, navigate]);
+
     // Fetch Full Profile for Modal
     const handleViewProfile = async (vendorId) => {
         setIsFetchingProfile(true);
@@ -1125,7 +1136,7 @@ const UserFind = () => {
                                             Owner ke roop mein register karein aur customers se direct connect ho.
                                         </p>
                                         <button
-                                            onClick={() => navigate('/auth?tab=vendor&role=owner')}
+                                            onClick={() => navigate('/auth?tab=vendor&role=owner&autofill=true')}
                                             className="w-full py-4 bg-[#C44545] text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-[#C44545]/30 active:scale-95 transition-all flex items-center justify-center gap-2"
                                         >
                                             Owner Form Fill Karein

@@ -81,6 +81,8 @@ const vendorSchema = new mongoose.Schema({
     rcNumber: String,            // Vehicle Registration Number
     availableFor: [String],      // e.g. ['Self Drive', 'With Driver', 'Towing', 'Goods Transport']
     operatingCity: String,
+    vehicleType: String,         // Added for Driver Owner requirements
+    jobType: String,             // Added for Driver Owner requirements (Permanent / Part Time)
   },
 
   kycDocuments: {
