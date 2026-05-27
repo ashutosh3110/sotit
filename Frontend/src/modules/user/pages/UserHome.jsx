@@ -121,7 +121,12 @@ const Home = () => {
                 name: user.profile.name,
                 contact: user.profile.mobile
             },
-            theme: { color: "#C44545" }
+            theme: { color: "#C44545" },
+            modal: {
+                ondismiss: () => {
+                    toast.dismiss(tid);
+                }
+            }
         };
 
         const rzp = new window.Razorpay(options);

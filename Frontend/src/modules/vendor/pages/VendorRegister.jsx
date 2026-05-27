@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Navigation, Wrench, Shield, Briefcase, FileText, Truck, Phone, ArrowRight, Car, Camera, MapPin, CheckCircle2, ShieldCheck, CreditCard, Landmark, Info, Map, Clock, Zap, Hammer, Wind, Battery, Settings, Disc, Droplets, Building2, Scale, GraduationCap, Video, Users, ChevronDown, Search, Globe, Check, Square, CheckSquare } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useRef, useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
 import { State } from "country-state-city";
@@ -8,9 +8,20 @@ import { indiaData } from '../../../utils/indiaData';
 
 const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [role, setRole] = useState('driver');
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Auto-select owner role if URL has ?role=owner
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam === 'owner') {
+      setRole('owner');
+      setStep(1);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- Constants ---
   const allStatesRaw = useMemo(() => State.getStatesOfCountry('IN'), []);
@@ -65,6 +76,10 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
   const [legalData, setLegalData] = useState({
     barRegNumber: "", practiceAreas: [], experience: "1-3 Years", officeName: "", visitingAddress: "", city: "", gpsLocation: null, consultationType: "Both"
+  });
+
+  const [ownerData, setOwnerData] = useState({
+    ownerType: "", vehicleTypes: [], fleetSize: "1", rcNumber: "", availableFor: [], operatingCity: ""
   });
 
   const [bankData, setBankData] = useState({ accountHolderName: "", bankName: "", accountNumber: "", ifscCode: "", upiId: "" });
@@ -310,6 +325,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setLegalData({
       barRegNumber: "", practiceAreas: [], experience: "1-3 Years", officeName: "", visitingAddress: "", city: "", gpsLocation: null, consultationType: "Both"
     });
+    setOwnerData({ ownerType: "", vehicleTypes: [], fleetSize: "1", rcNumber: "", availableFor: [], operatingCity: "" });
     setBankData({ accountHolderName: "", bankName: "", accountNumber: "", ifscCode: "", upiId: "" });
     setKycFiles({ 
       aadhaar: null, pan: null, selfie: null, policeVerification: null, dlFile: null, 
@@ -378,6 +394,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         formData.append('mechanicData', JSON.stringify(mechanicData));
         formData.append('rtoData', JSON.stringify(rtoData));
         formData.append('legalData', JSON.stringify(legalData));
+        formData.append('ownerData', JSON.stringify(ownerData));
         formData.append('bankData', JSON.stringify(bankData));
 
         if (profileFile) formData.append('profileImage', profileFile);
@@ -469,6 +486,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     { id: 'towing', label: 'Towing', icon: Truck, desc: '24/7 recovery & towing' },
                     { id: 'rto', label: 'RTO Agent', icon: FileText, desc: 'Paperwork assistant' },
                     { id: 'legal', label: 'Legal Advisor', icon: Briefcase, desc: 'Vehicle law expert' },
+                    { id: 'owner', label: 'Vehicle Owner', icon: Car, desc: 'Car, Truck, Bus, Tempo owner' },
                   ].map((r) => (
                     <div key={r.id} onClick={() => handleSelectRole(r.id)} className={`p-5 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-5 ${role === r.id ? 'border-[#C44545] bg-[#C44545] text-white' : 'border-neutral-200 bg-white'}`}>
                       <div className={`h-12 w-12 rounded-2xl flex items-center justify-center ${role === r.id ? 'bg-white/10' : 'bg-neutral-100'}`}><r.icon size={22} /></div>
@@ -803,6 +821,101 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                           ))}
                         </div>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Owner Role Details */}
+                  {role === 'owner' && (
+                    <div className="space-y-6 px-2">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Owner Type</label>
+                        <div className="flex flex-col gap-2">
+                          {['Car Owner', 'Truck Owner', 'Bus Owner', 'Tempo / Van Owner', 'Heavy Vehicle Owner', 'Other'].map(type => (
+                            <div
+                              key={type}
+                              onClick={() => setOwnerData({...ownerData, ownerType: type})}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${ownerData.ownerType === type ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{type}</span>
+                              {ownerData.ownerType === type ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Types Available (Multiple)</label>
+                        <div className="flex flex-col gap-2">
+                          {['Car / Sedan', 'SUV', 'Pickup Truck', 'Mini Truck', 'Large Truck', 'Bus', 'Mini Bus', 'Tempo / Van', 'Auto Rickshaw'].map(type => (
+                            <div
+                              key={type}
+                              onClick={() => {
+                                const n = ownerData.vehicleTypes.includes(type)
+                                  ? ownerData.vehicleTypes.filter(x => x !== type)
+                                  : [...ownerData.vehicleTypes, type];
+                                setOwnerData({...ownerData, vehicleTypes: n});
+                              }}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${ownerData.vehicleTypes.includes(type) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{type}</span>
+                              {ownerData.vehicleTypes.includes(type) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Available For (Multiple)</label>
+                        <div className="flex flex-col gap-2">
+                          {['Self Drive (Rental)', 'With Driver', 'Goods Transport', 'Towing Support', 'Staff Transport', 'School Bus'].map(use => (
+                            <div
+                              key={use}
+                              onClick={() => {
+                                const n = ownerData.availableFor.includes(use)
+                                  ? ownerData.availableFor.filter(x => x !== use)
+                                  : [...ownerData.availableFor, use];
+                                setOwnerData({...ownerData, availableFor: n});
+                              }}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${ownerData.availableFor.includes(use) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{use}</span>
+                              {ownerData.availableFor.includes(use) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Fleet Size (Kitne vehicles hain?)</label>
+                        <div className="flex gap-3 flex-wrap">
+                          {['1', '2-5', '6-10', '10+'].map(size => (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => setOwnerData({...ownerData, fleetSize: size})}
+                              className={`flex-1 py-4 rounded-2xl border-2 font-black text-[12px] uppercase tracking-widest transition-all min-w-[60px] ${ownerData.fleetSize === size ? 'border-[#C44545] bg-[#C44545] text-white shadow-lg' : 'border-slate-100 bg-white text-slate-400'}`}
+                            >
+                              {size}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <input
+                        type="text"
+                        placeholder="RC Number (Vehicle Registration No.)"
+                        value={ownerData.rcNumber}
+                        onChange={(e) => setOwnerData({...ownerData, rcNumber: e.target.value.toUpperCase()})}
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold uppercase"
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Operating City / Area"
+                        value={ownerData.operatingCity}
+                        onChange={(e) => setOwnerData({...ownerData, operatingCity: e.target.value})}
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold"
+                      />
                     </div>
                   )}
 

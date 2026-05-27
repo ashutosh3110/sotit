@@ -21,7 +21,7 @@ exports.registerVendor = async (req, res) => {
     const { 
         name, mobile, email, password, role, 
         address, liveLocation, 
-        profData, mechanicData, rtoData, legalData, 
+        profData, mechanicData, rtoData, legalData, ownerData,
         bankData,
         otp,
         remark
@@ -74,6 +74,7 @@ exports.registerVendor = async (req, res) => {
       mechanicDetails: mechanicData ? JSON.parse(mechanicData) : {},
       rtoDetails: rtoData ? JSON.parse(rtoData) : {},
       legalDetails: legalData ? JSON.parse(legalData) : {},
+      ownerDetails: ownerData ? JSON.parse(ownerData) : {},
       bankDetails: bankData ? JSON.parse(bankData) : {},
       kycDocuments: docs,
       status: 'approved',

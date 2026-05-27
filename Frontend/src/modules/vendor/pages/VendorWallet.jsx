@@ -118,7 +118,12 @@ const VendorWallet = () => {
                     email: vendorData.profile.email,
                     contact: vendorData.profile.mobile
                 },
-                theme: { color: "#C44545" }
+                theme: { color: "#C44545" },
+                modal: {
+                    ondismiss: function() {
+                        setIsLoading(false);
+                    }
+                }
             };
 
             const rzp = new window.Razorpay(options);

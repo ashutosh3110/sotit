@@ -9,7 +9,7 @@ const vendorSchema = new mongoose.Schema({
   role: { 
     type: String, 
     required: true, 
-    enum: ['driver', 'mechanic', 'towing', 'rto', 'legal'] 
+    enum: ['driver', 'mechanic', 'towing', 'rto', 'legal', 'owner'] 
   },
   profileImage: {
     public_id: String,
@@ -72,6 +72,15 @@ const vendorSchema = new mongoose.Schema({
     accountNumber: String,
     ifscCode: String,
     upiId: String
+  },
+
+  ownerDetails: {
+    ownerType: String,           // 'Car Owner', 'Truck Owner', 'Bus Owner', 'Tempo Owner', 'Other'
+    vehicleTypes: [String],      // e.g. ['Car', 'SUV']
+    fleetSize: String,           // '1', '2-5', '6-10', '10+'
+    rcNumber: String,            // Vehicle Registration Number
+    availableFor: [String],      // e.g. ['Self Drive', 'With Driver', 'Towing', 'Goods Transport']
+    operatingCity: String,
   },
 
   kycDocuments: {

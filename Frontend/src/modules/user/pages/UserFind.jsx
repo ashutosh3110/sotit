@@ -19,7 +19,8 @@ import {
     Globe,
     X,
     Check,
-    Loader2
+    Loader2,
+    ArrowRight
 } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -1098,20 +1099,47 @@ const UserFind = () => {
                             <div key={i} className="bg-white rounded-[2.5rem] p-6 border border-slate-100 animate-pulse h-40" />
                         ))}
                         {!isLoading && filteredVendors.length === 0 && (
-                            <div className="py-20 text-center px-10 flex flex-col items-center">
-                                <div className="h-32 w-32 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-6 shadow-xl"><Search size={48} strokeWidth={1} /></div>
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight">No experts found.</h3>
-                                <div className="flex flex-col gap-3 w-full max-w-xs mt-6">
-                                    <button 
-                                        onClick={() => setShowRequirementModal(true)}
-                                        className="w-full px-8 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
-                                    >
-                                        Post Requirement
-                                    </button>
-                                    <button onClick={() => { setSelectedState(null); setSelectedDistrict(''); setSearchQuery(''); }} className="w-full px-8 py-4 bg-white text-slate-400 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all">
-                                        Clear Filters
-                                    </button>
+                            <div className="py-16 text-center px-6 flex flex-col items-center">
+                                <div className="h-24 w-24 bg-rose-50 rounded-[2rem] flex items-center justify-center text-[#C44545] mb-6 shadow-xl border border-rose-100">
+                                    <Search size={40} strokeWidth={1.5} />
                                 </div>
+                                <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">No experts found.</h3>
+                                <p className="text-sm font-bold text-slate-400 mb-8 max-w-xs leading-relaxed">
+                                    Is area mein abhi koi expert available nahi hai.
+                                </p>
+
+                                {/* Owner Register CTA */}
+                                <div className="w-full max-w-sm bg-slate-900 rounded-[2.5rem] p-6 relative overflow-hidden shadow-2xl">
+                                    <div className="absolute top-0 right-0 h-32 w-32 bg-[#C44545] rounded-full blur-[60px] opacity-20" />
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="h-8 w-8 bg-[#C44545] rounded-xl flex items-center justify-center">
+                                                <Zap size={16} className="text-white fill-white" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-[#C44545] uppercase tracking-[0.2em]">Opportunity</span>
+                                        </div>
+                                        <h4 className="text-lg font-black text-white tracking-tight mb-2 leading-tight">
+                                            Kya aapke paas vehicle hai?
+                                        </h4>
+                                        <p className="text-[12px] font-bold text-white/50 mb-6 leading-relaxed">
+                                            Owner ke roop mein register karein aur customers se direct connect ho.
+                                        </p>
+                                        <button
+                                            onClick={() => navigate('/auth?tab=vendor&role=owner')}
+                                            className="w-full py-4 bg-[#C44545] text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-[#C44545]/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            Owner Form Fill Karein
+                                            <ArrowRight size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => { setSelectedState(null); setSelectedDistrict(''); setSearchQuery(''); }}
+                                    className="mt-4 w-full max-w-sm px-8 py-4 bg-white text-slate-400 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all"
+                                >
+                                    Clear Filters
+                                </button>
                             </div>
                         )}
                     </motion.div>
