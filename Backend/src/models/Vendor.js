@@ -120,7 +120,7 @@ const vendorSchema = new mongoose.Schema({
   },
   platform: {
     type: String,
-    enum: ['app', 'web', null],
+    enum: ['app', 'web', 'android', 'ios', null],
     default: null
   },
   isOnline: {
