@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Shield, Wallet, ChevronRight, Settings, LogOut, Package, Star, CreditCard, Bell, Lock, HelpCircle, ArrowLeft, Moon, Sun } from "lucide-react";
+import { User, Shield, Wallet, ChevronRight, Settings, LogOut, Star, Bell, Lock, HelpCircle, ArrowLeft, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getUserData, logoutUser } from "../utils/userStore";
 import { useState, useEffect } from "react";
@@ -46,7 +46,29 @@ const UserProfile = () => {
         <div className={`min-h-screen pb-28 font-inter transition-colors duration-500 ${isDarkMode ? 'bg-slate-950' : 'bg-neutral-50'}`}>
             {/* Header */}
             <div className="bg-[#C44545] px-6 pt-10 pb-12 flex items-center justify-between shadow-2xl shadow-[#C44545]/20 rounded-b-[3.5rem]">
-                <h1 className="text-2xl font-black tracking-tighter text-white">My Account.</h1>
+                <div className="flex items-center gap-4">
+                    {/* Profile Picture */}
+                    <div
+                        className="h-14 w-14 rounded-2xl overflow-hidden border-2 border-white/30 flex items-center justify-center bg-white/20 text-white text-xl font-black flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+                        onClick={() => navigate('/user/profile/edit')}
+                    >
+                        {(user?.profile?.profilePicture?.url || user?.user?.profilePicture?.url) ? (
+                            <img
+                                src={user?.profile?.profilePicture?.url || user?.user?.profilePicture?.url}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            (user?.profile?.name || user?.user?.name || 'U')[0].toUpperCase()
+                        )}
+                    </div>
+                    <div>
+                        <p className="text-white/70 text-[10px] font-black uppercase tracking-widest">Welcome back</p>
+                        <h1 className="text-xl font-black tracking-tighter text-white leading-tight">
+                            {user?.profile?.name || user?.user?.name || 'My Account'}.
+                        </h1>
+                    </div>
+                </div>
                 <button 
                   onClick={toggleDarkMode}
                   className="h-12 w-12 bg-white/15 rounded-[1.4rem] flex items-center justify-center border border-white/10 backdrop-blur-md active:scale-90 transition-transform text-white"
@@ -68,15 +90,6 @@ const UserProfile = () => {
                         isDark={isDarkMode}
                     />
                     <MenuButton 
-                        icon={Package} 
-                        label="Service History" 
-                        sublabel="Your Bookings" 
-                        onClick={() => navigate('/user/orders')}
-                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
-                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
-                        isDark={isDarkMode}
-                    />
-                    <MenuButton 
                         icon={Star} 
                         label="Rated Experts" 
                         sublabel="Your Feedback" 
@@ -89,17 +102,8 @@ const UserProfile = () => {
                         icon={HelpCircle} 
                         label="Help & Support" 
                         sublabel="Get Assistance" 
-                        onClick={() => navigate('/user/support')}
-                        color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
-                        bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
-                        isDark={isDarkMode}
-                    />
-                    <MenuButton 
-                        icon={Settings} 
-                        label="App Preferences" 
-                        sublabel="Themes & More" 
                         isLast={true}
-                        onClick={() => navigate('/user/preferences')}
+                        onClick={() => navigate('/user/support')}
                         color={isDarkMode ? 'text-rose-400' : 'text-[#C44545]'}
                         bg={isDarkMode ? 'bg-slate-800' : 'bg-white'}
                         isDark={isDarkMode}

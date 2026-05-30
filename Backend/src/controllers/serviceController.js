@@ -249,6 +249,40 @@ exports.getUserHistory = async (req, res) => {
     }
 };
 
+// @desc   Get user's completed/rated service requests (for Rated Experts page)
+// @route  GET /api/services/user/reviews
+// @access Private
+exports.getUserReviews = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const reviews = await ServiceRequest.find({
+            requesterId: userId,
+            status: { $in: ['completed', 'hired', 'accepted'] },
+            vendor: { $exists: true, $ne: null }
+        })
+        .populate('vendor', 'name role rating totalReviews profileImage')
+        .sort({ updatedAt: -1 });
+
+        const formatted = reviews.map(r => ({
+            id: r._id,
+            vendorName: r.vendor?.name || 'Unknown Expert',
+            vendorRole: r.vendor?.role || r.role || 'Expert',
+            vendorRating: r.vendor?.rating || 0,
+            vendorTotalReviews: r.vendor?.totalReviews || 0,
+            status: r.status,
+            role: r.role,
+            date: r.updatedAt || r.createdAt,
+            details: r.details || {}
+        }));
+
+        res.status(200).json({ success: true, reviews: formatted });
+    } catch (error) {
+        console.error('getUserReviews error:', error);
+        res.status(500).json({ message: 'Error fetching reviews' });
+    }
+};
+
+
 exports.updateFCMToken = async (req, res) => {
     try {
         const { fcmToken, platform } = req.body;

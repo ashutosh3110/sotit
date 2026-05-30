@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Navigation, Wrench, FileText, Truck, Briefcase, ArrowRight, CheckCircle2, Globe, MapPin, ChevronDown, Search, Check } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useRef, useMemo } from "react";
 import toast from "react-hot-toast";
 import { State } from "country-state-city";
@@ -16,6 +16,22 @@ const VehicleOwnerForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
   const [ownerSubRole, setOwnerSubRole] = useState("driver");
+  const [pages, setPages] = useState([]);
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/pages?target=vendor`);
+        const data = await response.json();
+        if (data.success) {
+          setPages(data.pages);
+        }
+      } catch (err) {
+        console.error("Error fetching policy pages:", err);
+      }
+    };
+    fetchPages();
+  }, []);
 
   // Shared conditional states
   const [language, setLanguage] = useState("");
@@ -279,13 +295,13 @@ const VehicleOwnerForm = () => {
         <div className="space-y-6 pt-6">
           <div className="px-2">
             <h2 className="text-2xl font-black text-slate-900 mb-2 leading-none">Vehicle Owner.</h2>
-            <p className="text-sm font-bold text-neutral-500">Apni zaroorat select karein aur submit karein.</p>
+            <p className="text-sm font-bold text-neutral-500">Select your requirement and submit.</p>
           </div>
 
           <form onSubmit={handleFormSubmit} className="space-y-6">
             {/* Sub-role chip selector */}
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Mujhe Chahiye (Service Select Karein)</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">I Need (Select Service)</label>
               <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 text-neutral-500">
                 {[
                   { id: 'driver', label: 'Driver', icon: Navigation },
@@ -538,6 +554,20 @@ const VehicleOwnerForm = () => {
               Submit Requirement <ArrowRight size={18} />
             </button>
           </form>
+
+          {pages.length > 0 && (
+            <div className="flex justify-center gap-6 mt-12 border-t border-slate-200 pt-6 pb-4">
+              {pages.map((p) => (
+                <Link
+                  key={p.slug}
+                  to={`/page/${p.slug}`}
+                  className="text-[10px] font-black uppercase text-neutral-400 tracking-widest hover:text-[#C44545] transition-colors"
+                >
+                  {p.title}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

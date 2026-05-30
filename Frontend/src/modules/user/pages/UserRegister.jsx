@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, User, Phone, ShieldCheck, Mail, ArrowRight, Camera, MapPin, CheckCircle2, Navigation, Lock } from "lucide-react";
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { initUserState } from "../utils/userStore";
 import toast from 'react-hot-toast';
 
@@ -10,6 +10,22 @@ import logo from "../../../assets/logo.png";
 const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); // Consolidating to 1 step flow
+  const [pages, setPages] = useState([]);
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/pages?target=customer`);
+        const data = await response.json();
+        if (data.success) {
+          setPages(data.pages);
+        }
+      } catch (err) {
+        console.error("Error fetching policy pages:", err);
+      }
+    };
+    fetchPages();
+  }, []);
   const [profileImg, setProfileImg] = useState(null);
   const [profileFile, setProfileFile] = useState(null);
   const [showFullAddress, setShowFullAddress] = useState(false);
@@ -42,11 +58,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     const file = e.target.files[0];
     if (file) {
       setProfileFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImg(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setProfileImg(URL.createObjectURL(file));
     }
   };
 
@@ -176,6 +188,8 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         return updated;
     });
   };
+
+  const isFormInvalid = !name.trim() || mobile.length !== 10 || password.length < 6 || !address.trim() || (isOtpSent && otp.join("").length !== 4);
 
   return (
     <div className={containerClasses}>
@@ -383,7 +397,8 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                         <button 
                           type="button" 
                           onClick={handleRegister} 
-                          className="w-full bg-[#C44545] h-16 rounded-[1.8rem] flex items-center justify-between px-8 shadow-2xl shadow-[#C44545]/20 active:scale-[0.98] transition-all group"
+                          disabled={isFormInvalid}
+                          className="w-full bg-[#C44545] h-16 rounded-[1.8rem] flex items-center justify-between px-8 shadow-2xl shadow-[#C44545]/20 active:scale-[0.98] transition-all group disabled:opacity-50 disabled:pointer-events-none"
                         >
                           <div className="flex items-center gap-3">
                             <ShieldCheck size={20} className="text-white/40" />
@@ -476,6 +491,20 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
               </button>
             </p>
           </div>
+
+          {pages.length > 0 && (
+            <div className="flex justify-center gap-6 mt-8 border-t border-slate-100 pt-6">
+              {pages.map((p) => (
+                <Link
+                  key={p.slug}
+                  to={`/page/${p.slug}`}
+                  className="text-[10px] font-black uppercase text-neutral-400 tracking-widest hover:text-[#C44545] transition-colors"
+                >
+                  {p.title}
+                </Link>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

@@ -11,6 +11,22 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [role, setRole] = useState('driver');
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [pages, setPages] = useState([]);
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/pages?target=vendor`);
+        const data = await response.json();
+        if (data.success) {
+          setPages(data.pages);
+        }
+      } catch (err) {
+        console.error("Error fetching policy pages:", err);
+      }
+    };
+    fetchPages();
+  }, []);
 
   // --- Constants ---
   const allStatesRaw = useMemo(() => State.getStatesOfCountry('IN'), []);
@@ -449,7 +465,15 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setProfData({ ...profData, serviceStates: newStates });
   };
 
+  const isStep1Invalid = !profileFile || !name.trim() || mobile.length !== 10 || !isOtpSent || otp.join("").length !== 4 || !password || password.length < 6 || !streetName.trim() || !address.state || !address.city || !address.pincode;
 
+  const isStep2Invalid = 
+    (!profData.languages || profData.languages.length === 0) ||
+    (role === 'driver' && ((profData.dlNumber ? profData.dlNumber.replace(/[^A-Za-z0-9]/g, "").length : 0) !== 15 || !profData.dlExpiry || !profData.availability || !profData.vehicleClasses || profData.vehicleClasses.length === 0)) ||
+    (role === 'towing' && (!profData.vehicleClasses || profData.vehicleClasses.length === 0)) ||
+    (role === 'mechanic' && (!mechanicData.specialties || mechanicData.specialties.length === 0 || !mechanicData.vehicleExpertise || mechanicData.vehicleExpertise.length === 0)) ||
+    (role === 'rto' && (!rtoData.rtoOffice.trim() || !rtoData.services || rtoData.services.length === 0)) ||
+    (role === 'legal' && (!legalData.barRegNumber.trim() || !legalData.officeName.trim() || !legalData.practiceAreas || legalData.practiceAreas.length === 0));
 
   return (
     <div className="min-h-screen bg-slate-50 font-inter flex flex-col">
@@ -515,7 +539,14 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                 <div className="space-y-4">
                   <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                   <input type="tel" placeholder="Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                  <button type="button" onClick={handleSendOTP} className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all">Verify Mobile</button>
+                  <button 
+                    type="button" 
+                    onClick={handleSendOTP} 
+                    disabled={mobile.length !== 10}
+                    className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    Verify Mobile
+                  </button>
                   {isOtpSent && (
                     <div className="flex gap-3 justify-center py-2">
                       {otp.map((d, i) => (
@@ -667,7 +698,13 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                   )}
                 </div>
 
-                <button onClick={handleNextStep} className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 mt-6">Next Step <ArrowRight size={18} /></button>
+                <button 
+                  onClick={handleNextStep} 
+                  disabled={isStep1Invalid}
+                  className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 mt-6 disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  Next Step <ArrowRight size={18} />
+                </button>
               </div>
             )}
 
@@ -995,12 +1032,32 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                   />
                 </div>
 
-                <button onClick={handleFinalSubmit} className="w-full bg-[#C44545] text-white h-20 rounded-[2.5rem] font-black uppercase mt-6 shadow-xl shadow-[#C44545]/20 flex items-center justify-center gap-3">Finish Registration <Check size={20} strokeWidth={3} /></button>
+                <button 
+                  onClick={handleFinalSubmit} 
+                  disabled={isStep2Invalid}
+                  className="w-full bg-[#C44545] text-white h-20 rounded-[2.5rem] font-black uppercase mt-6 shadow-xl shadow-[#C44545]/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  Finish Registration <Check size={20} strokeWidth={3} />
+                </button>
               </div>
             )}
 
           </motion.div>
         </AnimatePresence>
+
+        {pages.length > 0 && (
+          <div className="flex justify-center gap-6 mt-12 border-t border-slate-200 pt-6 pb-4">
+            {pages.map((p) => (
+              <Link
+                key={p.slug}
+                to={`/page/${p.slug}`}
+                className="text-[10px] font-black uppercase text-neutral-400 tracking-widest hover:text-[#C44545] transition-colors"
+              >
+                {p.title}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

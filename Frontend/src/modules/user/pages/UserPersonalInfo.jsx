@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { User, Mail, Phone, MapPin, ArrowLeft, Camera, Check, Loader2, Target } from "lucide-react";
-import { useState, useEffect } from "react";
+import { User, Mail, Phone, MapPin, ArrowLeft, Camera, Check, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserData, setUserData } from "../utils/userStore";
 import toast from "react-hot-toast";
@@ -9,7 +9,11 @@ const UserPersonalInfo = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(getUserData());
     const [loading, setLoading] = useState(false);
-    const [locating, setLocating] = useState(false);
+    const fileInputRef = useRef(null);
+
+    // Profile image states
+    const [profileImgPreview, setProfileImgPreview] = useState(null);
+    const [profileFile, setProfileFile] = useState(null);
 
     // Form data state
     const [formData, setFormData] = useState({
@@ -19,9 +23,10 @@ const UserPersonalInfo = () => {
         address: ''
     });
 
-    // Load data from store/backend on mount
+    // Load data from store/backend on mount - pre-fill from login data
     useEffect(() => {
         if (user) {
+            // Data can be at user.profile or user.user (depending on how initUserState was called)
             const profile = user.profile || user.user || {};
             setFormData({
                 name: profile.name || '',
@@ -29,65 +34,61 @@ const UserPersonalInfo = () => {
                 mobile: profile.mobile || '',
                 address: profile.location || ''
             });
+            // Pre-load profile picture if exists
+            if (profile.profilePicture?.url) {
+                setProfileImgPreview(profile.profilePicture.url);
+            }
         }
     }, [user]);
 
-    const handleLiveLocation = () => {
-        if (!navigator.geolocation) {
-            return toast.error("Geolocation not supported");
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            toast.error("Please select a valid image file");
+            return;
         }
-        setLocating(true);
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-                    const data = await response.json();
-                    if (data.display_name) {
-                        setFormData(prev => ({ ...prev, address: data.display_name }));
-                        toast.success("Location detected!");
-                    }
-                } catch (err) {
-                    toast.error("Reverse geocoding failed");
-                } finally {
-                    setLocating(false);
-                }
-            },
-            () => {
-                toast.error("Permission denied");
-                setLocating(false);
-            }
-        );
+        setProfileFile(file);
+        setProfileImgPreview(URL.createObjectURL(file));
     };
+
+
 
     const handleSave = async () => {
         if (!formData.name) return toast.error("Name is required");
         
         setLoading(true);
         try {
-            const token = user?.token;
+            // Token can be stored at different locations depending on login time
+            const token = user?.token || user?.profile?.token || user?.user?.token;
+
+            // Use FormData to support both text and image upload
+            const fd = new FormData();
+            fd.append('name', formData.name);
+            if (formData.email) fd.append('email', formData.email);
+            if (formData.mobile) fd.append('mobile', formData.mobile);
+            fd.append('location', formData.address);
+            if (profileFile) {
+                fd.append('profilePicture', profileFile);
+            }
+
             const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/profile`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
+                    // Do NOT set Content-Type manually - browser sets it with boundary for FormData
                 },
-                body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    mobile: formData.mobile,
-                    location: formData.address
-                })
+                body: fd
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // Update local storage
+                // Update local storage with new profile data
                 const updatedUser = { 
                     ...user, 
-                    profile: { ...user.profile, ...data.user },
-                    user: { ...user.user, ...data.user } 
+                    profile: { ...(user.profile || {}), ...data.user },
+                    user: { ...(user.user || {}), ...data.user } 
                 };
                 setUserData(updatedUser);
                 toast.success("Profile updated!");
@@ -103,6 +104,9 @@ const UserPersonalInfo = () => {
         }
     };
 
+    // Get initials for avatar fallback
+    const initials = formData.name?.[0]?.toUpperCase() || 'U';
+
     return (
         <div className="bg-white min-h-screen pb-28 font-inter text-slate-900">
             {/* Minimalist Header */}
@@ -114,14 +118,36 @@ const UserPersonalInfo = () => {
             </div>
 
             <div className="px-6 flex flex-col items-center">
-                {/* Centered Profile Image Section */}
+                {/* Centered Profile Image Section - Functional */}
                 <div className="mt-4 mb-10 relative">
-                    <div className="h-28 w-28 bg-rose-50 rounded-[2.5rem] flex items-center justify-center text-[#C44545] text-4xl font-black shadow-2xl shadow-[#C44545]/10 border-4 border-white overflow-hidden">
-                        {formData.name?.[0] || 'U'}
+                    <div
+                        className="h-28 w-28 bg-rose-50 rounded-[2.5rem] flex items-center justify-center text-[#C44545] text-4xl font-black shadow-2xl shadow-[#C44545]/10 border-4 border-white overflow-hidden cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        {profileImgPreview ? (
+                            <img
+                                src={profileImgPreview}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            initials
+                        )}
                     </div>
-                    <button className="absolute -bottom-1 -right-1 h-9 w-9 bg-slate-900 text-white rounded-xl border-4 border-white flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute -bottom-1 -right-1 h-9 w-9 bg-slate-900 text-white rounded-xl border-4 border-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
+                    >
                         <Camera size={14} />
                     </button>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                    />
                 </div>
 
                 {/* Form Fields */}
@@ -137,6 +163,7 @@ const UserPersonalInfo = () => {
                                 value={formData.name}
                                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                                 className="w-full bg-neutral-50 border border-neutral-100 rounded-2xl py-4 pl-14 pr-6 text-[14px] font-bold text-slate-800 focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#C44545]/5 focus:border-[#C44545] transition-all"
+                                placeholder="Your full name"
                             />
                         </div>
                     </div>
@@ -152,6 +179,7 @@ const UserPersonalInfo = () => {
                                 value={formData.email}
                                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                                 className="w-full bg-neutral-50 border border-neutral-100 rounded-2xl py-4 pl-14 pr-6 text-[14px] font-bold text-slate-800 focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#C44545]/5 focus:border-[#C44545] transition-all"
+                                placeholder="Email (optional)"
                             />
                         </div>
                     </div>
@@ -167,21 +195,14 @@ const UserPersonalInfo = () => {
                                 value={formData.mobile}
                                 onChange={(e) => setFormData({...formData, mobile: e.target.value})}
                                 className="w-full bg-neutral-50 border border-neutral-100 rounded-2xl py-4 pl-14 pr-6 text-[14px] font-bold text-slate-800 focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#C44545]/5 focus:border-[#C44545] transition-all"
+                                placeholder="10-digit mobile number"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
-                        <div className="flex items-center justify-between px-1">
+                        <div className="flex items-center px-1">
                             <label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em]">Service Address</label>
-                            <button 
-                                onClick={handleLiveLocation}
-                                disabled={locating}
-                                className="text-[10px] font-black text-[#C44545] uppercase tracking-widest flex items-center gap-1.5 bg-rose-50 px-3 py-1 rounded-full border border-rose-100 active:scale-95 transition-all shadow-sm"
-                            >
-                                {locating ? <Loader2 size={10} className="animate-spin" /> : <Target size={10} />}
-                                Use Live
-                            </button>
                         </div>
                         <div className="relative group">
                             <div className="absolute top-5 left-5 pointer-events-none group-focus-within:text-[#C44545] transition-colors">

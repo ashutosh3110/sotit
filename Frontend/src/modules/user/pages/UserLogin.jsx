@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, User, Lock, Phone, ArrowLeft, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { initUserState } from "../utils/userStore";
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,22 @@ const UserLogin = ({ isEmbedded = false }) => {
   const [forgotStep, setForgotStep] = useState(1); // 1: Mobile, 2: OTP, 3: New Password
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [newPassword, setNewPassword] = useState("");
+  const [pages, setPages] = useState([]);
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/pages?target=customer`);
+        const data = await response.json();
+        if (data.success) {
+          setPages(data.pages);
+        }
+      } catch (err) {
+        console.error("Error fetching policy pages:", err);
+      }
+    };
+    fetchPages();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -295,6 +311,20 @@ const UserLogin = ({ isEmbedded = false }) => {
             <Link to="/user/register" className="text-[#C44545] ml-2 border-b-2 border-[#C44545]/30 pb-0.5">Create Account</Link>
           </p>
         </div>
+
+        {pages.length > 0 && (
+          <div className="flex justify-center gap-6 mt-8 border-t border-slate-100 pt-6">
+            {pages.map((p) => (
+              <Link
+                key={p.slug}
+                to={`/page/${p.slug}`}
+                className="text-[10px] font-black uppercase text-neutral-400 tracking-widest hover:text-[#C44545] transition-colors"
+              >
+                {p.title}
+              </Link>
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   );

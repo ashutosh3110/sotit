@@ -70,7 +70,7 @@ const AdminUsers = () => {
             </button>
             <div className="flex flex-col leading-none">
               <span className="text-[10px] font-black uppercase text-[#C44545] tracking-[0.2em] mb-1">Management</span>
-              <h1 className="text-xl font-black text-slate-900 tracking-tighter">Directory Console.</h1>
+              <h1 className="text-xl font-black text-slate-900 tracking-tighter">Customer Directory.</h1>
             </div>
           </div>
 
@@ -90,7 +90,7 @@ const AdminUsers = () => {
                     </div>
                     <input 
                         type="text" 
-                        placeholder="Search users or providers..."
+                        placeholder="Search customers..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-sm font-medium focus:border-[#C44545]/20 focus:outline-none transition-all placeholder:text-slate-300 shadow-sm"
@@ -99,7 +99,7 @@ const AdminUsers = () => {
 
                 {/* Users List */}
                 <div className="flex items-center justify-between mb-6 px-1">
-                    <h2 className="text-xs font-bold text-[#C44545] uppercase tracking-[0.2em]">Platform Members</h2>
+                    <h2 className="text-xs font-bold text-[#C44545] uppercase tracking-[0.2em]">Registered Customers</h2>
                     <span className="text-xs font-semibold text-slate-500">{filteredUsers.length} total</span>
                 </div>
 
@@ -119,10 +119,8 @@ const AdminUsers = () => {
                                     <div className="flex items-start justify-between">
                                         <div className="flex flex-col">
                                             <h3 className="text-sm font-bold text-slate-800 truncate">{user.name}</h3>
-                                            <span className={`text-[10px] font-semibold uppercase tracking-wider mt-1 px-2 py-0.5 rounded-md inline-block w-fit ${
-                                                user.role === 'customer' ? 'bg-slate-100 text-slate-500' : 'bg-rose-50 text-[#C44545] border border-rose-100'
-                                            }`}>
-                                                {user.role}
+                                            <span className="text-[10px] font-bold uppercase tracking-wider mt-1 px-2 py-0.5 rounded-md inline-block w-fit bg-[#C44545]/10 text-[#C44545] border border-[#C44545]/10">
+                                                Customer
                                             </span>
                                         </div>
                                         <div className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold capitalize flex-shrink-0 border ${
@@ -166,7 +164,7 @@ const AdminUsers = () => {
                       <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-neutral-50/50 shrink-0">
                           <div>
                               <span className="text-[10px] font-black text-[#C44545] uppercase tracking-[0.2em] mb-1 block">Profile Review</span>
-                              <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Member Details</h2>
+                              <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Customer Profile</h2>
                           </div>
                           <button onClick={() => setSelectedEntity(null)} className="h-10 w-10 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
                               <ArrowLeft size={20} className="rotate-180" />
@@ -184,8 +182,8 @@ const AdminUsers = () => {
                                   <h3 className="text-xl font-black tracking-tight text-slate-900">{selectedEntity.name}</h3>
                                   <div className="flex items-center gap-2">
                                       <span className="px-2.5 py-1 bg-[#C44545] text-white text-[10px] font-black uppercase tracking-widest rounded-lg">
-                                          {selectedEntity.role}
-                                      </span>
+                                           Customer
+                                       </span>
                                       <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg ${
                                           selectedEntity.isBlocked ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'
                                       }`}>
@@ -197,9 +195,9 @@ const AdminUsers = () => {
 
                           {/* Data Grid */}
                           <div className="grid grid-cols-1 gap-4">
-                              <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100">
-                                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block mb-2">Member ID</span>
-                                  <p className="text-sm font-bold text-slate-900 break-all">{selectedEntity._id}</p>
+                               <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100">
+                                   <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block mb-2">Customer ID</span>
+                                   <p className="text-sm font-bold text-slate-900 break-all">{selectedEntity._id}</p>
                               </div>
                               <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100 flex items-center gap-4">
                                   <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400 shadow-sm">

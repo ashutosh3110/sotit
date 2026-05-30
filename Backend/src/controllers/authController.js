@@ -211,7 +211,7 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// @desc    Update user profile
+// @desc    Update user profile (text + optional image)
 // @route   PUT /api/auth/profile
 // @access  Private
 exports.updateProfile = async (req, res, next) => {
@@ -229,6 +229,19 @@ exports.updateProfile = async (req, res, next) => {
     user.location = location || user.location;
     user.mobile = mobile || user.mobile;
 
+    // Handle profile picture upload
+    if (req.file) {
+      // Delete old image from Cloudinary if exists
+      if (user.profilePicture && user.profilePicture.public_id) {
+        await cloudinary.uploader.destroy(user.profilePicture.public_id);
+      }
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'sootit_profiles',
+      });
+      user.profilePicture = { public_id: result.public_id, url: result.secure_url };
+      fs.unlinkSync(req.file.path);
+    }
+
     await user.save();
 
     res.status(200).json({
@@ -241,10 +254,14 @@ exports.updateProfile = async (req, res, next) => {
         mobile: user.mobile,
         role: user.role,
         walletBalance: user.walletBalance,
-        location: user.location
+        location: user.location,
+        profilePicture: user.profilePicture
       },
     });
   } catch (err) {
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
     next(err);
   }
 };
@@ -267,6 +284,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       location: user.location,
       role: user.role,
       walletBalance: user.walletBalance,
+      profilePicture: user.profilePicture
     },
   });
 };

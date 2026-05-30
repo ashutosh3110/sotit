@@ -30,6 +30,7 @@ const CategoryDetails = lazy(() => import('./modules/user/pages/CategoryDetails'
 const UserPersonalInfo = lazy(() => import('./modules/user/pages/UserPersonalInfo'));
 const UserWallet = lazy(() => import('./modules/user/pages/UserWallet'));
 const PremiumSelection = lazy(() => import('./modules/user/pages/PremiumSelectionPage'));
+const PageDetail = lazy(() => import('./modules/user/pages/PageDetail'));
 const VendorHome = lazy(() => import('./modules/vendor/pages/VendorHome'));
 const VendorLogin = lazy(() => import('./modules/vendor/pages/VendorLogin'));
 const VendorRegister = lazy(() => import('./modules/vendor/pages/VendorRegister'));
@@ -48,6 +49,7 @@ const AdminUsers = lazy(() => import('./modules/admin/pages/AdminUsers'));
 const AdminVendors = lazy(() => import('./modules/admin/pages/AdminVendors'));
 const AdminRatings = lazy(() => import('./modules/admin/pages/AdminRatings'));
 const AdminApprovals = lazy(() => import('./modules/admin/pages/AdminApprovals'));
+const AdminPages = lazy(() => import('./modules/admin/pages/AdminPages'));
 const AdminSettings = lazy(() => import('./modules/admin/pages/AdminSettings'));
 const AdminBanners = lazy(() => import('./modules/admin/pages/AdminBanners'));
 const AdminSupport = lazy(() => import('./modules/admin/pages/AdminSupport'));
@@ -94,6 +96,7 @@ const AppRoutes = () => {
           <Route path="/user/register" element={<ModuleWrapper type="user"><UserRegister /></ModuleWrapper>} />
           <Route path="/user/profile" element={<ModuleWrapper type="user"><UserProfile /></ModuleWrapper>} />
           <Route path="/user/profile/edit" element={<ModuleWrapper type="user"><UserPersonalInfo /></ModuleWrapper>} />
+          <Route path="/page/:slug" element={<PageDetail />} />
           <Route path="/user/find" element={<ModuleWrapper type="user"><UserFind /></ModuleWrapper>} />
           <Route path="/user/search" element={<ModuleWrapper type="user"><UserSearch /></ModuleWrapper>} />
           <Route path="/user/orders" element={<ModuleWrapper type="user"><UserOrders /></ModuleWrapper>} />
@@ -132,6 +135,7 @@ const AppRoutes = () => {
           <Route path="/admin/vendors" element={<ModuleWrapper type="admin"><AdminVendors /></ModuleWrapper>} />
           <Route path="/admin/ratings" element={<ModuleWrapper type="admin"><AdminRatings /></ModuleWrapper>} />
           <Route path="/admin/approvals" element={<ModuleWrapper type="admin"><AdminApprovals /></ModuleWrapper>} />
+          <Route path="/admin/pages" element={<ModuleWrapper type="admin"><AdminPages /></ModuleWrapper>} />
           <Route path="/admin/settings" element={<ModuleWrapper type="admin"><AdminSettings /></ModuleWrapper>} />
           <Route path="/admin/settings/security" element={<ModuleWrapper type="admin"><AdminSecurity /></ModuleWrapper>} />
           <Route path="/admin/settings/notifications" element={<ModuleWrapper type="admin"><AdminNotifications /></ModuleWrapper>} />

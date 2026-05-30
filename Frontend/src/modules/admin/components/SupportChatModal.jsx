@@ -82,7 +82,7 @@ const SupportChatModal = ({ isOpen, onClose, ticket, isAdmin = false }) => {
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 md:px-0">
+            <div className="fixed inset-0 z-[200] flex items-center justify-center md:p-4">
                 <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -95,10 +95,13 @@ const SupportChatModal = ({ isOpen, onClose, ticket, isAdmin = false }) => {
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="bg-white w-full max-w-lg h-[600px] rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col"
+                    className="bg-white w-full md:max-w-lg h-full md:h-[600px] rounded-none md:rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col"
                 >
                     {/* Header */}
-                    <div className="bg-[#C44545] p-6 text-white flex items-center justify-between shadow-lg">
+                    <div 
+                        className="bg-[#C44545] p-6 text-white flex items-center justify-between shadow-lg"
+                        style={{ paddingTop: 'calc(1.5rem + env(safe-area-inset-top))' }}
+                    >
                         <div className="flex items-center gap-4">
                             <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                                 {isAdmin ? <User size={24} /> : <ShieldCheck size={24} />}
@@ -148,7 +151,11 @@ const SupportChatModal = ({ isOpen, onClose, ticket, isAdmin = false }) => {
                     </div>
 
                     {/* Input Area */}
-                    <form onSubmit={handleSendMessage} className="p-6 bg-white border-t border-slate-100 flex items-center gap-3">
+                    <form 
+                        onSubmit={handleSendMessage} 
+                        className="p-6 bg-white border-t border-slate-100 flex items-center gap-3"
+                        style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+                    >
                         <input 
                             type="text"
                             value={newMessage}

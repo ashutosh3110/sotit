@@ -98,18 +98,31 @@ const AppHeader = () => {
             <img src={logo} alt="Sootit" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-0.5">
-                {isAdmin ? 'System' : isVendor ? 'Partner' : 'Current Location'}
-            </span>
-            <div 
-                onClick={() => !isAdmin && fetchLocation()}
-                className="flex items-center gap-1 cursor-pointer active:opacity-70 transition-opacity"
-            >
-              <span className="text-[13px] font-black text-white tracking-tight leading-none">
-                {isAdmin ? 'DeepMind' : (location?.shortAddress || 'Detecting...')}
-              </span>
-              {!isAdmin && <ChevronDown size={12} className="text-white/70" strokeWidth={3} />}
-            </div>
+            {isAdmin || isVendor ? (
+              <>
+                <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-0.5">
+                    {isAdmin ? 'System' : 'Partner'}
+                </span>
+                <div 
+                    onClick={() => !isAdmin && fetchLocation()}
+                    className="flex items-center gap-1 cursor-pointer active:opacity-70 transition-opacity"
+                >
+                  <span className="text-[13px] font-black text-white tracking-tight leading-none">
+                    {isAdmin ? 'DeepMind' : (location?.shortAddress || 'Detecting...')}
+                  </span>
+                  {!isAdmin && <ChevronDown size={12} className="text-white/70" strokeWidth={3} />}
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-0.5">
+                    Premium Services
+                </span>
+                <span className="text-[15px] font-black text-white tracking-tight leading-none uppercase">
+                    Sootit
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -124,9 +137,11 @@ const AppHeader = () => {
             )}
           </div>
           
-          <div className="h-10 w-10 overflow-hidden rounded-2xl border-2 border-rose-100 ring-2 ring-rose-50 shadow-md">
-            <img src={`https://i.pravatar.cc/80?u=${isAdmin ? 'admin' : isVendor ? 'vendor' : 'user'}`} alt="P" className="w-full h-full object-cover" />
-          </div>
+          {(isAdmin || isVendor) && (
+            <div className="h-10 w-10 overflow-hidden rounded-2xl border-2 border-rose-100 ring-2 ring-rose-50 shadow-md">
+              <img src={`https://i.pravatar.cc/80?u=${isAdmin ? 'admin' : 'vendor'}`} alt="P" className="w-full h-full object-cover" />
+            </div>
+          )}
         </div>
       </motion.header>
 

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Lock, Phone, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { initVendorState } from "../utils/vendorStore";
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,22 @@ const VendorLogin = ({ isEmbedded = false, onSwitchToRegister }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [pages, setPages] = useState([]);
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/pages?target=vendor`);
+        const data = await response.json();
+        if (data.success) {
+          setPages(data.pages);
+        }
+      } catch (err) {
+        console.error("Error fetching policy pages:", err);
+      }
+    };
+    fetchPages();
+  }, []);
   
   // Forgot Password States
   const [isForgot, setIsForgot] = useState(false);
@@ -315,6 +331,20 @@ const VendorLogin = ({ isEmbedded = false, onSwitchToRegister }) => {
              )}
           </p>
         </div>
+
+        {pages.length > 0 && (
+          <div className="flex justify-center gap-6 mt-8 border-t border-slate-100 pt-6">
+            {pages.map((p) => (
+              <Link
+                key={p.slug}
+                to={`/page/${p.slug}`}
+                className="text-[10px] font-black uppercase text-neutral-400 tracking-widest hover:text-[#C44545] transition-colors"
+              >
+                {p.title}
+              </Link>
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   );

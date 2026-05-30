@@ -11,6 +11,6 @@ router.post('/verify-reset-otp', verifyResetOTP);
 router.post('/reset-password', resetPassword);
 router.post('/register', upload.single('profilePicture'), register);
 router.post('/login', login);
-router.put('/profile', protect, updateProfile);
+router.put('/profile', protect, upload.single('profilePicture'), updateProfile);
 
 module.exports = router;

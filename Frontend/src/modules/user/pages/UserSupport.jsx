@@ -279,7 +279,7 @@ const UserSupport = () => {
                             className="space-y-4"
                         >
                             {tickets.length > 0 ? tickets.map((ticket) => (
-                                <div key={ticket._id} className="bg-white p-6 rounded-[2.5rem] border border-black/5 shadow-2xl shadow-black/[0.02] space-y-4">
+                                    <div key={ticket._id} className="bg-white p-6 rounded-[2.5rem] border border-black/5 shadow-2xl shadow-black/[0.02] space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="h-10 w-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-xs">
@@ -290,7 +290,6 @@ const UserSupport = () => {
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{timeAgo(ticket.createdAt)}</span>
                                             </div>
                                         </div>
-                                        <StatusBadge status={ticket.status} />
                                     </div>
                                     <div className="flex flex-col gap-1 text-left">
                                         <span className="text-[11px] font-black text-neutral-300 uppercase tracking-widest">Issue Subject</span>

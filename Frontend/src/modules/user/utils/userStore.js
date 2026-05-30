@@ -9,14 +9,15 @@ export const setUserData = (data) => {
   window.dispatchEvent(new Event('user_data_updated'));
 };
 
-export const initUserState = (profile) => {
+export const initUserState = (userData) => {
+  // userData comes from backend login/register response: { id, name, email, mobile, location, role, walletBalance, profilePicture, token }
   const initialState = {
     isLoggedIn: true,
-    profile,
-    wallet: 150.00, // starting balance as per image
-    recentActivity: [
-      { id: "ACT-101", type: "Search", desc: "Searched for Drivers in CP", date: "Today" }
-    ],
+    token: userData.token,
+    profile: userData, // Store all user fields directly accessible as user.profile.*
+    user: userData,    // Also store as user.user.* for compatibility
+    wallet: userData.walletBalance || 0,
+    recentActivity: [],
     bookings: []
   };
   setUserData(initialState);
