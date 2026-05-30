@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Navigation, Wrench, Shield, Briefcase, FileText, Truck, Phone, ArrowRight, Car, Camera, MapPin, CheckCircle2, ShieldCheck, CreditCard, Landmark, Info, Map, Clock, Zap, Hammer, Wind, Battery, Settings, Disc, Droplets, Building2, Scale, GraduationCap, Video, Users, ChevronDown, Search, Globe, Check, Square, CheckSquare } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
 import { State } from "country-state-city";
@@ -8,33 +8,9 @@ import { indiaData } from '../../../utils/indiaData';
 
 const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [role, setRole] = useState('driver');
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Auto-select owner role if URL has ?role=owner
-  useEffect(() => {
-    const roleParam = searchParams.get('role');
-    const isAutofill = searchParams.get('autofill') === 'true';
-    if (roleParam === 'owner') {
-      setRole('owner');
-      setStep(1);
-      
-      if (isAutofill) {
-        try {
-          const userData = JSON.parse(localStorage.getItem('user_data'));
-          if (userData && userData.profile) {
-            setName(userData.profile.name || "");
-            setMobile(userData.profile.mobile || "");
-          }
-        } catch (e) {
-          console.error("Failed to parse user_data", e);
-        }
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // --- Constants ---
   const allStatesRaw = useMemo(() => State.getStatesOfCountry('IN'), []);
@@ -89,11 +65,6 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
   const [legalData, setLegalData] = useState({
     barRegNumber: "", practiceAreas: [], experience: "1-3 Years", officeName: "", visitingAddress: "", city: "", gpsLocation: null, consultationType: "Both"
-  });
-
-  const [ownerData, setOwnerData] = useState({
-    ownerSubRole: "", ownerType: "", vehicleTypes: [], fleetSize: "1", rcNumber: "", availableFor: [], operatingCity: "",
-    vehicleType: "", jobType: "Permanent"
   });
 
   const [bankData, setBankData] = useState({ accountHolderName: "", bankName: "", accountNumber: "", ifscCode: "", upiId: "" });
@@ -339,7 +310,6 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setLegalData({
       barRegNumber: "", practiceAreas: [], experience: "1-3 Years", officeName: "", visitingAddress: "", city: "", gpsLocation: null, consultationType: "Both"
     });
-    setOwnerData({ ownerSubRole: "", ownerType: "", vehicleTypes: [], fleetSize: "1", rcNumber: "", availableFor: [], operatingCity: "", vehicleType: "", jobType: "Permanent" });
     setBankData({ accountHolderName: "", bankName: "", accountNumber: "", ifscCode: "", upiId: "" });
     setKycFiles({ 
       aadhaar: null, pan: null, selfie: null, policeVerification: null, dlFile: null, 
@@ -366,10 +336,10 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   };
 
   const handleFinalSubmit = async () => {
-    if ((role === 'driver' || role === 'towing') && !profData.dlNumber) {
+    if (role === 'driver' && !profData.dlNumber) {
         return toast.error("Please enter your Driving License Number");
     }
-    if ((role === 'driver' || role === 'towing') && profData.dlNumber) {
+    if (role === 'driver' && profData.dlNumber) {
         const cleanDL = profData.dlNumber.replace(/[^A-Za-z0-9]/g, "");
         if (cleanDL.length !== 15) {
             return toast.error("Driving License number must be exactly 15 characters (e.g. MH-12-2015-0001234)");
@@ -408,7 +378,6 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         formData.append('mechanicData', JSON.stringify(mechanicData));
         formData.append('rtoData', JSON.stringify(rtoData));
         formData.append('legalData', JSON.stringify(legalData));
-        formData.append('ownerData', JSON.stringify(ownerData));
         formData.append('bankData', JSON.stringify(bankData));
 
         if (profileFile) formData.append('profileImage', profileFile);
@@ -433,55 +402,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     }
   };
 
-  const handleOwnerSubmit = async () => {
-    if (!ownerData.ownerSubRole) return toast.error("Please select a service type first");
-    if (!name || !mobile) return toast.error("Please fill Name and Mobile");
-    if (!isOtpSent) return toast.error("Please verify your mobile number first");
-    const enteredOtp = otp.join("");
-    if (enteredOtp.length !== 4) return toast.error("Please enter the 4-digit OTP");
-    if (!ownerData.rcNumber) return toast.error("Please enter RC Number");
-
-    const finalOwnerData = { ...ownerData };
-    if (ownerData.ownerSubRole === 'driver') {
-      if (!ownerData.vehicleType) return toast.error("Please select Vehicle Type");
-      if (!ownerData.jobType) return toast.error("Please select Job Type");
-      finalOwnerData.vehicleTypes = [ownerData.vehicleType];
-    }
-
-    setIsLoading(true);
-    const tid = toast.loading("Creating Profile...");
-    try {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('mobile', mobile);
-      formData.append('password', mobile);
-      formData.append('role', role);
-      formData.append('otp', enteredOtp);
-      formData.append('ownerData', JSON.stringify(finalOwnerData));
-      formData.append('address', JSON.stringify(address));
-      formData.append('liveLocation', JSON.stringify(liveLocation));
-      formData.append('profData', JSON.stringify(profData));
-      formData.append('mechanicData', JSON.stringify(mechanicData));
-      formData.append('rtoData', JSON.stringify(rtoData));
-      formData.append('legalData', JSON.stringify(legalData));
-      formData.append('bankData', JSON.stringify(bankData));
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/register`, {
-        method: 'POST',
-        body: formData
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Registration failed");
-      toast.success(data.message || "Registration Successful!", { id: tid });
-      navigate('/auth?tab=vendor');
-    } catch (error) {
-      toast.error(error.message || "Registration failed", { id: tid });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const renderHeader = () => {
-    let totalSteps = role === 'owner' ? 1 : 2;
+    let totalSteps = 2;
     return (
       <div className="px-6 py-6 border-b border-slate-100 bg-white sticky top-0 z-40">
         <div className="flex items-center justify-between mb-4">
@@ -527,6 +449,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setProfData({ ...profData, serviceStates: newStates });
   };
 
+
+
   return (
     <div className="min-h-screen bg-slate-50 font-inter flex flex-col">
       {step > 0 && renderHeader()}
@@ -549,12 +473,23 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     { id: 'legal', label: 'Legal Advisor', icon: Briefcase, desc: 'Vehicle law expert' },
                     { id: 'owner', label: 'Vehicle Owner', icon: Car, desc: 'Car, Truck, Bus, Tempo owner' },
                   ].map((r) => (
-                    <div key={r.id} onClick={() => handleSelectRole(r.id)} className={`p-5 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-5 ${role === r.id ? 'border-[#C44545] bg-[#C44545] text-white' : 'border-neutral-200 bg-white'}`}>
+                    <div 
+                      key={r.id} 
+                      onClick={() => {
+                        if (r.id === 'owner') {
+                          navigate('/vehicle-owner');
+                        } else {
+                          handleSelectRole(r.id);
+                        }
+                      }} 
+                      className={`p-5 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-5 ${role === r.id ? 'border-[#C44545] bg-[#C44545] text-white' : 'border-neutral-200 bg-white'}`}
+                    >
                       <div className={`h-12 w-12 rounded-2xl flex items-center justify-center ${role === r.id ? 'bg-white/10' : 'bg-neutral-100'}`}><r.icon size={22} /></div>
                       <div><p className="text-[15px] font-black uppercase">{r.label}</p><p className="text-[12px] opacity-70 font-bold">{r.desc}</p></div>
                     </div>
                   ))}
                 </div>
+
                 {onSwitchToLogin && (
                   <div className="text-center mt-6">
                     <p className="text-[13px] font-black text-neutral-500 uppercase tracking-[0.2em]">
@@ -736,145 +671,10 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
               </div>
             )}
 
-            {/* Vehicle Owner — Simplified Single-Step Form */}
-            {step === 1 && role === 'owner' && (
-              <div className="space-y-6 pt-4 pb-20">
-                <div className="px-2">
-                  <h2 className="text-2xl font-black text-slate-900 mb-2 leading-none">Vehicle Owner.</h2>
-                  <p className="text-sm font-bold text-neutral-500">Apni zaroorat select karein aur register karein.</p>
-                </div>
 
-                {/* Sub-role chip selector */}
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Mujhe Chahiye (Service Select Karein)</label>
-                  <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                    {[
-                      { id: 'driver', label: 'Driver', icon: Navigation },
-                      { id: 'mechanic', label: 'Mechanic', icon: Wrench },
-                      { id: 'towing', label: 'Towing', icon: Truck },
-                      { id: 'rto', label: 'RTO Agent', icon: FileText },
-                      { id: 'legal', label: 'Legal Advisor', icon: Briefcase },
-                    ].map((sr) => (
-                      <button
-                        key={sr.id}
-                        type="button"
-                        onClick={() => setOwnerData({...ownerData, ownerSubRole: sr.id})}
-                        className={`flex flex-col items-center gap-1.5 px-5 py-3.5 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all flex-shrink-0 ${
-                          ownerData.ownerSubRole === sr.id
-                            ? 'border-[#C44545] bg-[#C44545] text-white shadow-lg shadow-[#C44545]/20'
-                            : 'border-slate-100 bg-white text-slate-400 hover:bg-slate-50'
-                        }`}
-                      >
-                        <sr.icon size={20} />
-                        <span>{sr.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
-                {/* 3 Fields */}
-                <div className="space-y-4">
-                  {/* Field 1: Full Name */}
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold"
-                  />
-
-                  {/* Field 2: Mobile + OTP */}
-                  <div className="space-y-3">
-                    <input
-                      type="tel"
-                      placeholder="Mobile Number"
-                      value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold"
-                    />
-                    <button type="button" onClick={handleSendOTP} className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all">
-                      Verify Mobile
-                    </button>
-                    {isOtpSent && (
-                      <div className="flex gap-3 justify-center py-2">
-                        {otp.map((d, i) => (
-                          <input
-                            key={i}
-                            type="tel"
-                            maxLength={1}
-                            value={d}
-                            onChange={(e) => {
-                              const n = [...otp]; n[i] = e.target.value; setOtp(n);
-                              if (e.target.value && e.target.nextSibling) e.target.nextSibling.focus();
-                            }}
-                            className="w-12 h-14 bg-rose-50 border-2 border-[#C44545]/10 rounded-xl text-center text-xl font-black text-[#C44545]"
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Field 3: RC Number */}
-                  <input
-                    type="text"
-                    placeholder="RC Number (Vehicle Registration No.)"
-                    value={ownerData.rcNumber}
-                    onChange={(e) => setOwnerData({...ownerData, rcNumber: e.target.value.toUpperCase()})}
-                    className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold uppercase"
-                  />
-
-                  {/* If driver is selected, show Vehicle Type and Job Type */}
-                  {ownerData.ownerSubRole === 'driver' && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="space-y-4 pt-2 overflow-hidden"
-                    >
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Type</label>
-                        <select 
-                          value={ownerData.vehicleType}
-                          onChange={(e) => setOwnerData({...ownerData, vehicleType: e.target.value})}
-                          className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all"
-                        >
-                          <option value="">Select Vehicle Type</option>
-                          {['SUV', 'Sedan', 'Hatchback', 'Luxury', 'Commercial'].map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Job Type</label>
-                        <div className="flex gap-3">
-                          {['Permanent', 'Part Time'].map(type => (
-                            <button 
-                              key={type}
-                              type="button"
-                              onClick={() => setOwnerData({...ownerData, jobType: type})}
-                              className={`flex-1 py-4 rounded-2xl border-2 font-black uppercase tracking-widest text-[11px] transition-all ${ownerData.jobType === type ? 'border-[#C44545] bg-[#C44545] text-white shadow-lg shadow-[#C44545]/20' : 'border-slate-100 bg-white text-slate-400 hover:bg-slate-50'}`}
-                            >
-                              {type}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-
-                <button
-                  onClick={handleOwnerSubmit}
-                  disabled={isLoading}
-                  className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 mt-6 disabled:opacity-60 active:scale-95 transition-all"
-                >
-                  Register Now <ArrowRight size={18} />
-                </button>
-              </div>
-            )}
-
-            {/* Step 2: Professional Details (Non-owner roles only) */}
-            {step === 2 && role !== 'owner' && (
+            {/* Step 2: Professional Details */}
+            {step === 2 && (
               <div className="space-y-6 pt-4 pb-20">
                 <div className="px-2">
                   <h3 className="text-xl font-black text-slate-900 mb-1">Final Step.</h3>
@@ -1019,223 +819,6 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                           ))}
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Owner role is handled in its own simplified single-step form above */}
-                  {false && role === 'owner' && (
-                    <div className="space-y-6 px-2">
-                      {/* Sub-role horizontal chip selector */}
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Mujhe Chahiye (Select Service)</label>
-                        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                          {[
-                            { id: 'driver', label: 'Driver', icon: Navigation },
-                            { id: 'mechanic', label: 'Mechanic', icon: Wrench },
-                            { id: 'towing', label: 'Towing', icon: Truck },
-                            { id: 'rto', label: 'RTO Agent', icon: FileText },
-                            { id: 'legal', label: 'Legal Advisor', icon: Briefcase },
-                          ].map((sr) => (
-                            <button
-                              key={sr.id}
-                              type="button"
-                              onClick={() => setOwnerData({...ownerData, ownerSubRole: sr.id, vehicleTypes: [], availableFor: []})}
-                              className={`flex flex-col items-center gap-1.5 px-5 py-3.5 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all flex-shrink-0 ${
-                                ownerData.ownerSubRole === sr.id
-                                  ? 'border-[#C44545] bg-[#C44545] text-white shadow-lg shadow-[#C44545]/20'
-                                  : 'border-slate-100 bg-white text-slate-400 hover:bg-slate-50'
-                              }`}
-                            >
-                              <sr.icon size={20} />
-                              <span>{sr.label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Driver Sub-Role */}
-                      {ownerData.ownerSubRole === 'driver' && (
-                        <div className="space-y-5">
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Driver Kis Vehicle Ke Liye?</label>
-                            <div className="flex flex-col gap-2">
-                              {['Car / Sedan', 'SUV', 'Pickup Truck', 'Mini Truck', 'Large Truck', 'Bus', 'Mini Bus', 'Tempo / Van', 'Auto Rickshaw'].map(type => (
-                                <div
-                                  key={type}
-                                  onClick={() => {
-                                    const n = ownerData.vehicleTypes.includes(type) ? ownerData.vehicleTypes.filter(x => x !== type) : [...ownerData.vehicleTypes, type];
-                                    setOwnerData({...ownerData, vehicleTypes: n});
-                                  }}
-                                  className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${
-                                    ownerData.vehicleTypes.includes(type) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="text-[12px] font-black uppercase">{type}</span>
-                                  {ownerData.vehicleTypes.includes(type) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Fleet Size (Kitne Vehicles?)</label>
-                            <div className="flex gap-3 flex-wrap">
-                              {['1', '2-5', '6-10', '10+'].map(size => (
-                                <button key={size} type="button" onClick={() => setOwnerData({...ownerData, fleetSize: size})}
-                                  className={`flex-1 py-4 rounded-2xl border-2 font-black text-[12px] uppercase tracking-widest transition-all min-w-[60px] ${
-                                    ownerData.fleetSize === size ? 'border-[#C44545] bg-[#C44545] text-white shadow-lg' : 'border-slate-100 bg-white text-slate-400'
-                                  }`}
-                                >{size}</button>
-                              ))}
-                            </div>
-                          </div>
-                          <input type="text" placeholder="RC Number (e.g. MH12AB1234)" value={ownerData.rcNumber} onChange={(e) => setOwnerData({...ownerData, rcNumber: e.target.value.toUpperCase()})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold uppercase" />
-                          <input type="text" placeholder="Operating City / Area" value={ownerData.operatingCity} onChange={(e) => setOwnerData({...ownerData, operatingCity: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                        </div>
-                      )}
-
-                      {/* Mechanic Sub-Role */}
-                      {ownerData.ownerSubRole === 'mechanic' && (
-                        <div className="space-y-5">
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Kis Vehicle Ka Service Chahiye?</label>
-                            <div className="flex flex-col gap-2">
-                              {['Car / Sedan', 'SUV', 'Pickup Truck', 'Truck', 'Bus', 'Tempo / Van', 'Bike'].map(type => (
-                                <div key={type}
-                                  onClick={() => { const n = ownerData.vehicleTypes.includes(type) ? ownerData.vehicleTypes.filter(x => x !== type) : [...ownerData.vehicleTypes, type]; setOwnerData({...ownerData, vehicleTypes: n}); }}
-                                  className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${
-                                    ownerData.vehicleTypes.includes(type) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="text-[12px] font-black uppercase">{type}</span>
-                                  {ownerData.vehicleTypes.includes(type) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Kya Service Chahiye?</label>
-                            <div className="flex flex-col gap-2">
-                              {mechanicServices.map(srv => (
-                                <div key={srv}
-                                  onClick={() => { const n = ownerData.availableFor.includes(srv) ? ownerData.availableFor.filter(x => x !== srv) : [...ownerData.availableFor, srv]; setOwnerData({...ownerData, availableFor: n}); }}
-                                  className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${
-                                    ownerData.availableFor.includes(srv) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="text-[12px] font-black uppercase">{srv}</span>
-                                  {ownerData.availableFor.includes(srv) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <input type="text" placeholder="RC Number (e.g. MH12AB1234)" value={ownerData.rcNumber} onChange={(e) => setOwnerData({...ownerData, rcNumber: e.target.value.toUpperCase()})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold uppercase" />
-                          <input type="text" placeholder="Operating City / Area" value={ownerData.operatingCity} onChange={(e) => setOwnerData({...ownerData, operatingCity: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                        </div>
-                      )}
-
-                      {/* Towing Sub-Role */}
-                      {ownerData.ownerSubRole === 'towing' && (
-                        <div className="space-y-5">
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Towing Kis Vehicle Ka Chahiye?</label>
-                            <div className="flex flex-col gap-2">
-                              {['Car / Sedan', 'SUV', 'Pickup Truck', 'Truck', 'Bus', 'Tempo / Van', 'Bike'].map(type => (
-                                <div key={type}
-                                  onClick={() => { const n = ownerData.vehicleTypes.includes(type) ? ownerData.vehicleTypes.filter(x => x !== type) : [...ownerData.vehicleTypes, type]; setOwnerData({...ownerData, vehicleTypes: n}); }}
-                                  className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${
-                                    ownerData.vehicleTypes.includes(type) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="text-[12px] font-black uppercase">{type}</span>
-                                  {ownerData.vehicleTypes.includes(type) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <input type="text" placeholder="RC Number (e.g. MH12AB1234)" value={ownerData.rcNumber} onChange={(e) => setOwnerData({...ownerData, rcNumber: e.target.value.toUpperCase()})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold uppercase" />
-                          <input type="text" placeholder="Operating City / Area" value={ownerData.operatingCity} onChange={(e) => setOwnerData({...ownerData, operatingCity: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                        </div>
-                      )}
-
-                      {/* RTO Agent Sub-Role */}
-                      {ownerData.ownerSubRole === 'rto' && (
-                        <div className="space-y-5">
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Kis Vehicle Ka RTO Work?</label>
-                            <div className="flex flex-col gap-2">
-                              {['Car / Sedan', 'SUV', 'Pickup Truck', 'Truck', 'Bus', 'Tempo / Van', 'Bike'].map(type => (
-                                <div key={type}
-                                  onClick={() => { const n = ownerData.vehicleTypes.includes(type) ? ownerData.vehicleTypes.filter(x => x !== type) : [...ownerData.vehicleTypes, type]; setOwnerData({...ownerData, vehicleTypes: n}); }}
-                                  className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${
-                                    ownerData.vehicleTypes.includes(type) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="text-[12px] font-black uppercase">{type}</span>
-                                  {ownerData.vehicleTypes.includes(type) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Kaunsi RTO Service Chahiye?</label>
-                            <div className="flex flex-col gap-2">
-                              {rtoServices.map(srv => (
-                                <div key={srv}
-                                  onClick={() => { const n = ownerData.availableFor.includes(srv) ? ownerData.availableFor.filter(x => x !== srv) : [...ownerData.availableFor, srv]; setOwnerData({...ownerData, availableFor: n}); }}
-                                  className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${
-                                    ownerData.availableFor.includes(srv) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="text-[12px] font-black uppercase">{srv}</span>
-                                  {ownerData.availableFor.includes(srv) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <input type="text" placeholder="RC Number (e.g. MH12AB1234)" value={ownerData.rcNumber} onChange={(e) => setOwnerData({...ownerData, rcNumber: e.target.value.toUpperCase()})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold uppercase" />
-                          <input type="text" placeholder="Operating City / Area" value={ownerData.operatingCity} onChange={(e) => setOwnerData({...ownerData, operatingCity: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                        </div>
-                      )}
-
-                      {/* Legal Advisor Sub-Role */}
-                      {ownerData.ownerSubRole === 'legal' && (
-                        <div className="space-y-5">
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Kis Vehicle Ka Legal Help Chahiye?</label>
-                            <div className="flex flex-col gap-2">
-                              {['Car / Sedan', 'SUV', 'Pickup Truck', 'Truck', 'Bus', 'Tempo / Van', 'Bike'].map(type => (
-                                <div key={type}
-                                  onClick={() => { const n = ownerData.vehicleTypes.includes(type) ? ownerData.vehicleTypes.filter(x => x !== type) : [...ownerData.vehicleTypes, type]; setOwnerData({...ownerData, vehicleTypes: n}); }}
-                                  className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${
-                                    ownerData.vehicleTypes.includes(type) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="text-[12px] font-black uppercase">{type}</span>
-                                  {ownerData.vehicleTypes.includes(type) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Kaunsa Legal Help Chahiye?</label>
-                            <div className="flex flex-col gap-2">
-                              {legalPractices.map(srv => (
-                                <div key={srv}
-                                  onClick={() => { const n = ownerData.availableFor.includes(srv) ? ownerData.availableFor.filter(x => x !== srv) : [...ownerData.availableFor, srv]; setOwnerData({...ownerData, availableFor: n}); }}
-                                  className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${
-                                    ownerData.availableFor.includes(srv) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <span className="text-[12px] font-black uppercase">{srv}</span>
-                                  {ownerData.availableFor.includes(srv) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <input type="text" placeholder="RC Number (e.g. MH12AB1234)" value={ownerData.rcNumber} onChange={(e) => setOwnerData({...ownerData, rcNumber: e.target.value.toUpperCase()})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold uppercase" />
-                          <input type="text" placeholder="Operating City / Area" value={ownerData.operatingCity} onChange={(e) => setOwnerData({...ownerData, operatingCity: e.target.value})} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                        </div>
-                      )}
                     </div>
                   )}
 

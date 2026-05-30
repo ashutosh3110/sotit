@@ -111,7 +111,6 @@ const AdminDashboard = () => {
               {[
                 { label: "User Management", count: "14.2k Users", icon: Users, path: '/admin/users' },
                 { label: "Vendor Verification", count: "152 Pending", icon: ShieldCheck, alert: true, path: '/admin/approvals' },
-                { label: "Job Postings", count: "890 Active", icon: Briefcase, path: '/admin/jobs' },
               ].map((item, i) => (
                 <motion.div 
                   key={i}

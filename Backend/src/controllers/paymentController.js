@@ -70,14 +70,15 @@ exports.verifyHirePayment = async (req, res) => {
         const requester = user || requesterVendor;
         const requesterType = user ? 'User' : 'Vendor';
 
+        const isDirectHire = !!vendorId;
         const request = await ServiceRequest.create({
             requesterId: actorId,
             requesterType: requesterType,
             vendor: vendorId || undefined,
             role: role.toLowerCase(),
             details: details || {},
-            status: role.toLowerCase() === 'driver' ? 'hired' : 'accepted',
-            hiredAt: role.toLowerCase() === 'driver' ? new Date() : undefined,
+            status: (isDirectHire && role.toLowerCase() === 'driver') ? 'hired' : (isDirectHire ? 'accepted' : 'pending'),
+            hiredAt: (isDirectHire && role.toLowerCase() === 'driver') ? new Date() : undefined,
             customerDeduction: 5, // Record the payment amount
             paymentId: razorpay_payment_id,
             paymentStatus: 'success'
@@ -197,16 +198,28 @@ exports.verifyAcceptancePayment = async (req, res) => {
         const vendorId = req.user.id;
         const request = await ServiceRequest.findById(requestId).populate('requesterId');
 
-        if (!request || request.status !== 'pending') {
-            return res.status(400).json({ success: false, message: "Request is no longer available" });
+        if (!request) {
+            return res.status(404).json({ success: false, message: "Request not found" });
+        }
+
+        // Allow payment if it is pending, or if it is a direct request assigned to this vendor and not paid yet
+        const isAssignedDirectRequest = request.vendor && request.vendor.toString() === vendorId.toString();
+        const canPay = request.status === 'pending' || (isAssignedDirectRequest && !request.isVendorPaid);
+
+        if (!canPay) {
+            return res.status(400).json({ success: false, message: "Request is no longer available or already unlocked" });
         }
 
         const vendor = await Vendor.findById(vendorId);
 
-        request.status = request.role === 'driver' ? 'hired' : 'accepted';
-        request.hiredAt = request.role === 'driver' ? new Date() : undefined;
-        request.vendor = vendorId;
+        if (request.status === 'pending') {
+            request.status = request.role === 'driver' ? 'hired' : 'accepted';
+            request.hiredAt = request.role === 'driver' ? new Date() : undefined;
+            request.vendor = vendorId;
+        }
+
         request.vendorDeduction = 9; // Record the payment amount
+        request.isVendorPaid = true;
         await request.save();
 
         // 2. Create Transaction Record

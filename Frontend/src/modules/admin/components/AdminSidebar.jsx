@@ -11,7 +11,6 @@ const AdminSidebar = ({ isOpen, onClose }) => {
   const menuItems = [
     { label: "Registered Vendors", path: "/admin/vendors", icon: ShieldCheck },
     { label: "Driver Ratings", path: "/admin/ratings", icon: Briefcase },
-    { label: "Job Board", path: "/admin/jobs", icon: Briefcase },
     { label: "Manage Banners", path: "/admin/banners", icon: Globe },
     { label: "Help & Support", path: "/admin/support", icon: MessageCircle },
     { label: "Manage FAQs", path: "/admin/faqs", icon: HelpCircle },

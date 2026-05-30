@@ -47,7 +47,6 @@ const AdminDashboard = lazy(() => import('./modules/admin/pages/AdminDashboard')
 const AdminUsers = lazy(() => import('./modules/admin/pages/AdminUsers'));
 const AdminVendors = lazy(() => import('./modules/admin/pages/AdminVendors'));
 const AdminRatings = lazy(() => import('./modules/admin/pages/AdminRatings'));
-const AdminJobs = lazy(() => import('./modules/admin/pages/AdminJobs'));
 const AdminApprovals = lazy(() => import('./modules/admin/pages/AdminApprovals'));
 const AdminSettings = lazy(() => import('./modules/admin/pages/AdminSettings'));
 const AdminBanners = lazy(() => import('./modules/admin/pages/AdminBanners'));
@@ -57,6 +56,7 @@ const AdminWallet = lazy(() => import('./modules/admin/pages/AdminWallet'));
 const AdminLogin = lazy(() => import('./modules/admin/pages/AdminLogin'));
 const OwnerDashboard = lazy(() => import('./modules/owner/pages/OwnerDashboard'));
 const RequirementForm = lazy(() => import('./modules/owner/pages/RequirementForm'));
+const VehicleOwnerForm = lazy(() => import('./modules/owner/pages/VehicleOwnerForm'));
 const AboutContact = lazy(() => import('./modules/landing/pages/AboutContact'));
 import { AdminSecurity, AdminNotifications, AdminPlatform, AdminProfile } from './modules/admin/pages/AdminSubSettings';
 
@@ -123,6 +123,7 @@ const AppRoutes = () => {
           {/* Owner App Module */}
           <Route path="/owner-dashboard" element={<ModuleWrapper type="owner"><OwnerDashboard /></ModuleWrapper>} />
           <Route path="/post-requirement" element={<ModuleWrapper type="owner"><RequirementForm /></ModuleWrapper>} />
+          <Route path="/vehicle-owner" element={<ModuleWrapper type="owner"><VehicleOwnerForm /></ModuleWrapper>} />
           
           {/* Admin App Module */}
           <Route path="/admin/login" element={<ModuleWrapper type="admin"><AdminLogin /></ModuleWrapper>} />
@@ -130,7 +131,6 @@ const AppRoutes = () => {
           <Route path="/admin/users" element={<ModuleWrapper type="admin"><AdminUsers /></ModuleWrapper>} />
           <Route path="/admin/vendors" element={<ModuleWrapper type="admin"><AdminVendors /></ModuleWrapper>} />
           <Route path="/admin/ratings" element={<ModuleWrapper type="admin"><AdminRatings /></ModuleWrapper>} />
-          <Route path="/admin/jobs" element={<ModuleWrapper type="admin"><AdminJobs /></ModuleWrapper>} />
           <Route path="/admin/approvals" element={<ModuleWrapper type="admin"><AdminApprovals /></ModuleWrapper>} />
           <Route path="/admin/settings" element={<ModuleWrapper type="admin"><AdminSettings /></ModuleWrapper>} />
           <Route path="/admin/settings/security" element={<ModuleWrapper type="admin"><AdminSecurity /></ModuleWrapper>} />

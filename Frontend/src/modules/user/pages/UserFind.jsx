@@ -271,16 +271,7 @@ const UserFind = () => {
         fetchVendors();
     }, [selectedCategory, selectedState, selectedDistrict, selectedVehicleClass, selectedSpecialty, selectedPracticeArea, selectedRtoService]);
 
-    // Redirect to Owner Form if no experts are found in the selected location/category
-    useEffect(() => {
-        if (!isLoading && vendors.length === 0) {
-            const timer = setTimeout(() => {
-                toast("No experts available in this area. Redirecting to Vehicle Owner form...", { icon: 'ℹ️', duration: 3000 });
-                navigate('/auth?tab=vendor&role=owner&autofill=true');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [isLoading, vendors.length, navigate]);
+
 
     // Fetch Full Profile for Modal
     const handleViewProfile = async (vendorId) => {
@@ -1122,24 +1113,18 @@ const UserFind = () => {
                                 {/* Owner Register CTA */}
                                 <div className="w-full max-w-sm bg-slate-900 rounded-[2.5rem] p-6 relative overflow-hidden shadow-2xl">
                                     <div className="absolute top-0 right-0 h-32 w-32 bg-[#C44545] rounded-full blur-[60px] opacity-20" />
-                                    <div className="relative z-10">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="h-8 w-8 bg-[#C44545] rounded-xl flex items-center justify-center">
-                                                <Zap size={16} className="text-white fill-white" />
-                                            </div>
-                                            <span className="text-[10px] font-black text-[#C44545] uppercase tracking-[0.2em]">Opportunity</span>
-                                        </div>
-                                        <h4 className="text-lg font-black text-white tracking-tight mb-2 leading-tight">
-                                            Kya aapke paas vehicle hai?
-                                        </h4>
-                                        <p className="text-[12px] font-bold text-white/50 mb-6 leading-relaxed">
-                                            Owner ke roop mein register karein aur customers se direct connect ho.
+                                    <div className="relative z-10 text-center">
+                                        <p className="text-sm font-bold text-white/80 mb-6 leading-relaxed">
+                                            Please fill this form
                                         </p>
                                         <button
-                                            onClick={() => navigate('/auth?tab=vendor&role=owner&autofill=true')}
+                                            onClick={() => {
+                                                const roleKey = selectedCategory.toLowerCase().replace(/s$/, '');
+                                                navigate(`/vehicle-owner?autofill=true&role=${roleKey}`);
+                                            }}
                                             className="w-full py-4 bg-[#C44545] text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-[#C44545]/30 active:scale-95 transition-all flex items-center justify-center gap-2"
                                         >
-                                            Owner Form Fill Karein
+                                            Owner Form
                                             <ArrowRight size={14} />
                                         </button>
                                     </div>

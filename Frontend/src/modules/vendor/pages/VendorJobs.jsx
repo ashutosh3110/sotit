@@ -259,12 +259,22 @@ const VendorJobs = () => {
                  </div>
                  <div className="relative z-10">
                     <h3 className="text-lg font-black tracking-tight leading-tight mb-1 uppercase">{job.role} Required</h3>
-                    <p className="text-[14px] font-medium text-neutral-600 mb-3 leading-relaxed tracking-tight">Lead from {job.customer?.name}.</p>
-                   <div className="flex items-center gap-2 text-neutral-500 mb-4 pb-4 border-b border-neutral-50">
-                      <MapPin size={14} className="text-neutral-400" />
+                    <p className="text-[14px] font-medium text-neutral-600 mb-3 leading-relaxed tracking-tight">Lead from {job.details?.name || job.requesterId?.name || 'Customer'}.</p>
+                    <div className="flex items-center gap-2 text-neutral-500 mb-4 pb-4 border-b border-neutral-50">
+                       <MapPin size={14} className="text-neutral-400" />
                        <span className="text-[14px] font-bold">Verified Lead • <span className="text-[#C44545] font-black">₹9 Application Fee</span></span>
-                   </div>
-                   <div className="flex items-center justify-between">
+                    </div>
+                    {job.details && Object.keys(job.details).length > 0 && (
+                        <div className="mb-6 grid grid-cols-2 gap-2">
+                            {Object.entries(job.details).map(([k, v]) => (
+                                <div key={k} className="bg-white/80 p-2 rounded-xl border border-rose-100/50">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">{k}</p>
+                                    <p className="text-[10px] font-bold text-slate-700 truncate">{v}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    <div className="flex items-center justify-between">
                        <div className="flex items-center gap-2 bg-rose-50 px-3 py-2 rounded-2xl border border-rose-100">
                           <ShieldCheck size={14} className="text-[#C44545]" />
                           <span className="text-[12px] font-bold uppercase text-[#C44545] tracking-tight">Active</span>

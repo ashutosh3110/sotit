@@ -34,7 +34,12 @@ const vendorSchema = new mongoose.Schema({
     experience: String,
     bgCheck: { type: Boolean, default: false },
     availability: String,
-    languages: [String]
+    languages: [String],
+    serviceStates: [{
+      name: String,
+      isoCode: String,
+      districts: [String]
+    }]
   },
 
   mechanicDetails: {
@@ -83,6 +88,9 @@ const vendorSchema = new mongoose.Schema({
     operatingCity: String,
     vehicleType: String,         // Added for Driver Owner requirements
     jobType: String,             // Added for Driver Owner requirements (Permanent / Part Time)
+    language: String,            // Added for Driver Owner requirements
+    state: String,               // Added for Driver Owner requirements
+    district: String,            // Added for Driver Owner requirements
   },
 
   kycDocuments: {

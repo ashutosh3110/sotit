@@ -27,15 +27,21 @@ exports.registerVendor = async (req, res) => {
         remark
     } = req.body;
 
-    if (!mobile || !otp) {
-      return res.status(400).json({ message: 'Mobile and OTP are required' });
-    }
+    if (role !== 'owner') {
+      if (!mobile || !otp) {
+        return res.status(400).json({ message: 'Mobile and OTP are required' });
+      }
 
-    // Verify OTP
-    const OTPVerification = require('../models/OTPVerification');
-    const otpRecord = await OTPVerification.findOne({ mobile });
-    if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
+      // Verify OTP
+      const OTPVerification = require('../models/OTPVerification');
+      const otpRecord = await OTPVerification.findOne({ mobile });
+      if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
+        return res.status(400).json({ message: 'Invalid or expired OTP' });
+      }
+    } else {
+      if (!mobile) {
+        return res.status(400).json({ message: 'Mobile number is required' });
+      }
     }
 
     // Check if user exists
@@ -84,8 +90,11 @@ exports.registerVendor = async (req, res) => {
 
     await newVendor.save();
 
-    // Delete OTP record since it is verified
-    await OTPVerification.deleteOne({ mobile });
+    // Delete OTP record since it is verified (for non-owner roles)
+    if (role !== 'owner') {
+      const OTPVerification = require('../models/OTPVerification');
+      await OTPVerification.deleteOne({ mobile });
+    }
 
     res.status(201).json({ 
         message: 'Vendor registered and activated successfully!',

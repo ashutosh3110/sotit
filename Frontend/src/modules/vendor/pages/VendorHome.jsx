@@ -448,7 +448,7 @@ const VendorHome = () => {
                            {req.requesterType === 'Vendor' ? 'Partner Lead' : 'Direct Lead'}
                        </span>
                    </div>
-                   <h3 className="text-xl font-black tracking-tighter text-slate-900">{req.requesterId?.name}</h3>
+                   <h3 className="text-xl font-black tracking-tighter text-slate-900">{req.details?.name || req.requesterId?.name || 'Customer'}</h3>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500 mb-6 bg-slate-50 p-3 rounded-2xl">
                    <MapPin size={14} className="text-[#C44545]" />

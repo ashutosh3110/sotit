@@ -29,14 +29,15 @@ exports.hireExpert = async (req, res) => {
         }
 
         // Create Service Request (No wallet deductions)
+        const isDirectHire = !!vendorId;
         const request = await ServiceRequest.create({
             requesterId: actorId,
             requesterType: requesterType,
             vendor: vendorId || undefined,
             role: role.toLowerCase(),
             details: details || {},
-            status: role.toLowerCase() === 'driver' ? 'hired' : 'pending',
-            hiredAt: role.toLowerCase() === 'driver' ? new Date() : undefined,
+            status: (isDirectHire && role.toLowerCase() === 'driver') ? 'hired' : 'pending',
+            hiredAt: (isDirectHire && role.toLowerCase() === 'driver') ? new Date() : undefined,
             customerDeduction: 0
         });
 
@@ -125,18 +126,73 @@ exports.getVendorRequests = async (req, res) => {
 
         const requests = await ServiceRequest.find({ 
             status: 'pending',
+            requesterId: { $ne: vendorId },
             $or: [
                 { vendor: vendorId },
                 { 
                     vendor: { $exists: false }, 
-                    role: vendor.role.toLowerCase(),
-                    requesterId: { $ne: vendorId } 
+                    role: vendor.role.toLowerCase()
+                },
+                {
+                    vendor: null,
+                    role: vendor.role.toLowerCase()
                 }
             ]
         }).populate('requesterId', 'name mobile profilePicture');
 
-        res.status(200).json({ success: true, requests });
+        // Filter requests based on vendor's serviceStates
+        const matchedRequests = requests.filter(request => {
+            // Direct requests to this vendor are always shown
+            if (request.vendor && request.vendor.toString() === vendorId.toString()) {
+                return true;
+            }
+
+            const reqState = request.details?.state;
+            const reqDistrict = request.details?.district;
+
+            // If the request does not specify location, show it
+            if (!reqState || !reqDistrict) {
+                return true;
+            }
+
+            const serviceStates = vendor.professionalDetails?.serviceStates || [];
+
+            // Check if any registered serviceStates covers the request state & district
+            const hasLocationMatch = serviceStates.some(sState => {
+                const isStateMatch = sState.name && sState.name.toLowerCase() === reqState.toLowerCase();
+                if (!isStateMatch) return false;
+
+                const isDistrictMatch = sState.districts && sState.districts.some(dist => dist.toLowerCase() === reqDistrict.toLowerCase());
+                return isDistrictMatch;
+            });
+
+            return hasLocationMatch;
+        });
+
+        // Mask phone numbers for pending requests
+        const maskMobile = (mobile) => {
+            if (!mobile) return "";
+            const str = String(mobile);
+            if (str.length >= 10) {
+                return str.substring(0, 5) + "*****";
+            }
+            return "*****";
+        };
+
+        const sanitizedRequests = matchedRequests.map(req => {
+            const reqObj = req.toObject();
+            if (reqObj.requesterId && reqObj.requesterId.mobile) {
+                reqObj.requesterId.mobile = maskMobile(reqObj.requesterId.mobile);
+            }
+            if (reqObj.details && reqObj.details.mobile) {
+                reqObj.details.mobile = maskMobile(reqObj.details.mobile);
+            }
+            return reqObj;
+        });
+
+        res.status(200).json({ success: true, requests: sanitizedRequests });
     } catch (error) {
+        console.error("getVendorRequests error:", error);
         res.status(500).json({ message: 'Error fetching requests' });
     }
 };
@@ -150,8 +206,33 @@ exports.getVendorHistory = async (req, res) => {
         })
         .populate('requesterId', 'name mobile profilePicture')
         .sort({ createdAt: -1 });
-        res.status(200).json({ success: true, history });
+
+        const maskMobile = (mobile) => {
+            if (!mobile) return "";
+            const str = String(mobile);
+            if (str.length >= 10) {
+                return str.substring(0, 5) + "*****";
+            }
+            return "*****";
+        };
+
+        const sanitizedHistory = history.map(req => {
+            const reqObj = req.toObject();
+            const shouldMask = !reqObj.isVendorPaid;
+            if (shouldMask) {
+                if (reqObj.requesterId && reqObj.requesterId.mobile) {
+                    reqObj.requesterId.mobile = maskMobile(reqObj.requesterId.mobile);
+                }
+                if (reqObj.details && reqObj.details.mobile) {
+                    reqObj.details.mobile = maskMobile(reqObj.details.mobile);
+                }
+            }
+            return reqObj;
+        });
+
+        res.status(200).json({ success: true, history: sanitizedHistory });
     } catch (error) {
+        console.error("getVendorHistory error:", error);
         res.status(500).json({ message: 'Error fetching history' });
     }
 };
