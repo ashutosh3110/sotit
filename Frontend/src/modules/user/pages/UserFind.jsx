@@ -280,7 +280,12 @@ const UserFind = () => {
         setShowLanguagesModal(false);
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/vendors/profile/${vendorId}`);
-            setSelectedVendor(response.data);
+            const listVendor = vendors.find(v => v._id === vendorId);
+            setSelectedVendor({
+                ...response.data,
+                isUnlocked: listVendor?.isUnlocked || response.data.isUnlocked,
+                mobile: listVendor?.mobile || response.data.mobile
+            });
         } catch (error) {
             console.error("Error fetching vendor profile:", error);
             toast.error("Failed to load expert details");
@@ -402,6 +407,20 @@ const UserFind = () => {
                                         </div>
                                     </div>
 
+                                    {(selectedVendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date())) && (
+                                        <div className="mb-8 px-2">
+                                            <div className="p-4 bg-emerald-50 rounded-2xl flex items-center justify-between border border-emerald-100/50">
+                                                <div className="flex items-center gap-2">
+                                                    <CheckCircle2 size={16} className="text-emerald-600" />
+                                                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Contact Number</span>
+                                                </div>
+                                                <a href={`tel:${selectedVendor.mobile}`} className="text-sm font-black uppercase text-emerald-700 hover:underline">
+                                                    +91 {selectedVendor.mobile}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {selectedVendor.professionalDetails?.availability && (
                                         <div className="mb-8 px-2">
                                             <div className="p-4 bg-slate-50 rounded-2xl flex items-center justify-between border border-slate-100/50">
@@ -482,14 +501,16 @@ const UserFind = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="p-8 pt-0 mt-auto">
-                                    <button 
-                                        onClick={() => handleHireExpert(selectedVendor._id, selectedVendor.role)}
-                                        className="w-full py-5 bg-[#C44545] text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-[#C44545]/30 hover:scale-[1.02] active:scale-95 transition-all"
-                                    >
-                                        {selectedVendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) ? "Connect Now" : "Unlock Contact (₹9)"}
-                                    </button>
-                                </div>
+                                {!(selectedVendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date())) && (
+                                    <div className="p-8 pt-0 mt-auto">
+                                        <button 
+                                            onClick={() => handleHireExpert(selectedVendor._id, selectedVendor.role)}
+                                            className="w-full py-5 bg-[#C44545] text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-[#C44545]/30 hover:scale-[1.02] active:scale-95 transition-all"
+                                        >
+                                            Unlock Contact (₹9)
+                                        </button>
+                                    </div>
+                                )}
                             </>
                         )}
                     </motion.div>
@@ -1087,14 +1108,16 @@ const UserFind = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3 mt-6 pt-6 border-t border-slate-50">
+                                <div className={`grid ${vendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) ? 'grid-cols-1' : 'grid-cols-2'} gap-3 mt-6 pt-6 border-t border-slate-50`}>
                                     <button onClick={() => handleViewProfile(vendor._id)} className="py-4 bg-slate-100 text-slate-900 rounded-[1.2rem] text-[11px] font-black uppercase hover:bg-slate-200 transition-all">View Profile</button>
-                                    <button 
-                                        onClick={() => handleHireExpert(vendor._id, vendor.role)}
-                                        className="py-4 bg-[#C44545] text-white rounded-[1.2rem] text-[11px] font-black uppercase shadow-xl hover:scale-[1.02] transition-all"
-                                    >
-                                        Hire Expert
-                                    </button>
+                                    {!(vendor.isUnlocked || (['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date())) && (
+                                        <button 
+                                            onClick={() => handleHireExpert(vendor._id, vendor.role)}
+                                            className="py-4 bg-[#C44545] text-white rounded-[1.2rem] text-[11px] font-black uppercase shadow-xl hover:scale-[1.02] transition-all"
+                                        >
+                                            Hire Expert
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )) : Array.from({ length: 3 }).map((_, i) => (
