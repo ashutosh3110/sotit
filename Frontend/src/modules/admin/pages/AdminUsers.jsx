@@ -22,6 +22,27 @@ const AdminUsers = () => {
     fetchUsers();
   }, []);
 
+  // Disable background scroll when modal is open
+  useEffect(() => {
+      if (selectedEntity) {
+          document.body.style.overflow = 'hidden';
+          if (window.lenis) {
+              window.lenis.stop();
+          }
+      } else {
+          document.body.style.overflow = 'unset';
+          if (window.lenis) {
+              window.lenis.start();
+          }
+      }
+      return () => {
+          document.body.style.overflow = 'unset';
+          if (window.lenis) {
+              window.lenis.start();
+          }
+      };
+  }, [selectedEntity]);
+
   const fetchUsers = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/users`, {
@@ -105,11 +126,9 @@ const AdminUsers = () => {
 
                 <div className="space-y-3">
                     {filteredUsers.map((user) => (
-                        <motion.div 
+                        <div 
                             key={user._id}
-                            whileTap={{ scale: 0.99 }}
-                            onClick={() => setSelectedEntity(user)}
-                            className="bg-white py-3.5 px-5 rounded-xl border border-slate-200 shadow-sm space-y-2 hover:border-[#C44545]/20 transition-all cursor-pointer flex items-center justify-between"
+                            className="bg-white py-3.5 px-5 rounded-xl border border-slate-200 shadow-sm space-y-2 flex items-center justify-between"
                         >
                             <div className="flex items-center gap-4 w-full">
                                 <div className="h-10 w-10 bg-rose-50/50 text-[#C44545] rounded-xl flex items-center justify-center border border-rose-100 flex-shrink-0 font-bold uppercase">
@@ -130,182 +149,18 @@ const AdminUsers = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 mt-2 text-slate-400">
-                                        <MapPin size={12} className="flex-shrink-0" />
-                                        <span className="text-[11px] font-semibold capitalize">{user.city || user.currentAddress || 'Location N/A'}</span>
+                                        <Phone size={12} className="flex-shrink-0" />
+                                        <span className="text-[11px] font-semibold">{user.mobile || user.phone || 'N/A'}</span>
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
             </div>
         </section>
       </div>
 
-      {/* --- Details Modal --- */}
-      <AnimatePresence>
-          {selectedEntity && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center lg:justify-end p-4 lg:p-10">
-                  <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setSelectedEntity(null)}
-                      className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
-                  />
-                  <motion.div 
-                      initial={{ x: '100%', opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: '100%', opacity: 0 }}
-                      transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                      className="relative w-full max-w-lg h-[85vh] bg-white rounded-[3rem] shadow-2xl flex flex-col overflow-hidden shadow-black/20"
-                  >
-                      {/* Fixed Header */}
-                      <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-neutral-50/50 shrink-0">
-                          <div>
-                              <span className="text-[10px] font-black text-[#C44545] uppercase tracking-[0.2em] mb-1 block">Profile Review</span>
-                              <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Customer Profile</h2>
-                          </div>
-                          <button onClick={() => setSelectedEntity(null)} className="h-10 w-10 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
-                              <ArrowLeft size={20} className="rotate-180" />
-                          </button>
-                      </div>
-
-                      {/* Scrollable Content */}
-                      <div className="flex-1 overflow-y-auto p-8 space-y-8 overflow-x-hidden">
-                          {/* Profile Header */}
-                          <div className="flex items-center gap-6">
-                              <div className="h-20 w-20 bg-rose-50 rounded-[2rem] flex items-center justify-center text-[#C44545] font-black text-2xl border-2 border-rose-100 shadow-inner uppercase">
-                                  {selectedEntity.name[0]}
-                              </div>
-                              <div className="space-y-1">
-                                  <h3 className="text-xl font-black tracking-tight text-slate-900">{selectedEntity.name}</h3>
-                                  <div className="flex items-center gap-2">
-                                      <span className="px-2.5 py-1 bg-[#C44545] text-white text-[10px] font-black uppercase tracking-widest rounded-lg">
-                                           Customer
-                                       </span>
-                                      <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg ${
-                                          selectedEntity.isBlocked ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'
-                                      }`}>
-                                          {selectedEntity.isBlocked ? 'Blocked' : 'Active'}
-                                      </span>
-                                  </div>
-                              </div>
-                          </div>
-
-                          {/* Data Grid */}
-                          <div className="grid grid-cols-1 gap-4">
-                               <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100">
-                                   <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block mb-2">Customer ID</span>
-                                   <p className="text-sm font-bold text-slate-900 break-all">{selectedEntity._id}</p>
-                              </div>
-                              <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100 flex items-center gap-4">
-                                  <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400 shadow-sm">
-                                      <Mail size={18} />
-                                  </div>
-                                  <div className="flex-1">
-                                      <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block mb-0.5">Email Address</span>
-                                      <p className="text-sm font-bold text-slate-900">{selectedEntity.email || 'Not Provided'}</p>
-                                  </div>
-                              </div>
-                              <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100 flex items-center gap-4">
-                                  <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400 shadow-sm">
-                                      <Phone size={18} />
-                                  </div>
-                                  <div className="flex-1">
-                                      <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block mb-0.5">Contact Number</span>
-                                      <p className="text-sm font-bold text-slate-900">{selectedEntity.mobile || selectedEntity.phone || 'N/A'}</p>
-                                  </div>
-                              </div>
-                              <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100 flex items-center gap-4">
-                                  <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400 shadow-sm">
-                                      <MapPin size={18} />
-                                  </div>
-                                  <div className="flex-1">
-                                      <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block mb-0.5">Current Location</span>
-                                      <p className="text-sm font-bold text-slate-900">{selectedEntity.city || selectedEntity.currentAddress || 'Location N/A'}</p>
-                                  </div>
-                              </div>
-
-                              {/* Dynamic Vendor Details */}
-                              {selectedEntity.role?.toLowerCase() !== 'customer' && (
-                                  <>
-                                      <div className="grid grid-cols-2 gap-4">
-                                          <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100">
-                                              <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block mb-1">Experience</span>
-                                              <p className="text-sm font-bold text-slate-900">{selectedEntity.professionalDetails?.experience || 'Not Mentioned'}</p>
-                                          </div>
-                                          <div className="bg-neutral-50 p-5 rounded-3xl border border-slate-100">
-                                              <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block mb-1">Availability</span>
-                                              <p className="text-sm font-bold text-slate-900">{selectedEntity.professionalDetails?.availability || 'N/A'}</p>
-                                          </div>
-                                      </div>
-
-                                      {/* Settlement Section */}
-                                      <div className="bg-rose-50/50 p-6 rounded-[2.5rem] border border-rose-100/50 mt-4">
-                                          <h4 className="text-[11px] font-black text-[#C44545] uppercase tracking-[0.2em] flex items-center gap-2 mb-4">
-                                              <ShieldCheck size={14} /> Settlement Details
-                                          </h4>
-                                          <div className="space-y-3">
-                                              <div className="flex justify-between items-center py-2 border-b border-[#C44545]/10">
-                                                  <span className="text-[10px] font-black text-neutral-400 uppercase">Bank Name</span>
-                                                  <span className="text-xs font-black text-slate-900">{selectedEntity.bankDetails?.bankName || 'N/A'}</span>
-                                              </div>
-                                              <div className="flex justify-between items-center py-2 border-b border-[#C44545]/10">
-                                                  <span className="text-[10px] font-black text-neutral-400 uppercase">Account No.</span>
-                                                  <span className="text-xs font-black text-slate-900">{selectedEntity.bankDetails?.accountNumber || 'N/A'}</span>
-                                              </div>
-                                              <div className="flex justify-between items-center py-2">
-                                                  <span className="text-[10px] font-black text-neutral-400 uppercase">IFSC Code</span>
-                                                  <span className="text-xs font-black text-slate-900">{selectedEntity.bankDetails?.ifscCode || 'N/A'}</span>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </>
-                              )}
-                          </div>
-                      </div>
-
-                      {/* Fixed Footer */}
-                      <div className="p-8 bg-white border-t border-slate-100 flex gap-3 shrink-0">
-                          <button className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-black/10 active:scale-95 transition-all">
-                              Send Message
-                          </button>
-                          <button 
-                              onClick={async () => {
-                                  const tid = toast.loading(`${selectedEntity.isBlocked ? 'Unblocking' : 'Blocking'} user...`);
-                                  try {
-                                      const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/users/${selectedEntity._id}/toggle-block`, {
-                                          method: 'PUT',
-                                          headers: { 
-                                              'Authorization': `Bearer ${localStorage.getItem('admin_token')}` 
-                                          }
-                                      });
-                                      const data = await res.json();
-                                      if (res.ok) {
-                                          toast.success(data.message, { id: tid });
-                                          setSelectedEntity(data.user);
-                                          setUsersList(prev => prev.map(u => u._id === data.user._id ? data.user : u));
-                                      } else {
-                                          toast.error(data.message, { id: tid });
-                                      }
-                                  } catch (err) {
-                                      toast.error("Action failed", { id: tid });
-                                  }
-                              }}
-                              className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] border-2 transition-all active:scale-95 ${
-                                  selectedEntity.isBlocked 
-                                  ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
-                                  : 'bg-rose-50 border-rose-100 text-rose-600'
-                              }`}
-                          >
-                              {selectedEntity.isBlocked ? 'Unblock' : 'Block User'}
-                          </button>
-                      </div>
-                  </motion.div>
-              </div>
-          )}
-      </AnimatePresence>
     </div>
   );
 };
