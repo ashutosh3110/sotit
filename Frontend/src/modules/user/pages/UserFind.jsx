@@ -1148,6 +1148,7 @@ const UserFind = () => {
                 role={selectedCategory}
                 onPost={handlePostRequirement}
             />
+            <DebugOverlay />
         </div>
     );
 };
@@ -1268,5 +1269,91 @@ const InputField = ({ label, icon, type = "text", placeholder, onChange }) => (
         </div>
     </div>
 );
+
+const DebugOverlay = () => {
+    const [logs, setLogs] = useState([]);
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        const addLog = (type, ...args) => {
+            const message = args.map(arg => {
+                try {
+                    return typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg);
+                } catch(e) {
+                    return String(arg);
+                }
+            }).join(' ');
+            
+            setLogs(prev => [...prev, { type, message, time: new Date().toLocaleTimeString() }]);
+        };
+
+        console.log = (...args) => {
+            addLog('log', ...args);
+            originalLog.apply(console, args);
+        };
+
+        console.error = (...args) => {
+            addLog('error', ...args);
+            originalError.apply(console, args);
+        };
+
+        console.warn = (...args) => {
+            addLog('warn', ...args);
+            originalWarn.apply(console, args);
+        };
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            addLog('error', `Global Error: ${message} at ${source}:${lineno}:${colno}`);
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+            addLog('error', `Unhandled Promise: ${event.reason}`);
+        });
+
+        // Custom axios interceptor to log network requests if window.axios is used, but we'll just rely on catch blocks in your code for now.
+
+        return () => {
+            console.log = originalLog;
+            console.error = originalError;
+            console.warn = originalWarn;
+        };
+    }, []);
+
+    if (!isOpen) {
+        return (
+            <button 
+                onClick={() => setIsOpen(true)}
+                className="fixed bottom-24 right-4 z-[999] bg-slate-900 text-white p-3 rounded-full shadow-2xl opacity-50 hover:opacity-100 flex items-center gap-2"
+            >
+                <Wrench size={20} />
+            </button>
+        );
+    }
+
+    return (
+        <div className="fixed inset-0 z-[1000] bg-black/90 p-4 overflow-hidden flex flex-col font-mono text-xs">
+            <div className="flex justify-between items-center text-white mb-4">
+                <h3 className="font-bold">Debug Console (Network/Errors)</h3>
+                <div className="flex gap-4">
+                    <button onClick={() => setLogs([])} className="text-red-400 font-bold">Clear</button>
+                    <button onClick={() => setIsOpen(false)} className="text-white"><X size={20} /></button>
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-2 pb-10">
+                {logs.length === 0 && <div className="text-slate-500">No logs yet...</div>}
+                {logs.map((log, i) => (
+                    <div key={i} className={`p-2 rounded break-all whitespace-pre-wrap ${log.type === 'error' ? 'bg-red-500/20 text-red-300' : log.type === 'warn' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-white/10 text-slate-300'}`}>
+                        <span className="text-white/40 mr-2">[{log.time}]</span>
+                        {log.message}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 export default UserFind;
