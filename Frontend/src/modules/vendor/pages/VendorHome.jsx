@@ -394,38 +394,7 @@ const VendorHome = () => {
             </div>
           </section>
 
-          {/* PARTNER NETWORK - Post Requirement */}
-          <section className="bg-slate-900 p-8 rounded-[3rem] relative overflow-hidden shadow-2xl shadow-black/20">
-            <div className="absolute top-0 right-0 h-40 w-40 bg-[#C44545]/10 rounded-full blur-3xl -mr-10 -mt-10" />
-            <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center text-[#C44545]">
-                        <Zap size={20} strokeWidth={3} />
-                    </div>
-                    <h2 className="text-lg font-black text-white tracking-tighter">Partner Network</h2>
-                </div>
-                <p className="text-slate-400 text-[11px] font-bold mb-6 leading-relaxed">Need a Driver or Mechanic for your own vehicle? Post a requirement to the Sootit expert network.</p>
-                <div className="grid grid-cols-1 gap-2 mb-6">
-                    {['driver', 'mechanic', 'towing']
-                      .filter(role => role === vendor.profile.role)
-                      .map(role => (
-                        <button 
-                            key={role}
-                            onClick={() => setSelectedHireRole(role)}
-                            className="py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] bg-[#C44545] text-white shadow-lg active:scale-95 transition-all border-2 border-white/10"
-                        >
-                            Hire {role}
-                        </button>
-                    ))}
-                </div>
-                <button 
-                    onClick={() => setIsPostModalOpen(true)}
-                    className="w-full bg-white text-slate-900 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                    Find Expert <ArrowRight size={14} strokeWidth={3} />
-                </button>
-            </div>
-          </section>
+
 
           {/* Hire Requests */}
           <section>
