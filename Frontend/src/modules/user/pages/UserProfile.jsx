@@ -69,12 +69,6 @@ const UserProfile = () => {
                         </h1>
                     </div>
                 </div>
-                <button 
-                  onClick={toggleDarkMode}
-                  className="h-12 w-12 bg-white/15 rounded-[1.4rem] flex items-center justify-center border border-white/10 backdrop-blur-md active:scale-90 transition-transform text-white"
-                >
-                    {isDarkMode ? <Sun size={20} className="fill-white" /> : <Moon size={20} />}
-                </button>
             </div>
 
             <div className="px-6 pt-10 pb-6">

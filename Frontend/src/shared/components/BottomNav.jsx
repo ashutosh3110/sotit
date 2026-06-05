@@ -46,7 +46,6 @@ const AppBottomNav = () => {
           <>
             <NavItem to="/user" icon={LayoutDashboard} label="Home" />
             <NavItem to="/user/find" icon={MapPin} label="Find" />
-            <NavItem to="/user/history" icon={Activity} label="History" />
             <NavItem to="/user/profile" icon={User} label="Profile" />
           </>
         )}
