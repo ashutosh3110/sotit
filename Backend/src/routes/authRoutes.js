@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, sendOTP, updateProfile, verifyResetOTP, resetPassword, sendRegisterOTP } = require('../controllers/authController');
+const { register, login, sendOTP, updateProfile, verifyResetOTP, resetPassword, sendRegisterOTP, deleteAccount } = require('../controllers/authController');
 const upload = require('../middlewares/upload');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -12,5 +12,6 @@ router.post('/reset-password', resetPassword);
 router.post('/register', upload.single('profilePicture'), register);
 router.post('/login', login);
 router.put('/profile', protect, upload.single('profilePicture'), updateProfile);
+router.delete('/delete-account', protect, deleteAccount);
 
 module.exports = router;

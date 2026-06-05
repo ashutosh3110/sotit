@@ -1,14 +1,17 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Shield, Wallet, ChevronRight, Settings, LogOut, Star, Bell, Lock, HelpCircle, ArrowLeft, Moon, Sun } from "lucide-react";
+import { User, Shield, Wallet, ChevronRight, Settings, LogOut, Star, Bell, Lock, HelpCircle, ArrowLeft, Moon, Sun, Trash2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getUserData, logoutUser } from "../utils/userStore";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 const UserProfile = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(getUserData() || { profile: { name: "Guest" }, wallet: 0 });
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         const handleUpdate = () => setUser(getUserData());
@@ -19,6 +22,26 @@ const UserProfile = () => {
     const toggleDarkMode = () => {
         setIsDarkMode(!isDarkMode);
         toast.success(`${!isDarkMode ? 'Dark' : 'Light'} Mode Enabled`);
+    };
+
+    const handleDeleteAccount = async () => {
+        try {
+            setIsDeleting(true);
+            const token = user?.token;
+            if (!token) throw new Error("Authentication error");
+
+            await axios.delete(`${import.meta.env.VITE_API_URL}/auth/delete-account`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            toast.success("Account deleted successfully");
+            setTimeout(() => logoutUser(), 1000);
+        } catch (error) {
+            console.error("Delete account error:", error);
+            toast.error(error.response?.data?.message || "Failed to delete account");
+            setIsDeleting(false);
+            setShowDeleteModal(false);
+        }
     };
 
     const MenuButton = ({ icon: Icon, label, sublabel, onClick, color = "text-[#C44545]", bg = "bg-white", isLast = false, isDark = false }) => (
@@ -104,6 +127,20 @@ const UserProfile = () => {
                     />
                 </div>
 
+                {/* Delete Account Button */}
+                <motion.button 
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowDeleteModal(true)}
+                    className={`w-full h-16 rounded-[2rem] border flex items-center justify-center gap-4 font-black uppercase text-[11px] tracking-[0.3em] active:scale-95 transition-all shadow-xl mb-4 ${
+                        isDarkMode 
+                        ? 'bg-red-950/30 border-red-900/50 text-red-500 shadow-black/20' 
+                        : 'bg-red-50 border-red-100 text-red-600 shadow-red-500/5'
+                    }`}
+                >
+                    <Trash2 size={16} strokeWidth={3} />
+                    Delete Account
+                </motion.button>
+
                 {/* Unified Logout Button */}
                 <motion.button 
                     whileTap={{ scale: 0.98 }}
@@ -121,6 +158,59 @@ const UserProfile = () => {
                     Logout Session
                 </motion.button>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {showDeleteModal && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+                            onClick={() => !isDeleting && setShowDeleteModal(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="fixed left-6 right-6 top-[30%] z-[101] bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-red-100 dark:border-red-900/30"
+                        >
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 flex items-center justify-center mb-6">
+                                    <AlertTriangle size={32} strokeWidth={2.5} />
+                                </div>
+                                <h3 className="text-xl font-black tracking-tight text-slate-800 dark:text-slate-100 mb-2">
+                                    Delete Account?
+                                </h3>
+                                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 leading-relaxed px-4">
+                                    This action cannot be undone. All your data, history, and active requests will be permanently removed.
+                                </p>
+                                <div className="flex flex-col gap-3 w-full">
+                                    <button
+                                        onClick={handleDeleteAccount}
+                                        disabled={isDeleting}
+                                        className="w-full h-14 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        {isDeleting ? (
+                                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            "Yes, Delete My Account"
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowDeleteModal(false)}
+                                        disabled={isDeleting}
+                                        className="w-full h-14 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

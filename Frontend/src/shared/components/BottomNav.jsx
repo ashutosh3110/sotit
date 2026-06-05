@@ -53,7 +53,6 @@ const AppBottomNav = () => {
           <>
             <NavItem to="/vendor" icon={Grid} label="PANEL" />
             <NavItem to="/vendor/jobs" icon={Briefcase} label="JOBS" />
-            <NavItem to="/vendor/history" icon={Activity} label="HISTORY" />
             <NavItem to="/vendor/settings" icon={Settings} label="PROFILE" />
           </>
         )}

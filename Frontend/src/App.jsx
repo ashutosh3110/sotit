@@ -43,7 +43,6 @@ const VendorExpertise = lazy(() => import('./modules/vendor/pages/VendorExpertis
 const VendorKYC = lazy(() => import('./modules/vendor/pages/VendorKYC'));
 const VendorRoles = lazy(() => import('./modules/vendor/pages/VendorRoles'));
 const VendorSupport = lazy(() => import('./modules/vendor/pages/VendorSupport'));
-const VendorHistory = lazy(() => import('./modules/vendor/pages/VendorHistory'));
 const AdminDashboard = lazy(() => import('./modules/admin/pages/AdminDashboard'));
 const AdminUsers = lazy(() => import('./modules/admin/pages/AdminUsers'));
 const AdminVendors = lazy(() => import('./modules/admin/pages/AdminVendors'));
@@ -121,7 +120,6 @@ const AppRoutes = () => {
           <Route path="/vendor/kyc" element={<ModuleWrapper type="vendor"><VendorKYC /></ModuleWrapper>} />
           <Route path="/vendor/roles" element={<ModuleWrapper type="vendor"><VendorRoles /></ModuleWrapper>} />
           <Route path="/vendor/support" element={<ModuleWrapper type="vendor"><VendorSupport /></ModuleWrapper>} />
-          <Route path="/vendor/history" element={<ModuleWrapper type="vendor"><VendorHistory /></ModuleWrapper>} />
           
           {/* Owner App Module */}
           <Route path="/owner-dashboard" element={<ModuleWrapper type="owner"><OwnerDashboard /></ModuleWrapper>} />

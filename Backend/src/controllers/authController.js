@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const OTPVerification = require('../models/OTPVerification');
+const Vendor = require('../models/Vendor');
 const jwt = require('jsonwebtoken');
 
 const cloudinary = require('../utils/cloudinary');
@@ -262,6 +263,33 @@ exports.updateProfile = async (req, res, next) => {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
+    next(err);
+  }
+};
+
+// @desc    Delete user account
+// @route   DELETE /api/auth/delete-account
+// @access  Private
+exports.deleteAccount = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    // Optional: Delete user's profile picture from Cloudinary
+    if (user.profilePicture && user.profilePicture.public_id) {
+      await cloudinary.uploader.destroy(user.profilePicture.public_id);
+    }
+
+    await User.findByIdAndDelete(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (err) {
     next(err);
   }
 };

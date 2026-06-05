@@ -312,3 +312,19 @@ exports.getVendors = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error fetching vendors' });
     }
 };
+
+exports.deleteVendorAccount = async (req, res) => {
+    try {
+        const vendor = await Vendor.findById(req.user.id);
+        if (!vendor) return res.status(404).json({ message: 'Vendor not found' });
+
+        // Optionally delete KYC documents from Cloudinary here if needed
+        // Since we are doing a hard delete:
+        await Vendor.findByIdAndDelete(req.user.id);
+
+        res.status(200).json({ success: true, message: 'Vendor account deleted successfully' });
+    } catch (error) {
+        console.error("Delete Vendor Error:", error);
+        res.status(500).json({ success: false, message: 'Error deleting account' });
+    }
+};

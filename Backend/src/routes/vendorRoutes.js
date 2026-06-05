@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { registerVendor, getVendorProfile, updateVendorProfile, updateVendorKYC, toggleStatus, getVendors } = require('../controllers/vendorController');
+const { registerVendor, getVendorProfile, updateVendorProfile, updateVendorKYC, toggleStatus, getVendors, deleteVendorAccount } = require('../controllers/vendorController');
 const { vendorLogin, sendVendorOTP, verifyVendorResetOTP, resetVendorPassword } = require('../controllers/vendorAuthController');
 
 router.post('/send-otp', sendVendorOTP);
@@ -43,9 +43,10 @@ router.put('/kyc/:id', upload.fields([
     { name: 'officeProof', maxCount: 1 }
 ]), updateVendorKYC);
 
-const { optionalProtect } = require('../middlewares/authMiddleware');
+const { optionalProtect, protect } = require('../middlewares/authMiddleware');
 
 router.get('/all', optionalProtect, getVendors);
 router.put('/:id/toggle-status', toggleStatus);
+router.delete('/delete-account', protect, deleteVendorAccount);
 
 module.exports = router;
