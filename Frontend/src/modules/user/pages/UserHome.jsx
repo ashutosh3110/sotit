@@ -14,6 +14,20 @@ const Home = () => {
   const [activeRole, setActiveRole] = useState('driver'); // Default to driver or none
   const [roleBanners, setRoleBanners] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+  useEffect(() => {
+    const hasSeenDisclaimer = localStorage.getItem('hasSeenDisclaimer');
+    // We check if it is user's first time on home by storing a flag in local storage
+    if (!hasSeenDisclaimer && user?.profile?.token) {
+      setShowDisclaimer(true);
+    }
+  }, [user?.profile?.token]);
+
+  const handleCloseDisclaimer = () => {
+    localStorage.setItem('hasSeenDisclaimer', 'true');
+    setShowDisclaimer(false);
+  };
 
   useEffect(() => {
     const handleUpdate = () => setUser(getUserData());
@@ -185,6 +199,40 @@ const Home = () => {
 
   return (
     <div className="bg-white min-h-screen font-inter overflow-hidden pb-10">
+      <AnimatePresence>
+        {showDisclaimer && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white rounded-[2rem] p-6 max-w-sm w-full shadow-2xl border border-slate-100"
+            >
+              <div className="flex justify-center mb-5">
+                <div className="h-16 w-16 bg-blue-50 rounded-[1.5rem] flex items-center justify-center text-blue-500 shadow-inner">
+                  <Info size={32} strokeWidth={2.5} />
+                </div>
+              </div>
+              <h3 className="text-[16px] font-black text-center text-slate-800 uppercase tracking-wider mb-3">Important Notice</h3>
+              <p className="text-xs font-bold text-slate-500 text-center mb-6 leading-relaxed">
+                This app does not take any documents from you nor does it call for any document. We only make the number available to you through this app.
+              </p>
+              <button 
+                onClick={handleCloseDisclaimer}
+                className="w-full bg-[#C44545] text-white text-[12px] font-black uppercase tracking-[0.2em] py-4 rounded-2xl active:scale-95 transition-all shadow-xl shadow-[#C44545]/20"
+              >
+                Okay
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AppHero 
         user={user} 
         activeRole={activeRole} 
