@@ -5,6 +5,7 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import toast from "react-hot-toast";
 import { State } from "country-state-city";
 import { indiaData } from '../../../utils/indiaData';
+import ISO6391 from 'iso-639-1';
 
 const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
@@ -34,6 +35,42 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
       name,
       isoCode: allStatesRaw.find(s => s.name === name)?.isoCode || name
   })), [allStatesRaw]);
+  const [configLanguages, setConfigLanguages] = useState([]);
+  const [customFieldsList, setCustomFieldsList] = useState([]);
+  const [customFieldValues, setCustomFieldValues] = useState({});
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/registration-config/public`);
+        const data = await res.json();
+        if (data.success) {
+          setConfigLanguages(data.languages || []);
+          setCustomFieldsList(data.fields || []);
+        }
+      } catch (err) {
+        console.error("Error fetching registration config:", err);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const indianLanguages = useMemo(() => {
+    return ['hi', 'en', 'bn', 'mr', 'te', 'ta', 'ur', 'gu', 'kn', 'ml', 'or', 'pa', 'as', 'ks', 'sd', 'ne', 'sa']
+      .map(code => ISO6391.getName(code))
+      .sort();
+  }, []);
+
+  const displayLanguages = useMemo(() => {
+    if (configLanguages && configLanguages.length > 0) {
+      return configLanguages.map(l => l.name).sort();
+    }
+    return indianLanguages;
+  }, [configLanguages, indianLanguages]);
+
+  const activeCustomFields = useMemo(() => {
+    return customFieldsList.filter(f => f.role === 'all' || f.role === role);
+  }, [customFieldsList, role]);
   const mechanicServices = ['General Service', 'Engine Repair', 'Brake Service', 'Electrical Work', 'AC Service', 'Suspension & Steering', 'Oil & Filter Change', 'Body Work & Paint', 'Clutch & Gearbox', 'Battery & Charging'];
   const rtoServices = ['RC Transfer', 'Driving License', 'Vehicle Insurance', 'Hypothecation Addition/Removal', 'NOC Certificate', 'Fitness Certificate', 'Permit Work', 'Address Change', 'Duplicate RC', 'Tax Payment'];
   const legalPractices = ['Criminal Law', 'Civil Law', 'Property Law', 'Family Law', 'Corporate Law', 'Accident Claims', 'Taxation Law', 'Consumer Court', 'Cyber Law', 'Labor Law'];
@@ -155,7 +192,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
             >
                 <div className="flex items-center gap-3 overflow-hidden">
                     {Icon && <Icon size={18} className={value ? 'text-[#C44545]' : 'text-slate-400'} />}
-                    <span className={`text-sm font-bold truncate ${value ? 'text-slate-900' : 'text-slate-400'}`}>
+                    <span className={`text-lg font-bold truncate ${value ? 'text-slate-900' : 'text-slate-400'}`}>
                         {value || placeholder}
                     </span>
                 </div>
@@ -195,7 +232,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                                             setIsOpen(false);
                                             setSearch("");
                                         }}
-                                        className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-between transition-colors ${isSelected ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        className={`w-full text-left px-4 py-3 rounded-xl text-lg font-bold flex items-center justify-between transition-colors ${isSelected ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                     >
                                         {name}
                                         {isSelected && <Check size={14} />}
@@ -374,6 +411,16 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         return toast.error("Please enter the 4-digit verification OTP");
     }
 
+    // Validate custom fields
+    for (const field of activeCustomFields) {
+        if (field.required) {
+            const val = customFieldValues[field.name];
+            if (val === undefined || val === null || val === '' || val === false) {
+                return toast.error(`Please fill the required field: ${field.label}`);
+            }
+        }
+    }
+
     setIsLoading(true);
     const tid = toast.loading("Creating Partner Profile...");
 
@@ -395,6 +442,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         formData.append('rtoData', JSON.stringify(rtoData));
         formData.append('legalData', JSON.stringify(legalData));
         formData.append('bankData', JSON.stringify(bankData));
+        formData.append('customFields', JSON.stringify(customFieldValues));
 
         if (profileFile) formData.append('profileImage', profileFile);
         Object.keys(kycFiles).forEach(key => {
@@ -467,13 +515,22 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
   const isStep1Invalid = !profileFile || !name.trim() || mobile.length !== 10 || !isOtpSent || otp.join("").length !== 4 || !password || password.length < 6 || !streetName.trim() || !address.state || !address.city || !address.pincode;
 
+  const isCustomFieldsValid = () => {
+    return activeCustomFields.every(field => {
+      if (!field.required) return true;
+      const val = customFieldValues[field.name];
+      return val !== undefined && val !== null && val !== '' && val !== false;
+    });
+  };
+
   const isStep2Invalid = 
     (!profData.languages || profData.languages.length === 0) ||
     (role === 'driver' && ((profData.dlNumber ? profData.dlNumber.replace(/[^A-Za-z0-9]/g, "").length : 0) !== 15 || !profData.dlExpiry || !profData.availability || !profData.vehicleClasses || profData.vehicleClasses.length === 0)) ||
     (role === 'towing' && (!profData.vehicleClasses || profData.vehicleClasses.length === 0)) ||
     (role === 'mechanic' && (!mechanicData.specialties || mechanicData.specialties.length === 0 || !mechanicData.vehicleExpertise || mechanicData.vehicleExpertise.length === 0)) ||
     (role === 'rto' && (!rtoData.rtoOffice.trim() || !rtoData.services || rtoData.services.length === 0)) ||
-    (role === 'legal' && (!legalData.barRegNumber.trim() || !legalData.officeName.trim() || !legalData.practiceAreas || legalData.practiceAreas.length === 0));
+    (role === 'legal' && (!legalData.barRegNumber.trim() || !legalData.officeName.trim() || !legalData.practiceAreas || legalData.practiceAreas.length === 0)) ||
+    !isCustomFieldsValid();
 
   return (
     <div className="min-h-screen bg-slate-50 font-inter flex flex-col">
@@ -656,7 +713,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                                       onClick={() => toggleStateSelection(state)}
                                       className={`p-4 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-600 hover:bg-slate-50'}`}
                                   >
-                                      <span className="text-[12px] font-black uppercase">{state.name}</span>
+                                      <span className="text-lg font-black uppercase">{state.name}</span>
                                       {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
                                   </div>
                               );
@@ -672,7 +729,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                                   return (
                                       <div key={selectedState.isoCode} className="p-5 border border-slate-200 rounded-[2rem] bg-white shadow-sm">
                                           <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
-                                              <span className="text-[12px] font-black uppercase text-slate-900">{selectedState.name} Districts</span>
+                                              <span className="text-lg font-black uppercase text-slate-900">{selectedState.name} Districts</span>
                                               <span className="text-[10px] font-black text-[#C44545] bg-rose-50 px-3 py-1 rounded-full uppercase tracking-wider">{selectedState.districts.length} Selected</span>
                                           </div>
                                           <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1 no-scrollbar">
@@ -684,7 +741,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                                                           onClick={() => toggleDistrictSelection(selectedState.isoCode, district)}
                                                           className={`p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${isDistSelected ? 'border-[#C44545]/30 bg-rose-50/20 text-[#C44545]' : 'border-slate-100 text-slate-500 bg-slate-50/50'}`}
                                                       >
-                                                          <span className="text-[11px] font-bold truncate pr-1">{district}</span>
+                                                          <span className="text-base font-bold truncate pr-1">{district}</span>
                                                           {isDistSelected ? <CheckCircle2 size={16} className="fill-[#C44545] text-white flex-shrink-0" /> : <div className="h-4 w-4 rounded-full border-2 border-slate-200 flex-shrink-0" />}
                                                       </div>
                                                   );
@@ -859,6 +916,56 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     </div>
                   )}
 
+                  {/* Custom Fields defined by Admin */}
+                  {activeCustomFields.map((field) => {
+                    if (field.type === 'checkbox') {
+                      return (
+                        <div className="px-2 flex items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl shadow-sm" key={field._id}>
+                          <div>
+                            <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                              {field.label} {field.required && <span className="text-red-500">*</span>}
+                            </span>
+                            {field.placeholder && <span className="text-[10px] font-bold text-slate-400 block mt-0.5">{field.placeholder}</span>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCustomFieldValues({...customFieldValues, [field.name]: !customFieldValues[field.name]})}
+                            className={`w-12 h-6 rounded-full transition-all duration-300 relative ${customFieldValues[field.name] ? 'bg-[#C44545]' : 'bg-slate-300'}`}
+                          >
+                            <div className={`h-4.5 w-4.5 bg-white rounded-full absolute top-[3px] transition-all duration-300 ${customFieldValues[field.name] ? 'left-[26px]' : 'left-[3px]'}`} />
+                          </button>
+                        </div>
+                      );
+                    }
+                    if (field.type === 'select') {
+                      return (
+                        <div className="px-2" key={field._id}>
+                          <CustomDropdown 
+                            label={field.label + (field.required ? " *" : "")}
+                            options={field.options || []}
+                            value={customFieldValues[field.name] || ''}
+                            placeholder={field.placeholder || `Select ${field.label}`}
+                            onChange={(val) => setCustomFieldValues({...customFieldValues, [field.name]: val})}
+                          />
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="px-2 space-y-1" key={field._id}>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">
+                          {field.label} {field.required && <span className="text-red-500">*</span>}
+                        </label>
+                        <input 
+                          type={field.type === 'number' ? 'number' : 'text'} 
+                          placeholder={field.placeholder || `Enter ${field.label}...`}
+                          value={customFieldValues[field.name] || ''}
+                          onChange={(e) => setCustomFieldValues({...customFieldValues, [field.name]: e.target.value})}
+                          className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold"
+                        />
+                      </div>
+                    );
+                  })}
+
                   <div className="px-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2 block ml-2">Identity Proof (Optional)</label>
                     <input 
@@ -956,7 +1063,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                   <div className="space-y-3 px-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Languages Known (Multiple Select)</label>
                     <div className="flex flex-col gap-2">
-                      {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(lang => {
+                      {displayLanguages.map(lang => {
                         const isSelected = profData.languages.includes(lang);
                         return (
                           <div 
@@ -976,7 +1083,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       })}
                       
                       {/* Render custom added languages */}
-                      {profData.languages.filter(l => !['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].includes(l)).map(lang => (
+                      {profData.languages.filter(l => !displayLanguages.includes(l)).map(lang => (
                         <div 
                           key={lang}
                           onClick={() => {

@@ -139,9 +139,9 @@ const vendorSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  totalReviews: {
-    type: Number,
-    default: 0
+  customFields: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed
   },
   otp: String,
   otpExpire: Date,

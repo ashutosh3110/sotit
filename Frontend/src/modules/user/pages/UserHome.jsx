@@ -220,7 +220,7 @@ const Home = () => {
               </div>
               <h3 className="text-[16px] font-black text-center text-slate-800 uppercase tracking-wider mb-3">Important Notice</h3>
               <p className="text-xs font-bold text-slate-500 text-center mb-6 leading-relaxed">
-                This app does not take any documents from you nor does it call for any document. We only make the number available to you through this app.
+                Before hiring anyone, please verify all documents carefully and finalize the payment only after proper verification. The company will not be responsible for any issues related to documents or payments. The company does not collect or handle any documents from users. Users can communicate and verify details directly with each other through the provided phone numbers.
               </p>
               <button 
                 onClick={handleCloseDisclaimer}

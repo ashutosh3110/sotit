@@ -465,7 +465,7 @@ const UserFind = () => {
                                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-[#C44545] mb-2">Operational Areas</h4>
                                                     <div className="flex flex-wrap gap-2">
                                                         {selectedVendor.professionalDetails?.serviceDistricts?.map(d => (
-                                                            <span key={d} className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-tight">{d}</span>
+                                                            <span key={d} className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-wider">{d}</span>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -723,7 +723,7 @@ const UserFind = () => {
                     <button onClick={() => { setShowStateDropdown(!showStateDropdown); setShowDistrictDropdown(false); }} className={`w-full flex items-center justify-between bg-white border ${showStateDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}>
                         <div className="flex items-center gap-3 overflow-hidden">
                             <Globe size={16} className={showStateDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedState ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedState ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {selectedState?.name || 'All States'}
                             </span>
                         </div>
@@ -732,11 +732,11 @@ const UserFind = () => {
                     <AnimatePresence>
                         {showStateDropdown && (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute left-0 right-0 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1">
-                                <button onClick={() => { setSelectedState(null); setSelectedDistrict(''); setShowStateDropdown(false); }} className="w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 flex items-center justify-between">
+                                <button onClick={() => { setSelectedState(null); setSelectedDistrict(''); setShowStateDropdown(false); }} className="w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide text-slate-400 hover:bg-slate-50 flex items-center justify-between">
                                     All States {!selectedState && <Check size={14} className="text-[#C44545]" />}
                                 </button>
                                 {Object.keys(indiaData).map((stateName) => (
-                                    <button key={stateName} onClick={() => { setSelectedState({name: stateName}); setSelectedDistrict(''); setShowStateDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedState?.name === stateName ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                    <button key={stateName} onClick={() => { setSelectedState({name: stateName}); setSelectedDistrict(''); setShowStateDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedState?.name === stateName ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
                                         {stateName} {selectedState?.name === stateName && <Check size={14} />}
                                     </button>
                                 ))}
@@ -748,7 +748,7 @@ const UserFind = () => {
                     <button onClick={() => selectedState && setShowDistrictDropdown(!showDistrictDropdown)} disabled={!selectedState} className={`w-full flex items-center justify-between bg-white border ${showDistrictDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm disabled:opacity-50 group`}>
                         <div className="flex items-center gap-3 overflow-hidden">
                             <MapPin size={16} className={showDistrictDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedDistrict ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedDistrict ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {selectedDistrict || 'All Districts'}
                             </span>
                         </div>
@@ -757,11 +757,11 @@ const UserFind = () => {
                     <AnimatePresence>
                         {showDistrictDropdown && (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute left-0 right-0 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1">
-                                <button onClick={() => { setSelectedDistrict(''); setShowDistrictDropdown(false); }} className="w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 flex items-center justify-between">
+                                <button onClick={() => { setSelectedDistrict(''); setShowDistrictDropdown(false); }} className="w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide text-slate-400 hover:bg-slate-50 flex items-center justify-between">
                                     All Districts {!selectedDistrict && <Check size={14} className="text-[#C44545]" />}
                                 </button>
                                 {(indiaData[selectedState?.name] || []).map((district) => (
-                                    <button key={district} onClick={() => { setSelectedDistrict(district); setShowDistrictDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedDistrict === district ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                    <button key={district} onClick={() => { setSelectedDistrict(district); setShowDistrictDropdown(false); }} className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedDistrict === district ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}>
                                         {district} {selectedDistrict === district && <Check size={14} />}
                                     </button>
                                 ))}
@@ -785,7 +785,7 @@ const UserFind = () => {
                     >
                         <div className="flex items-center gap-3 overflow-hidden">
                             <Navigation size={16} className={showVehicleClassDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {selectedVehicleClass === 'Bike' ? '2 Wheeler' : selectedVehicleClass === 'Car' ? '4 Wheeler' : selectedVehicleClass || 'All Vehicle Types'}
                             </span>
                         </div>
@@ -812,7 +812,7 @@ const UserFind = () => {
                                             setSelectedVehicleClass(opt.value); 
                                             setShowVehicleClassDropdown(false); 
                                         }} 
-                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedVehicleClass === opt.value ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedVehicleClass === opt.value ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                     >
                                         {opt.label} {selectedVehicleClass === opt.value && <Check size={14} />}
                                     </button>
@@ -836,7 +836,7 @@ const UserFind = () => {
                     >
                         <div className="flex items-center gap-3 overflow-hidden">
                             <Wrench size={16} className={showSpecialtyDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedSpecialty ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedSpecialty ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {selectedSpecialty || 'All Specialties'}
                             </span>
                         </div>
@@ -855,7 +855,7 @@ const UserFind = () => {
                                         setSelectedSpecialty(''); 
                                         setShowSpecialtyDropdown(false); 
                                     }} 
-                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedSpecialty === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedSpecialty === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                 >
                                     All Specialties {selectedSpecialty === '' && <Check size={14} />}
                                 </button>
@@ -869,7 +869,7 @@ const UserFind = () => {
                                             setSelectedSpecialty(opt); 
                                             setShowSpecialtyDropdown(false); 
                                         }} 
-                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedSpecialty === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedSpecialty === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                     >
                                         {opt} {selectedSpecialty === opt && <Check size={14} />}
                                     </button>
@@ -895,7 +895,7 @@ const UserFind = () => {
                     >
                         <div className="flex items-center gap-3 overflow-hidden">
                             <Truck size={16} className={showVehicleClassDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {selectedVehicleClass === 'Bike' ? '2 Wheeler' : selectedVehicleClass === 'Car' ? '4 Wheeler' : selectedVehicleClass || 'All Vehicle Types'}
                             </span>
                         </div>
@@ -922,7 +922,7 @@ const UserFind = () => {
                                             setSelectedVehicleClass(opt.value); 
                                             setShowVehicleClassDropdown(false); 
                                         }} 
-                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedVehicleClass === opt.value ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedVehicleClass === opt.value ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                     >
                                         {opt.label} {selectedVehicleClass === opt.value && <Check size={14} />}
                                     </button>
@@ -948,7 +948,7 @@ const UserFind = () => {
                     >
                         <div className="flex items-center gap-3 overflow-hidden">
                             <Briefcase size={16} className={showPracticeAreaDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedPracticeArea ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedPracticeArea ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {selectedPracticeArea || 'All Practice Areas'}
                             </span>
                         </div>
@@ -967,7 +967,7 @@ const UserFind = () => {
                                         setSelectedPracticeArea(''); 
                                         setShowPracticeAreaDropdown(false); 
                                     }} 
-                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedPracticeArea === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedPracticeArea === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                 >
                                     All Practice Areas {selectedPracticeArea === '' && <Check size={14} />}
                                 </button>
@@ -981,7 +981,7 @@ const UserFind = () => {
                                             setSelectedPracticeArea(opt); 
                                             setShowPracticeAreaDropdown(false); 
                                         }} 
-                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedPracticeArea === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedPracticeArea === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                     >
                                         {opt} {selectedPracticeArea === opt && <Check size={14} />}
                                     </button>
@@ -1007,7 +1007,7 @@ const UserFind = () => {
                     >
                         <div className="flex items-center gap-3 overflow-hidden">
                             <FileText size={16} className={showRtoServiceDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${selectedRtoService ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedRtoService ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {selectedRtoService || 'All RTO Services'}
                             </span>
                         </div>
@@ -1026,7 +1026,7 @@ const UserFind = () => {
                                         setSelectedRtoService(''); 
                                         setShowRtoServiceDropdown(false); 
                                     }} 
-                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedRtoService === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedRtoService === '' ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                 >
                                     All RTO Services {selectedRtoService === '' && <Check size={14} />}
                                 </button>
@@ -1040,7 +1040,7 @@ const UserFind = () => {
                                             setSelectedRtoService(opt); 
                                             setShowRtoServiceDropdown(false); 
                                         }} 
-                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-between ${selectedRtoService === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedRtoService === opt ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
                                     >
                                         {opt} {selectedRtoService === opt && <Check size={14} />}
                                     </button>

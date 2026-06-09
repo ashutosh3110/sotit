@@ -55,6 +55,7 @@ const AdminSupport = lazy(() => import('./modules/admin/pages/AdminSupport'));
 const AdminFAQs = lazy(() => import('./modules/admin/pages/AdminFAQs'));
 const AdminWallet = lazy(() => import('./modules/admin/pages/AdminWallet'));
 const AdminLogin = lazy(() => import('./modules/admin/pages/AdminLogin'));
+const AdminRegistrationConfig = lazy(() => import('./modules/admin/pages/AdminRegistrationConfig'));
 const OwnerDashboard = lazy(() => import('./modules/owner/pages/OwnerDashboard'));
 const RequirementForm = lazy(() => import('./modules/owner/pages/RequirementForm'));
 const VehicleOwnerForm = lazy(() => import('./modules/owner/pages/VehicleOwnerForm'));
@@ -142,6 +143,7 @@ const AppRoutes = () => {
           <Route path="/admin/banners" element={<ModuleWrapper type="admin"><AdminBanners /></ModuleWrapper>} />
           <Route path="/admin/support" element={<ModuleWrapper type="admin"><AdminSupport /></ModuleWrapper>} />
           <Route path="/admin/faqs" element={<ModuleWrapper type="admin"><AdminFAQs /></ModuleWrapper>} />
+          <Route path="/admin/registration-config" element={<ModuleWrapper type="admin"><AdminRegistrationConfig /></ModuleWrapper>} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/user" replace />} />

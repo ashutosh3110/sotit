@@ -40,6 +40,7 @@ const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const pageRoutes = require('./routes/pageRoutes');
+const registrationConfigRoutes = require('./routes/registrationConfigRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/banners', bannerRoutes);
@@ -55,6 +56,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/pages', pageRoutes);
+app.use('/api/registration-config', registrationConfigRoutes);
 
 // Error Handling
 app.use(notFound);

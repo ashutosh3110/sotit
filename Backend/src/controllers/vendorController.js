@@ -15,7 +15,6 @@ exports.sendOTP = async (req, res) => {
 
   res.status(200).json({ message: 'OTP sent successfully (Check backend console)', otp }); 
 };
-
 exports.registerVendor = async (req, res) => {
   try {
     const { 
@@ -24,7 +23,8 @@ exports.registerVendor = async (req, res) => {
         profData, mechanicData, rtoData, legalData, ownerData,
         bankData,
         otp,
-        remark
+        remark,
+        customFields
     } = req.body;
 
     if (role !== 'owner') {
@@ -85,7 +85,8 @@ exports.registerVendor = async (req, res) => {
       kycDocuments: docs,
       status: 'approved',
       isApproved: true,
-      remark
+      remark,
+      customFields: customFields ? (typeof customFields === 'string' ? JSON.parse(customFields) : customFields) : {}
     });
 
     await newVendor.save();
