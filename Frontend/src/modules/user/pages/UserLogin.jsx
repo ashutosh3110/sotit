@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, User, Lock, Phone, ArrowLeft, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { ArrowRight, User, Lock, Phone, ArrowLeft, ShieldCheck, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { initUserState } from "../utils/userStore";
@@ -12,12 +12,14 @@ const UserLogin = ({ isEmbedded = false }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   // Forgot Password States
   const [isForgot, setIsForgot] = useState(false);
   const [forgotStep, setForgotStep] = useState(1); // 1: Mobile, 2: OTP, 3: New Password
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [pages, setPages] = useState([]);
 
   useEffect(() => {
@@ -204,12 +206,19 @@ const UserLogin = ({ isEmbedded = false }) => {
                                 <Lock size={18} strokeWidth={2.5} />
                             </div>
                             <input 
-                                type="password" 
+                                type={showPassword ? "text" : "password"} 
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••" 
-                                className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 pl-14 pr-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
+                                className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 pl-14 pr-12 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                            >
+                                {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
+                            </button>
                         </div>
                     </div>
                     
@@ -286,12 +295,19 @@ const UserLogin = ({ isEmbedded = false }) => {
                                 <Lock size={18} strokeWidth={2.5} />
                             </div>
                             <input 
-                                type="password" 
+                                type={showNewPassword ? "text" : "password"} 
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="Enter New Password" 
-                                className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 pl-14 pr-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
+                                className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 pl-14 pr-12 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                            >
+                                {showNewPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
+                            </button>
                         </div>
                         <button onClick={handleResetPassword} disabled={isLoading} className="w-full bg-slate-900 text-white h-16 rounded-[1.8rem] flex items-center justify-between px-8 shadow-2xl shadow-slate-900/20 active:scale-[0.98] transition-all group mt-4">
                             <span className="text-white text-[13px] font-black uppercase tracking-[0.2em]">Reset Password</span>

@@ -65,9 +65,17 @@ exports.verifyResetOTP = async (req, res, next) => {
     }
 
     const user = await User.findOne({ mobile });
-    if (!user || user.otp !== otp || user.otpExpire < Date.now()) {
-      res.status(400);
-      throw new Error('Invalid or expired OTP');
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    if (isRealOtp) {
+      if (!user || user.otp !== otp || user.otpExpire < Date.now()) {
+        res.status(400);
+        throw new Error('Invalid or expired OTP');
+      }
+    } else {
+      if (otp !== '1234') {
+        res.status(400);
+        throw new Error('Invalid or expired OTP (Mock OTP is 1234)');
+      }
     }
 
     res.status(200).json({
@@ -92,9 +100,17 @@ exports.resetPassword = async (req, res, next) => {
     }
 
     const user = await User.findOne({ mobile });
-    if (!user || user.otp !== otp || user.otpExpire < Date.now()) {
-      res.status(400);
-      throw new Error('Invalid or expired OTP');
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    if (isRealOtp) {
+      if (!user || user.otp !== otp || user.otpExpire < Date.now()) {
+        res.status(400);
+        throw new Error('Invalid or expired OTP');
+      }
+    } else {
+      if (otp !== '1234') {
+        res.status(400);
+        throw new Error('Invalid or expired OTP (Mock OTP is 1234)');
+      }
     }
 
     // Update password
@@ -125,10 +141,18 @@ exports.register = async (req, res, next) => {
     }
 
     // Verify OTP
-    const otpRecord = await OTPVerification.findOne({ mobile });
-    if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
-      res.status(400);
-      throw new Error('Invalid or expired OTP');
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    if (isRealOtp) {
+      const otpRecord = await OTPVerification.findOne({ mobile });
+      if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
+        res.status(400);
+        throw new Error('Invalid or expired OTP');
+      }
+    } else {
+      if (otp !== '1234') {
+        res.status(400);
+        throw new Error('Invalid or expired OTP (Mock OTP is 1234)');
+      }
     }
 
     // Check if mobile already exists

@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Navigation, Wrench, Shield, Briefcase, FileText, Truck, Phone, ArrowRight, Car, Camera, MapPin, CheckCircle2, ShieldCheck, CreditCard, Landmark, Info, Map, Clock, Zap, Hammer, Wind, Battery, Settings, Disc, Droplets, Building2, Scale, GraduationCap, Video, Users, ChevronDown, Search, Globe, Check, Square, CheckSquare } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useMemo, useEffect } from "react";
+import { initVendorState } from "../utils/vendorStore";
 import toast from "react-hot-toast";
 import { State } from "country-state-city";
 import { indiaData } from '../../../utils/indiaData';
@@ -375,49 +376,123 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   };
 
   const handleNextStep = () => {
-    if (!name || !mobile || !streetName || !address.state || !address.city || !address.pincode) {
-        return toast.error("Please fill all required personal & address fields");
+    if (!profileFile) {
+        return toast.error("Please upload a profile photo");
+    }
+    if (!name.trim()) {
+        return toast.error("Please enter your Full Name");
+    }
+    if (!mobile || mobile.length !== 10) {
+        return toast.error("Please enter a valid 10-digit Mobile Number");
     }
     if (!isOtpSent) {
-        return toast.error("Please click 'Verify' to send OTP to your mobile number");
+        return toast.error("Please verify your mobile number first");
     }
     const enteredOtp = otp.join("");
     if (enteredOtp.length !== 4) {
-        return toast.error("Please enter the 4-digit OTP code");
+        return toast.error("Please enter the 4-digit verification OTP");
+    }
+    if (!password) {
+        return toast.error("Please set a secure password");
+    }
+    if (password.length < 6) {
+        return toast.error("Password must be at least 6 characters long");
+    }
+    if (!houseNo.trim()) {
+        return toast.error("Please enter House / Flat No.");
+    }
+    if (!streetName.trim()) {
+        return toast.error("Please enter Street Address / Locality");
+    }
+    if (!address.state) {
+        return toast.error("Please select State");
+    }
+    if (!address.city) {
+        return toast.error("Please select City / District");
+    }
+    if (!address.pincode || address.pincode.length !== 6) {
+        return toast.error("Please enter a valid 6-digit Pincode");
     }
     setStep(2);
   };
 
   const handleFinalSubmit = async () => {
-    if (role === 'driver' && !profData.dlNumber) {
-        return toast.error("Please enter your Driving License Number");
+    // 1. Language validation
+    if (!profData.languages || profData.languages.length === 0) {
+        return toast.error("Please select at least one language");
     }
-    if (role === 'driver' && profData.dlNumber) {
+
+    // 2. Role-specific validation
+    if (role === 'driver') {
+        if (!profData.dlNumber) {
+            return toast.error("Please enter your Driving License Number");
+        }
         const cleanDL = profData.dlNumber.replace(/[^A-Za-z0-9]/g, "");
         if (cleanDL.length !== 15) {
             return toast.error("Driving License number must be exactly 15 characters (e.g. MH-12-2015-0001234)");
         }
-    }
-
-    if (profData.aadhaarNumber) {
-        const cleanAadhaar = profData.aadhaarNumber.replace(/[^0-9]/g, "");
-        if (cleanAadhaar.length !== 12) {
-            return toast.error("Aadhaar Number must be exactly 12 digits (e.g. 1234 5678 9012)");
+        if (!profData.dlExpiry) {
+            return toast.error("Please select DL Expiry Date");
+        }
+        if (!profData.availability) {
+            return toast.error("Please select Service Type (Full Time / Part Time)");
+        }
+        if (!profData.vehicleClasses || profData.vehicleClasses.length === 0) {
+            return toast.error("Please select at least one Vehicle Class");
         }
     }
 
-    const enteredOtp = otp.join("");
-    if (!enteredOtp || enteredOtp.length !== 4) {
-        return toast.error("Please enter the 4-digit verification OTP");
+    if (role === 'towing') {
+        if (!profData.vehicleClasses || profData.vehicleClasses.length === 0) {
+            return toast.error("Please select at least one Vehicle Class");
+        }
     }
 
-    // Validate custom fields
+    if (role === 'mechanic') {
+        if (!mechanicData.specialties || mechanicData.specialties.length === 0) {
+            return toast.error("Please select at least one Service Offered / Specialty");
+        }
+        if (!mechanicData.vehicleExpertise || mechanicData.vehicleExpertise.length === 0) {
+            return toast.error("Please select at least one Vehicle Expertise");
+        }
+    }
+
+    if (role === 'rto') {
+        if (!rtoData.rtoOffice || !rtoData.rtoOffice.trim()) {
+            return toast.error("Please enter RTO Office Details");
+        }
+        if (!rtoData.services || rtoData.services.length === 0) {
+            return toast.error("Please select at least one RTO Service Provided");
+        }
+    }
+
+    if (role === 'legal') {
+        if (!legalData.barRegNumber || !legalData.barRegNumber.trim()) {
+            return toast.error("Please enter Bar Registration Number");
+        }
+        if (!legalData.officeName || !legalData.officeName.trim()) {
+            return toast.error("Please enter Legal Office/Chamber Name");
+        }
+        if (!legalData.practiceAreas || legalData.practiceAreas.length === 0) {
+            return toast.error("Please select at least one Practice Area");
+        }
+    }
+
+    // 3. Custom Fields validation
     for (const field of activeCustomFields) {
         if (field.required) {
             const val = customFieldValues[field.name];
             if (val === undefined || val === null || val === '' || val === false) {
                 return toast.error(`Please fill the required field: ${field.label}`);
             }
+        }
+    }
+
+    // 4. Optional Aadhaar validation
+    if (profData.aadhaarNumber) {
+        const cleanAadhaar = profData.aadhaarNumber.replace(/[^0-9]/g, "");
+        if (cleanAadhaar.length !== 12) {
+            return toast.error("Aadhaar Number must be exactly 12 digits (e.g. 1234 5678 9012)");
         }
     }
 
@@ -458,7 +533,25 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         if (!response.ok) throw new Error(data.message || "Registration failed");
 
         toast.success(data.message || "Registration Successful!", { id: tid });
-        navigate('/auth?tab=vendor');
+        
+        // Auto-login the vendor
+        try {
+            const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/vendors/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile, password: password || mobile })
+            });
+            const loginData = await loginResponse.json();
+            if (loginResponse.ok) {
+                initVendorState({ ...loginData.vendor, token: loginData.token });
+                navigate('/vendor');
+            } else {
+                navigate('/auth?tab=vendor');
+            }
+        } catch (err) {
+            console.error("Auto login failed:", err);
+            navigate('/auth?tab=vendor');
+        }
     } catch (error) {
         toast.error(error.message || "Registration failed", { id: tid });
     } finally {
@@ -757,8 +850,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
                 <button 
                   onClick={handleNextStep} 
-                  disabled={isStep1Invalid}
-                  className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 mt-6 disabled:opacity-50 disabled:pointer-events-none"
+                  disabled={isLoading}
+                  className="w-full bg-[#C44545] text-white h-16 rounded-[1.8rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 mt-6 disabled:opacity-50"
                 >
                   Next Step <ArrowRight size={18} />
                 </button>
@@ -1141,8 +1234,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
                 <button 
                   onClick={handleFinalSubmit} 
-                  disabled={isStep2Invalid}
-                  className="w-full bg-[#C44545] text-white h-20 rounded-[2.5rem] font-black uppercase mt-6 shadow-xl shadow-[#C44545]/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:pointer-events-none"
+                  disabled={isLoading}
+                  className="w-full bg-[#C44545] text-white h-20 rounded-[2.5rem] font-black uppercase mt-6 shadow-xl shadow-[#C44545]/20 flex items-center justify-center gap-3 disabled:opacity-50"
                 >
                   Finish Registration <Check size={20} strokeWidth={3} />
                 </button>

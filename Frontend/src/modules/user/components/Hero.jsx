@@ -108,7 +108,13 @@ const AppHero = ({ user, onServiceSelect, activeRole }) => {
                                         {item.label}
                                     </h4>
                                 </div>
-                                <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${activeRole === item.role ? 'bg-white/10 text-white rotate-90' : 'bg-white/50 text-slate-400'}`}>
+                                <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
+                                    activeRole === item.role 
+                                        ? 'bg-white/10 text-white' 
+                                        : item.role === 'driver'
+                                            ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                                            : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}>
                                     <ArrowRight size={20} strokeWidth={3} />
                                 </div>
                             </motion.div>

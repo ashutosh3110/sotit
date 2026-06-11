@@ -117,6 +117,23 @@ exports.vendorLogin = async (req, res, next) => {
       throw new Error('Invalid password');
     }
 
+    // Check if vendor is blocked
+    if (vendor.isBlocked) {
+      res.status(403);
+      throw new Error('Your account has been blocked by the administrator. Please contact support.');
+    }
+
+    // Check vendor status
+    if (vendor.status === 'pending') {
+      res.status(403);
+      throw new Error('Your profile is pending for approval. Please wait for admin review.');
+    }
+
+    if (vendor.status === 'rejected') {
+      res.status(403);
+      throw new Error('Your request has been rejected by the admin.');
+    }
+
     sendTokenResponse(vendor, 200, res);
   } catch (err) {
     next(err);
@@ -197,9 +214,17 @@ exports.verifyVendorResetOTP = async (req, res, next) => {
     }
 
     const vendor = await Vendor.findOne({ mobile });
-    if (!vendor || vendor.otp !== otp || vendor.otpExpire < Date.now()) {
-      res.status(400);
-      throw new Error('Invalid or expired OTP');
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    if (isRealOtp) {
+      if (!vendor || vendor.otp !== otp || vendor.otpExpire < Date.now()) {
+        res.status(400);
+        throw new Error('Invalid or expired OTP');
+      }
+    } else {
+      if (otp !== '1234') {
+        res.status(400);
+        throw new Error('Invalid or expired OTP (Mock OTP is 1234)');
+      }
     }
 
     res.status(200).json({ success: true, message: 'OTP verified successfully' });
@@ -221,9 +246,17 @@ exports.resetVendorPassword = async (req, res, next) => {
     }
 
     const vendor = await Vendor.findOne({ mobile });
-    if (!vendor || vendor.otp !== otp || vendor.otpExpire < Date.now()) {
-      res.status(400);
-      throw new Error('Invalid or expired OTP');
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    if (isRealOtp) {
+      if (!vendor || vendor.otp !== otp || vendor.otpExpire < Date.now()) {
+        res.status(400);
+        throw new Error('Invalid or expired OTP');
+      }
+    } else {
+      if (otp !== '1234') {
+        res.status(400);
+        throw new Error('Invalid or expired OTP (Mock OTP is 1234)');
+      }
     }
 
     // Update password

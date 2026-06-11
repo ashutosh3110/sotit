@@ -461,14 +461,6 @@ const UserFind = () => {
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <div>
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#C44545] mb-2">Operational Areas</h4>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {selectedVendor.professionalDetails?.serviceDistricts?.map(d => (
-                                                            <span key={d} className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-wider">{d}</span>
-                                                        ))}
-                                                    </div>
-                                                </div>
                                             </div>
                                         )}
 
@@ -492,6 +484,31 @@ const UserFind = () => {
                                                 </div>
                                             </div>
                                         )}
+
+                                        {/* Operational Areas (For All Vendor Roles) */}
+                                        <div>
+                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#C44545] mb-2">Operational Areas</h4>
+                                            <div className="space-y-2">
+                                                {selectedVendor.professionalDetails?.serviceStates && selectedVendor.professionalDetails.serviceStates.length > 0 ? (
+                                                    selectedVendor.professionalDetails.serviceStates.map(state => (
+                                                        <div key={state.name} className="bg-slate-50 p-4 rounded-2xl border border-slate-100/50">
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">{state.name}</span>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {state.districts && state.districts.length > 0 ? (
+                                                                    state.districts.map(d => (
+                                                                        <span key={d} className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-wider">{d}</span>
+                                                                    ))
+                                                                ) : (
+                                                                    <span className="text-slate-400 italic text-[10px] font-bold">All Districts</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-xs font-bold text-slate-400 italic pl-1">Not specified</span>
+                                                )}
+                                            </div>
+                                        </div>
 
                                         <div>
                                             <h4 className="text-[10px] font-black uppercase tracking-widest text-[#C44545] mb-2">Member Since</h4>

@@ -33,10 +33,17 @@ exports.registerVendor = async (req, res) => {
       }
 
       // Verify OTP
-      const OTPVerification = require('../models/OTPVerification');
-      const otpRecord = await OTPVerification.findOne({ mobile });
-      if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
-        return res.status(400).json({ message: 'Invalid or expired OTP' });
+      const isRealOtp = process.env.REAL_OTP === 'true';
+      if (isRealOtp) {
+        const OTPVerification = require('../models/OTPVerification');
+        const otpRecord = await OTPVerification.findOne({ mobile });
+        if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
+          return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+      } else {
+        if (otp !== '1234') {
+          return res.status(400).json({ message: 'Invalid or expired OTP (Mock OTP is 1234)' });
+        }
       }
     } else {
       if (!mobile) {
