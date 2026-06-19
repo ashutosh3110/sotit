@@ -17,26 +17,39 @@ class SMSIndiaHubService {
     return '91' + digits.slice(-10);
   }
 
-  async sendOTP(phone, otp) {
+  async sendOTP(phone, otp, type = 'register') {
+    let message = '';
+    let templateId = '';
+
+    if (type === 'forget') {
+      message = `Dear User, your OTP for password reset is ${otp}. This OTP is valid for 10 minutes. Do not share it with anyone.-TLKTRD`;
+      templateId = process.env.SMSINDIAHUB_FORGOT_TEMPLATE_ID;
+    } else {
+      message = `Dear User, your OTP for account registration is ${otp}. This OTP is valid for 10 minutes. Do not share it with anyone.TLKTRD`;
+      templateId = process.env.SMSINDIAHUB_REGISTER_TEMPLATE_ID;
+    }
+
     const isRealOtp = process.env.REAL_OTP === 'true';
     if (!isRealOtp) {
       console.log(`\n------------------------------------------------------------`);
-      console.log(`[MOCK OTP] Skip sending SMS to ${phone}. OTP is: ${otp}`);
+      console.log(`[MOCK OTP] Skip sending SMS to ${phone}.`);
+      console.log(`Template Type: ${type}`);
+      console.log(`Template ID: ${templateId || 'None (Using Default)'}`);
+      console.log(`Message: ${message}`);
       console.log(`------------------------------------------------------------\n`);
       return { success: true, message: 'Mock OTP generated successfully' };
     }
-    // Approved DLT template pattern for the SMSIndiaHub account
-    const message = `Welcome to Sootit Powered by IIDMTB. Use OTP ${otp} to verify your login.`;
-    return this.sendSMS(phone, message);
+
+    return this.sendSMS(phone, message, templateId);
   }
 
-  async sendSMS(phone, message) {
+  async sendSMS(phone, message, templateId) {
     try {
       // Load credentials dynamically at runtime to ensure dotenv has loaded
       const apiKey = this.apiKey || process.env.SMSINDIAHUB_API_KEY;
       const senderId = this.senderId || process.env.SMSINDIAHUB_SENDER_ID;
       const entityId = this.entityId || process.env.SMSINDIAHUB_ENTITY_ID;
-      const templateId = this.templateId || process.env.SMSINDIAHUB_TEMPLATE_ID;
+      const finalTemplateId = templateId || this.templateId || process.env.SMSINDIAHUB_TEMPLATE_ID;
 
       if (!apiKey) {
         console.warn('⚠️ [SMSIndiaHub] Missing API Key. SMS NOT SENT.');
@@ -58,8 +71,8 @@ class SMSIndiaHubService {
       if (entityId) {
         params.append('EntityId', entityId);
       }
-      if (templateId) {
-        params.append('templateid', templateId);
+      if (finalTemplateId) {
+        params.append('templateid', finalTemplateId);
       }
 
       const apiUrl = `${this.baseUrl}?${params.toString()}`;

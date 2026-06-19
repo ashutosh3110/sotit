@@ -36,7 +36,7 @@ exports.sendOTP = async (req, res, next) => {
 
     // Send OTP via SMS India Hub
     const smsService = require('../utils/smsService');
-    const smsResult = await smsService.sendOTP(mobile, otp);
+    const smsResult = await smsService.sendOTP(mobile, otp, 'forget');
 
     user.otp = otp;
     user.otpExpire = otpExpire;
@@ -371,7 +371,7 @@ exports.sendRegisterOTP = async (req, res, next) => {
 
     // Send OTP via SMS India Hub
     const smsService = require('../utils/smsService');
-    const smsResult = await smsService.sendOTP(mobile, otp);
+    const smsResult = await smsService.sendOTP(mobile, otp, 'register');
 
     // Save to OTPVerification collection
     await OTPVerification.findOneAndUpdate(
