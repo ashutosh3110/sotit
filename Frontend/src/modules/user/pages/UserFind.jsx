@@ -64,6 +64,8 @@ const UserFind = () => {
     const [selectedSpecialty, setSelectedSpecialty] = useState('');
     const [selectedPracticeArea, setSelectedPracticeArea] = useState('');
     const [selectedRtoService, setSelectedRtoService] = useState('');
+    const [isCustomVehicle, setIsCustomVehicle] = useState(false);
+    const [availableVehicleClasses, setAvailableVehicleClasses] = useState([]);
     
     // Reset role-specific filters when category changes
     useEffect(() => {
@@ -71,6 +73,7 @@ const UserFind = () => {
         setSelectedSpecialty('');
         setSelectedPracticeArea('');
         setSelectedRtoService('');
+        setIsCustomVehicle(false);
     }, [selectedCategory]);
     
     // Data States
@@ -265,6 +268,24 @@ const UserFind = () => {
 
     useEffect(() => {
         fetchUserProfile();
+    }, []);
+
+    useEffect(() => {
+        const fetchVehicleClasses = async () => {
+            try {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/vendors/vehicle-classes`);
+                if (response.data.success) {
+                    const standard = ['bike', 'car', 'truck'];
+                    const dynamic = response.data.vehicleClasses.filter(
+                        v => !standard.includes(v.toLowerCase())
+                    );
+                    setAvailableVehicleClasses(dynamic);
+                }
+            } catch (error) {
+                console.error("Error fetching vehicle classes:", error);
+            }
+        };
+        fetchVehicleClasses();
     }, []);
 
     useEffect(() => {
@@ -791,52 +812,85 @@ const UserFind = () => {
             {/* ROLE SPECIFIC FILTERS */}
             {selectedCategory === 'Drivers' && (
                 <div className="px-6 mt-4 relative">
-                    <button 
-                        onClick={() => {
-                            setShowVehicleClassDropdown(!showVehicleClassDropdown);
-                            setShowSpecialtyDropdown(false);
-                            setShowStateDropdown(false);
-                            setShowDistrictDropdown(false);
-                        }} 
-                        className={`w-full flex items-center justify-between bg-white border ${showVehicleClassDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
-                    >
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <Navigation size={16} className={showVehicleClassDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
-                                {selectedVehicleClass === 'Bike' ? '2 Wheeler' : selectedVehicleClass === 'Car' ? '4 Wheeler' : selectedVehicleClass || 'All Vehicle Types'}
-                            </span>
-                        </div>
-                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${showVehicleClassDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
-                    </button>
-                    <AnimatePresence>
-                        {showVehicleClassDropdown && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                exit={{ opacity: 0, y: 10 }} 
-                                className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
+                    {isCustomVehicle ? (
+                        <div className="w-full flex items-center justify-between bg-white border border-[#C44545] ring-4 ring-[#C44545]/5 rounded-2xl py-3 px-5 shadow-sm">
+                            <div className="flex items-center gap-3 flex-1">
+                                <Navigation size={16} className="text-[#C44545]" />
+                                <input
+                                    type="text"
+                                    placeholder="Type vehicle type (e.g. Auto, Tractor)..."
+                                    value={selectedVehicleClass}
+                                    onChange={(e) => setSelectedVehicleClass(e.target.value)}
+                                    className="w-full bg-transparent border-none text-base font-bold text-slate-900 focus:outline-none placeholder-slate-400"
+                                    autoFocus
+                                />
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setIsCustomVehicle(false);
+                                    setSelectedVehicleClass('');
+                                }}
+                                className="text-slate-400 hover:text-slate-900 p-1"
                             >
-                                {[
-                                    { value: '', label: 'All Vehicle Types' },
-                                    { value: 'Bike', label: '2 Wheeler' },
-                                    { value: 'Car', label: '4 Wheeler' },
-                                    { value: 'Truck', label: 'Truck' },
-                                    { value: 'Other', label: 'Other' }
-                                ].map((opt) => (
-                                    <button 
-                                        key={opt.value} 
-                                        onClick={() => { 
-                                            setSelectedVehicleClass(opt.value); 
-                                            setShowVehicleClassDropdown(false); 
-                                        }} 
-                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedVehicleClass === opt.value ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                <X size={18} />
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <button 
+                                onClick={() => {
+                                    setShowVehicleClassDropdown(!showVehicleClassDropdown);
+                                    setShowSpecialtyDropdown(false);
+                                    setShowStateDropdown(false);
+                                    setShowDistrictDropdown(false);
+                                }} 
+                                className={`w-full flex items-center justify-between bg-white border ${showVehicleClassDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
+                            >
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <Navigation size={16} className={showVehicleClassDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
+                                    <span className={`text-base font-black uppercase tracking-wide truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
+                                        {selectedVehicleClass === 'Bike' ? '2 Wheeler' : selectedVehicleClass === 'Car' ? '4 Wheeler' : selectedVehicleClass || 'All Vehicle Types'}
+                                    </span>
+                                </div>
+                                <ChevronDown size={14} className={`text-slate-400 transition-transform ${showVehicleClassDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
+                            </button>
+                            <AnimatePresence>
+                                {showVehicleClassDropdown && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10 }} 
+                                        animate={{ opacity: 1, y: 0 }} 
+                                        exit={{ opacity: 0, y: 10 }} 
+                                        className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
                                     >
-                                        {opt.label} {selectedVehicleClass === opt.value && <Check size={14} />}
-                                    </button>
-                                ))}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                        {[
+                                            { value: '', label: 'All Vehicle Types' },
+                                            { value: 'Bike', label: '2 Wheeler' },
+                                            { value: 'Car', label: '4 Wheeler' },
+                                            { value: 'Truck', label: 'Truck' },
+                                            ...availableVehicleClasses.map(v => ({ value: v, label: v })),
+                                            { value: 'custom', label: 'Custom...' }
+                                        ].map((opt) => (
+                                            <button 
+                                                key={opt.value} 
+                                                onClick={() => { 
+                                                    if (opt.value === 'custom') {
+                                                        setIsCustomVehicle(true);
+                                                        setSelectedVehicleClass('');
+                                                    } else {
+                                                        setSelectedVehicleClass(opt.value); 
+                                                    }
+                                                    setShowVehicleClassDropdown(false); 
+                                                }} 
+                                                className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedVehicleClass === opt.value || (opt.value === 'custom' && isCustomVehicle) ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                            >
+                                                {opt.label} {(selectedVehicleClass === opt.value || (opt.value === 'custom' && isCustomVehicle)) && <Check size={14} />}
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </>
+                    )}
                 </div>
             )}
 
@@ -899,54 +953,87 @@ const UserFind = () => {
 
             {selectedCategory === 'Towing' && (
                 <div className="px-6 mt-4 relative">
-                    <button 
-                        onClick={() => {
-                            setShowVehicleClassDropdown(!showVehicleClassDropdown);
-                            setShowSpecialtyDropdown(false);
-                            setShowPracticeAreaDropdown(false);
-                            setShowRtoServiceDropdown(false);
-                            setShowStateDropdown(false);
-                            setShowDistrictDropdown(false);
-                        }} 
-                        className={`w-full flex items-center justify-between bg-white border ${showVehicleClassDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
-                    >
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <Truck size={16} className={showVehicleClassDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
-                            <span className={`text-base font-black uppercase tracking-wide truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
-                                {selectedVehicleClass === 'Bike' ? '2 Wheeler' : selectedVehicleClass === 'Car' ? '4 Wheeler' : selectedVehicleClass || 'All Vehicle Types'}
-                            </span>
-                        </div>
-                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${showVehicleClassDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
-                    </button>
-                    <AnimatePresence>
-                        {showVehicleClassDropdown && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                exit={{ opacity: 0, y: 10 }} 
-                                className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
+                    {isCustomVehicle ? (
+                        <div className="w-full flex items-center justify-between bg-white border border-[#C44545] ring-4 ring-[#C44545]/5 rounded-2xl py-3 px-5 shadow-sm">
+                            <div className="flex items-center gap-3 flex-1">
+                                <Truck size={16} className="text-[#C44545]" />
+                                <input
+                                    type="text"
+                                    placeholder="Type vehicle type (e.g. Auto, Tractor)..."
+                                    value={selectedVehicleClass}
+                                    onChange={(e) => setSelectedVehicleClass(e.target.value)}
+                                    className="w-full bg-transparent border-none text-base font-bold text-slate-900 focus:outline-none placeholder-slate-400"
+                                    autoFocus
+                                />
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setIsCustomVehicle(false);
+                                    setSelectedVehicleClass('');
+                                }}
+                                className="text-slate-400 hover:text-slate-900 p-1"
                             >
-                                {[
-                                    { value: '', label: 'All Vehicle Types' },
-                                    { value: 'Bike', label: '2 Wheeler' },
-                                    { value: 'Car', label: '4 Wheeler' },
-                                    { value: 'Truck', label: 'Truck' },
-                                    { value: 'Other', label: 'Other' }
-                                ].map((opt) => (
-                                    <button 
-                                        key={opt.value} 
-                                        onClick={() => { 
-                                            setSelectedVehicleClass(opt.value); 
-                                            setShowVehicleClassDropdown(false); 
-                                        }} 
-                                        className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedVehicleClass === opt.value ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                <X size={18} />
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <button 
+                                onClick={() => {
+                                    setShowVehicleClassDropdown(!showVehicleClassDropdown);
+                                    setShowSpecialtyDropdown(false);
+                                    setShowPracticeAreaDropdown(false);
+                                    setShowRtoServiceDropdown(false);
+                                    setShowStateDropdown(false);
+                                    setShowDistrictDropdown(false);
+                                }} 
+                                className={`w-full flex items-center justify-between bg-white border ${showVehicleClassDropdown ? 'border-[#C44545] ring-4 ring-[#C44545]/5' : 'border-slate-100'} rounded-2xl py-4 px-5 shadow-sm group`}
+                            >
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <Truck size={16} className={showVehicleClassDropdown ? 'text-[#C44545]' : 'text-slate-400'} />
+                                    <span className={`text-base font-black uppercase tracking-wide truncate ${selectedVehicleClass ? 'text-slate-900' : 'text-slate-400'}`}>
+                                        {selectedVehicleClass === 'Bike' ? '2 Wheeler' : selectedVehicleClass === 'Car' ? '4 Wheeler' : selectedVehicleClass || 'All Vehicle Types'}
+                                    </span>
+                                </div>
+                                <ChevronDown size={14} className={`text-slate-400 transition-transform ${showVehicleClassDropdown ? 'rotate-180 text-[#C44545]' : ''}`} />
+                            </button>
+                            <AnimatePresence>
+                                {showVehicleClassDropdown && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10 }} 
+                                        animate={{ opacity: 1, y: 0 }} 
+                                        exit={{ opacity: 0, y: 10 }} 
+                                        className="absolute left-6 right-6 top-full mt-2 bg-white rounded-[2rem] shadow-2xl border border-slate-100 z-[110] max-h-64 overflow-y-auto no-scrollbar p-2 space-y-1"
                                     >
-                                        {opt.label} {selectedVehicleClass === opt.value && <Check size={14} />}
-                                    </button>
-                                ))}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                        {[
+                                            { value: '', label: 'All Vehicle Types' },
+                                            { value: 'Bike', label: '2 Wheeler' },
+                                            { value: 'Car', label: '4 Wheeler' },
+                                            { value: 'Truck', label: 'Truck' },
+                                            ...availableVehicleClasses.map(v => ({ value: v, label: v })),
+                                            { value: 'custom', label: 'Custom...' }
+                                        ].map((opt) => (
+                                            <button 
+                                                key={opt.value} 
+                                                onClick={() => { 
+                                                    if (opt.value === 'custom') {
+                                                        setIsCustomVehicle(true);
+                                                        setSelectedVehicleClass('');
+                                                    } else {
+                                                        setSelectedVehicleClass(opt.value); 
+                                                    }
+                                                    setShowVehicleClassDropdown(false); 
+                                                }} 
+                                                className={`w-full text-left px-5 py-3.5 rounded-xl text-base font-black uppercase tracking-wide flex items-center justify-between ${selectedVehicleClass === opt.value || (opt.value === 'custom' && isCustomVehicle) ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                                            >
+                                                {opt.label} {(selectedVehicleClass === opt.value || (opt.value === 'custom' && isCustomVehicle)) && <Check size={14} />}
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </>
+                    )}
                 </div>
             )}
 

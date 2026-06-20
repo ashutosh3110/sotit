@@ -1,11 +1,85 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, User, Phone, ShieldCheck, Mail, ArrowRight, Camera, MapPin, CheckCircle2, Lock, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, User, Phone, ShieldCheck, Mail, ArrowRight, Camera, MapPin, CheckCircle2, Lock, Eye, EyeOff, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { initUserState } from "../utils/userStore";
 import toast from 'react-hot-toast';
 
 import logo from "../../../assets/logo.png";
+import { indiaData } from "../../../utils/indiaData";
+
+const SearchableDropdown = ({ options, value, onChange, placeholder, disabled }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const dropdownRef = useRef(null);
+
+  const filteredOptions = options.filter(opt =>
+    opt.toLowerCase().includes(search.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 px-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all text-left flex justify-between items-center disabled:opacity-50 disabled:pointer-events-none"
+      >
+        <span className={value ? "text-slate-800" : "text-slate-300"}>
+          {value || placeholder}
+        </span>
+        <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-3xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
+          <div className="p-3 border-b border-slate-50">
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-slate-50 border-none rounded-2xl py-2.5 px-4 text-xs font-bold focus:outline-none focus:ring-0"
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto hide-scrollbar p-1">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt, i) => {
+                const isSelected = value === opt;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt);
+                      setIsOpen(false);
+                      setSearch("");
+                    }}
+                    className={`w-full text-left px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center justify-between transition-colors ${isSelected ? 'bg-rose-50 text-[#C44545]' : 'text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="p-4 text-center text-xs font-bold text-slate-400">No results found</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
@@ -38,6 +112,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [address, setAddress] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [otp, setOtp] = useState(["", "", "", ""]);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   
   const [addressDetails, setAddressDetails] = useState({
     house: "",
@@ -46,6 +121,38 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     state: "",
     pincode: ""
   });
+
+  useEffect(() => {
+    const fetchCityState = async () => {
+      const pin = addressDetails.pincode;
+      if (pin && pin.length === 6 && /^\d+$/.test(pin)) {
+        setLoadingLocation(true);
+        try {
+          const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+          const data = await res.json();
+          if (data && data[0] && data[0].Status === "Success" && data[0].PostOffice && data[0].PostOffice.length > 0) {
+            const office = data[0].PostOffice[0];
+            const fetchedCity = office.District;
+            const fetchedState = office.State;
+            setAddressDetails(prev => {
+              const updated = { ...prev, city: fetchedCity, state: fetchedState };
+              setAddress(`${updated.house}${updated.house ? ', ' : ''}${updated.area}${updated.area ? ', ' : ''}${updated.city}${updated.city ? ', ' : ''}${updated.state} - ${updated.pincode}`);
+              return updated;
+            });
+            toast.success(`Location auto-fetched: ${fetchedCity}, ${fetchedState}`);
+          } else {
+            toast.error("Invalid Pincode or no records found");
+          }
+        } catch (err) {
+          console.error("Error fetching location from pincode:", err);
+          toast.error("Failed to fetch location details automatically");
+        } finally {
+          setLoadingLocation(false);
+        }
+      }
+    };
+    fetchCityState();
+  }, [addressDetails.pincode]);
   
   const fileInputRef = useRef(null);
 
@@ -148,6 +255,17 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     });
   };
 
+  const handleSelectChange = (name, value) => {
+    setAddressDetails(prev => {
+        const updated = { ...prev, [name]: value };
+        if (name === 'state') {
+          updated.city = ''; // Reset city when state changes
+        }
+        setAddress(`${updated.house}${updated.house ? ', ' : ''}${updated.area}${updated.area ? ', ' : ''}${updated.city}${updated.city ? ', ' : ''}${updated.state} - ${updated.pincode}`);
+        return updated;
+    });
+  };
+
   const isFormInvalid = !name.trim() || mobile.length !== 10 || password.length < 6 || !address.trim() || (isOtpSent && otp.join("").length !== 4);
 
   return (
@@ -219,7 +337,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       onChange={handleImageUpload}
                     />
                   </div>
-                  <span className="text-[10px] font-black text-[#C44545] uppercase tracking-widest mt-2">Upload Photo</span>
+                  <span className="text-[10px] font-black text-[#C44545] uppercase tracking-widest mt-2">Upload Photo (Optional)</span>
                 </div>
 
                 {/* Input Group: Name */}
@@ -291,15 +409,22 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       placeholder="House/Flat No." 
                       className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 px-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
                     />
-                    <input 
-                      name="pincode"
-                      value={addressDetails.pincode}
-                      onChange={handleDetailChange}
-                      type="tel"
-                      maxLength={6}
-                      placeholder="Pincode" 
-                      className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 px-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
-                    />
+                    <div className="relative w-full">
+                      <input 
+                        name="pincode"
+                        value={addressDetails.pincode}
+                        onChange={handleDetailChange}
+                        type="tel"
+                        maxLength={6}
+                        placeholder="Pincode" 
+                        className={`w-full bg-white border ${loadingLocation ? 'border-rose-300' : 'border-black/[0.03]'} rounded-3xl py-4 pl-6 pr-12 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all`}
+                      />
+                      {loadingLocation && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#C44545] border-t-transparent"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Area/Street/Landmark */}
@@ -312,23 +437,20 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 px-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
                   />
 
-                  {/* City & State */}
+                  {/* State & City dropdowns */}
                   <div className="grid grid-cols-2 gap-3">
-                    <input 
-                      name="city"
-                      value={addressDetails.city}
-                      onChange={handleDetailChange}
-                      type="text" 
-                      placeholder="City" 
-                      className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 px-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
-                    />
-                    <input 
-                      name="state"
+                    <SearchableDropdown
+                      options={Object.keys(indiaData).sort()}
                       value={addressDetails.state}
-                      onChange={handleDetailChange}
-                      type="text" 
-                      placeholder="State" 
-                      className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 px-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
+                      onChange={(val) => handleSelectChange('state', val)}
+                      placeholder="State"
+                    />
+                    <SearchableDropdown
+                      options={addressDetails.state ? indiaData[addressDetails.state] || [] : []}
+                      value={addressDetails.city}
+                      onChange={(val) => handleSelectChange('city', val)}
+                      placeholder="City"
+                      disabled={!addressDetails.state}
                     />
                   </div>
                 </div>

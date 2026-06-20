@@ -24,7 +24,8 @@ exports.registerVendor = async (req, res) => {
         bankData,
         otp,
         remark,
-        customFields
+        customFields,
+        isOnline
     } = req.body;
 
     if (role !== 'owner') {
@@ -90,6 +91,8 @@ exports.registerVendor = async (req, res) => {
       ownerDetails: ownerData ? JSON.parse(ownerData) : {},
       bankDetails: bankData ? JSON.parse(bankData) : {},
       kycDocuments: docs,
+      profileImage: docs.profileImage ? { public_id: '', url: docs.profileImage } : undefined,
+      isOnline: isOnline === undefined ? true : (isOnline === 'true' || isOnline === true),
       status: 'approved',
       isApproved: true,
       remark,
@@ -239,6 +242,19 @@ exports.toggleStatus = async (req, res) => {
     }
 };
 
+exports.getUniqueVehicleClasses = async (req, res) => {
+    try {
+        const vehicleClasses = await Vendor.distinct('professionalDetails.vehicleClasses', { 
+            status: 'approved' 
+        });
+        const filtered = vehicleClasses.filter(v => v && v.trim() !== '' && v.toLowerCase() !== 'other');
+        res.status(200).json({ success: true, vehicleClasses: filtered });
+    } catch (error) {
+        console.error("Error in getUniqueVehicleClasses:", error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
 exports.getVendors = async (req, res) => {
     try {
         const { role, state, district, vehicleClass, specialty, practiceArea, rtoService } = req.query;
@@ -266,7 +282,7 @@ exports.getVendors = async (req, res) => {
             query['address.city'] = { $regex: new RegExp(district, 'i') };
         }
         if (vehicleClass) {
-            query['professionalDetails.vehicleClasses'] = vehicleClass;
+            query['professionalDetails.vehicleClasses'] = { $regex: new RegExp(`^${vehicleClass.trim()}$`, 'i') };
         }
         if (specialty) {
             query['mechanicDetails.specialties'] = specialty;

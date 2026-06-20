@@ -93,6 +93,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [customLanguage, setCustomLanguage] = useState("");
   const [customVehicleClass, setCustomVehicleClass] = useState("");
   const [remark, setRemark] = useState("");
+  const [showLanguageList, setShowLanguageList] = useState(false);
+  const [driverStatus, setDriverStatus] = useState("free");
 
   useEffect(() => {
     const fullStreetAddress = [houseNo, streetName, landmark]
@@ -103,7 +105,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   }, [houseNo, streetName, landmark]);
 
   const [profData, setProfData] = useState({
-    dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Full Time", languages: ["Hindi"],
+    dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Permanent", languages: ["Hindi"],
     serviceStates: [], 
     aadhaarNumber: ""
   });
@@ -348,9 +350,11 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setCustomLanguage("");
     setCustomVehicleClass("");
     setRemark("");
+    setDriverStatus("free");
 
+    setShowLanguageList(false);
     setProfData({
-      dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Full Time", languages: ["Hindi"],
+      dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Permanent", languages: ["Hindi"],
       serviceStates: [], 
       aadhaarNumber: ""
     });
@@ -376,9 +380,6 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   };
 
   const handleNextStep = () => {
-    if (!profileFile) {
-        return toast.error("Please upload a profile photo");
-    }
     if (!name.trim()) {
         return toast.error("Please enter your Full Name");
     }
@@ -435,7 +436,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
             return toast.error("Please select DL Expiry Date");
         }
         if (!profData.availability) {
-            return toast.error("Please select Service Type (Full Time / Part Time)");
+            return toast.error("Please select Service Type (Permanent / Temporary)");
         }
         if (!profData.vehicleClasses || profData.vehicleClasses.length === 0) {
             return toast.error("Please select at least one Vehicle Class");
@@ -510,6 +511,9 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         formData.append('role', role);
         formData.append('otp', enteredOtp);
         formData.append('remark', remark);
+        if (role === 'driver') {
+            formData.append('isOnline', driverStatus === 'free');
+        }
         formData.append('address', JSON.stringify(address));
         formData.append('liveLocation', JSON.stringify(liveLocation));
         formData.append('profData', JSON.stringify(profData));
@@ -606,7 +610,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setProfData({ ...profData, serviceStates: newStates });
   };
 
-  const isStep1Invalid = !profileFile || !name.trim() || mobile.length !== 10 || !isOtpSent || otp.join("").length !== 4 || !password || password.length < 6 || !streetName.trim() || !address.state || !address.city || !address.pincode;
+  const isStep1Invalid = !name.trim() || mobile.length !== 10 || !isOtpSent || otp.join("").length !== 4 || !password || password.length < 6 || !streetName.trim() || !address.state || !address.city || !address.pincode;
 
   const isCustomFieldsValid = () => {
     return activeCustomFields.every(field => {
@@ -684,7 +688,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       const file = e.target.files[0]; if(file) { setProfileFile(file); setProfileImg(URL.createObjectURL(file)); }
                     }} />
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#C44545]">Upload Photo</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#C44545]">Upload Photo (Optional)</span>
                 </div>
                 <div className="space-y-4">
                   <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
@@ -890,7 +894,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       <div className="space-y-3 pt-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Service Type</label>
                         <div className="flex gap-3">
-                          {['Full Time', 'Part Time'].map(type => (
+                          {['Permanent', 'Temporary'].map(type => (
                             <button 
                               key={type}
                               type="button"
@@ -931,7 +935,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       <div className="space-y-3 px-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Expertise (Multiple Select)</label>
                         <div className="flex flex-col gap-2">
-                          {['Bike', 'Car', 'Truck', 'Bus', 'Other'].map(type => (
+                          {['Bike', 'Car', 'Truck', 'Bus'].map(type => (
                             <div 
                               key={type}
                               onClick={() => {
@@ -1071,11 +1075,35 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     />
                   </div>
 
-                  {(role === 'driver' || role === 'towing') && (
+                  {role === 'towing' && (
                     <div className="space-y-3 px-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Classes (Multiple Select)</label>
                       <div className="flex flex-col gap-2">
-                        {['Bike', 'Car', 'Truck', 'Other'].map(c => {
+                        {['Bike', 'Car', 'Truck'].map(c => {
+                          const isSelected = profData.vehicleClasses.includes(c);
+                          return (
+                            <div 
+                              key={c} 
+                              onClick={() => {
+                                const n = isSelected ? profData.vehicleClasses.filter(x => x !== c) : [...profData.vehicleClasses, c];
+                                setProfData({...profData, vehicleClasses: n});
+                              }} 
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-500 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{c}</span>
+                              {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {role === 'driver' && (
+                    <div className="space-y-3 px-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Classes (Multiple Select)</label>
+                      <div className="flex flex-col gap-2">
+                        {['Bike', 'Car', 'Truck'].map(c => {
                           const isSelected = profData.vehicleClasses.includes(c);
                           return (
                             <div 
@@ -1093,7 +1121,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                         })}
 
                         {/* Render custom added vehicle classes */}
-                        {profData.vehicleClasses.filter(c => !['Bike', 'Car', 'Truck', 'Other'].includes(c)).map(c => (
+                        {profData.vehicleClasses.filter(c => !['Bike', 'Car', 'Truck'].includes(c)).map(c => (
                           <div 
                             key={c}
                             onClick={() => {
@@ -1153,72 +1181,125 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     />
                   </div>
 
-                  <div className="space-y-3 px-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Languages Known (Multiple Select)</label>
-                    <div className="flex flex-col gap-2">
-                      {displayLanguages.map(lang => {
-                        const isSelected = profData.languages.includes(lang);
-                        return (
-                          <div 
-                            key={lang}
-                            onClick={() => {
-                              const n = isSelected 
-                                ? profData.languages.filter(x => x !== lang) 
-                                : [...profData.languages, lang];
-                              setProfData({...profData, languages: n});
-                            }}
-                            className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                          >
-                            <span className="text-[12px] font-black uppercase">{lang}</span>
-                            {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
-                          </div>
-                        );
-                      })}
-                      
-                      {/* Render custom added languages */}
-                      {profData.languages.filter(l => !displayLanguages.includes(l)).map(lang => (
-                        <div 
-                          key={lang}
-                          onClick={() => {
-                            const n = profData.languages.filter(x => x !== lang);
-                            setProfData({...profData, languages: n});
-                          }}
-                          className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
-                        >
-                          <span className="text-[12px] font-black uppercase">{lang}</span>
-                          <CheckSquare size={20} />
+                  <div className="px-2 mt-8">
+                    <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                            Languages Known
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                            Multiple Select
+                          </span>
                         </div>
-                      ))}
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowLanguageList(!showLanguageList)}
+                          className="text-xs font-black uppercase tracking-widest text-[#C44545] hover:bg-rose-100/50 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100/70 transition-all active:scale-95 shadow-sm shadow-[#C44545]/5"
+                        >
+                          {showLanguageList ? "Hide List" : "Select"}
+                        </button>
+                      </div>
 
-                    {/* Input box to add custom language */}
-                    <input 
-                      type="text" 
-                      placeholder="Add Custom Language (e.g. French)" 
-                      value={customLanguage} 
-                      onChange={(e) => setCustomLanguage(e.target.value)} 
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none"
-                    />
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        if (customLanguage.trim()) {
-                          const lang = customLanguage.trim();
-                          if (!profData.languages.includes(lang)) {
-                            setProfData({
-                              ...profData,
-                              languages: [...profData.languages, lang]
-                            });
-                          }
-                          setCustomLanguage("");
-                        }
-                      }}
-                      className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm"
-                    >
-                      Add Language
-                    </button>
-                  </div>
+                      {showLanguageList && (
+                        <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all">
+                          {displayLanguages.map(lang => {
+                            const isSelected = profData.languages.includes(lang);
+                            return (
+                              <div 
+                                key={lang}
+                                onClick={() => {
+                                  const n = isSelected 
+                                    ? profData.languages.filter(x => x !== lang) 
+                                    : [...profData.languages, lang];
+                                  setProfData({...profData, languages: n});
+                                }}
+                                className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                              >
+                                <span className="text-[12px] font-black uppercase">{lang}</span>
+                                {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                              </div>
+                            );
+                          })}
+                          
+                          {/* Render custom added languages */}
+                          {profData.languages.filter(l => !displayLanguages.includes(l)).map(lang => (
+                            <div 
+                              key={lang}
+                              onClick={() => {
+                                const n = profData.languages.filter(x => x !== lang);
+                                setProfData({...profData, languages: n});
+                              }}
+                              className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
+                            >
+                              <span className="text-[12px] font-black uppercase">{lang}</span>
+                              <CheckSquare size={20} />
+                            </div>
+                          ))}
+
+                          {/* Input box to add custom language */}
+                          <input 
+                            type="text" 
+                            placeholder="Add Custom Language (e.g. French)" 
+                            value={customLanguage} 
+                            onChange={(e) => setCustomLanguage(e.target.value)} 
+                            className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none mt-2"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              if (customLanguage.trim()) {
+                                const lang = customLanguage.trim();
+                                if (!profData.languages.includes(lang)) {
+                                  setProfData({
+                                    ...profData,
+                                    languages: [...profData.languages, lang]
+                                  });
+                                }
+                                  setCustomLanguage("");
+                                }
+                              }}
+                              className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm"
+                            >
+                              Add Language
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                 </div>
+
+                {/* Driver Status selection */}
+                {role === 'driver' && (
+                  <div className="px-2 mt-6">
+                    <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-3 block ml-1">Your Status</label>
+                      <div className="flex gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setDriverStatus('free')}
+                          className={`flex-1 flex items-center justify-between p-4 rounded-xl border transition-all ${driverStatus === 'free' ? 'border-[#C44545] bg-rose-50/30' : 'border-slate-100 hover:bg-slate-50'}`}
+                        >
+                          <span className={`text-xs font-black uppercase tracking-wider ${driverStatus === 'free' ? 'text-[#C44545]' : 'text-slate-500'}`}>Free</span>
+                          <div className={`h-4.5 w-4.5 rounded-full border-2 flex items-center justify-center ${driverStatus === 'free' ? 'border-[#C44545]' : 'border-slate-300'}`}>
+                            {driverStatus === 'free' && <div className="h-2 w-2 rounded-full bg-[#C44545]" />}
+                          </div>
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={() => setDriverStatus('busy')}
+                          className={`flex-1 flex items-center justify-between p-4 rounded-xl border transition-all ${driverStatus === 'busy' ? 'border-[#C44545] bg-rose-50/30' : 'border-slate-100 hover:bg-slate-50'}`}
+                        >
+                          <span className={`text-xs font-black uppercase tracking-wider ${driverStatus === 'busy' ? 'text-[#C44545]' : 'text-slate-500'}`}>Busy</span>
+                          <div className={`h-4.5 w-4.5 rounded-full border-2 flex items-center justify-center ${driverStatus === 'busy' ? 'border-[#C44545]' : 'border-slate-300'}`}>
+                            {driverStatus === 'busy' && <div className="h-2 w-2 rounded-full bg-[#C44545]" />}
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Remark/Note section at the end of Step 2 */}
                 <div className="px-2 mt-4">

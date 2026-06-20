@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { Star, Shield, Zap, TrendingUp, Settings, DollarSign, Activity, Briefcase, Wallet, MapPin, CheckCircle2, Wrench, Truck, FileText, Navigation, ArrowRight, Loader2, Moon, Sun, ZapOff } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Star, Shield, Zap, TrendingUp, Settings, DollarSign, Activity, Briefcase, Wallet, MapPin, CheckCircle2, Wrench, Truck, FileText, Navigation, ArrowRight, Loader2, Moon, Sun, ZapOff, Info } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { getVendorData, setVendorData } from "../utils/vendorStore";
 import { getVendorConfig } from "../utils/vendorConfig";
@@ -18,8 +18,21 @@ const VendorHome = () => {
   const [isToggling, setIsToggling] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [selectedHireRole, setSelectedHireRole] = useState('driver');
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const config = getVendorConfig(vendor.profile.role);
+
+  useEffect(() => {
+    const hasSeenVendorDisclaimer = localStorage.getItem('hasSeenVendorDisclaimer');
+    if (!hasSeenVendorDisclaimer && vendor?.profile?.token) {
+      setShowDisclaimer(true);
+    }
+  }, [vendor?.profile?.token]);
+
+  const handleCloseDisclaimer = () => {
+    localStorage.setItem('hasSeenVendorDisclaimer', 'true');
+    setShowDisclaimer(false);
+  };
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -298,6 +311,40 @@ const VendorHome = () => {
 
   return (
     <div className={`min-h-screen pb-24 font-inter transition-colors duration-700 ${isOnline ? 'bg-white' : 'bg-slate-50'}`}>
+      <AnimatePresence>
+        {showDisclaimer && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white rounded-[2rem] p-6 max-w-sm w-full shadow-2xl border border-slate-100 text-center"
+            >
+              <div className="flex justify-center mb-5">
+                <div className="h-16 w-16 bg-blue-50 rounded-[1.5rem] flex items-center justify-center text-blue-500 shadow-inner">
+                  <Info size={32} strokeWidth={2.5} />
+                </div>
+              </div>
+              <h3 className="text-[16px] font-black text-center text-slate-800 uppercase tracking-wider mb-3">Important Notice</h3>
+              <p className="text-xs font-bold text-slate-500 text-center mb-6 leading-relaxed">
+                Before hiring anyone, please verify all documents carefully and finalize the payment only after proper verification. The company will not be responsible for any issues related to documents or payments. The company does not collect or handle any documents from users. Users can communicate and verify details directly with each other through the provided phone numbers.
+              </p>
+              <button 
+                onClick={handleCloseDisclaimer}
+                className="w-full bg-[#C44545] text-white text-[12px] font-black uppercase tracking-[0.2em] py-4 rounded-2xl active:scale-95 transition-all shadow-xl shadow-[#C44545]/20"
+              >
+                Okay
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Earnings & Success Rate (Top Bar) */}
       <section className={`px-4 pt-6 pb-22 rounded-b-[3rem] shadow-2xl relative overflow-hidden transition-all duration-700 ${isOnline ? 'bg-[#C44545] shadow-[#C44545]/20' : 'bg-slate-800 shadow-slate-900/40'}`}>
         <div className="absolute top-0 right-0 h-64 w-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-20" />
