@@ -3,9 +3,10 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const { registerVendor, getVendorProfile, updateVendorProfile, updateVendorKYC, toggleStatus, getVendors, deleteVendorAccount, getUniqueVehicleClasses } = require('../controllers/vendorController');
-const { vendorLogin, sendVendorOTP, verifyVendorResetOTP, resetVendorPassword } = require('../controllers/vendorAuthController');
+const { vendorLogin, sendVendorOTP, verifyVendorResetOTP, resetVendorPassword, verifyVendorRegisterOTP } = require('../controllers/vendorAuthController');
 
 router.post('/send-otp', sendVendorOTP);
+router.post('/verify-register-otp', verifyVendorRegisterOTP);
 router.post('/verify-reset-otp', verifyVendorResetOTP);
 router.post('/reset-password', resetVendorPassword);
 

@@ -111,6 +111,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [address, setAddress] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [loadingLocation, setLoadingLocation] = useState(false);
   
@@ -168,6 +169,45 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     }
   };
 
+  const handleSendOTP = async () => {
+    if (mobile.length !== 10) return toast.error("Enter valid 10-digit mobile");
+    const tid = toast.loading("Sending OTP...");
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register-send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        setIsOtpSent(true);
+        toast.success(data.message || "OTP sent successfully to your mobile", { id: tid });
+    } catch (error) {
+        toast.error(error.message || "Failed to send OTP", { id: tid });
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    const enteredOtp = otp.join("");
+    if (enteredOtp.length !== 4) return toast.error("Enter 4-digit OTP");
+    const tid = toast.loading("Verifying OTP...");
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/verify-register-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile, otp: enteredOtp })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        setIsOtpVerified(true);
+        toast.success("OTP Verified Successfully!", { id: tid });
+    } catch (error) {
+        toast.error(error.message || "OTP verification failed", { id: tid });
+    }
+  };
+
   const handleRegister = async () => {
     if (!name || !mobile || !password || !address) {
       toast.error("Please fill all required fields");
@@ -184,34 +224,12 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
       return;
     }
 
-    if (!isOtpSent) {
-      const loadToast = toast.loading("Sending verification OTP...");
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register-send-otp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile }),
-        });
-        const data = await response.json();
-        if (data.success) {
-          toast.success(data.message || "OTP sent to your mobile number!", { id: loadToast });
-          setIsOtpSent(true);
-        } else {
-          toast.error(data.message || "Failed to send OTP", { id: loadToast });
-        }
-      } catch (error) {
-        console.error("OTP Send Error:", error);
-        toast.error("Failed to send OTP. Try again.", { id: loadToast });
-      }
+    if (!isOtpVerified) {
+      toast.error("Please verify your OTP first");
       return;
     }
 
     const enteredOtp = otp.join("");
-    if (enteredOtp.length !== 4) {
-      toast.error("Please enter the 4-digit OTP");
-      return;
-    }
-
     const formData = new FormData();
     formData.append('name', name);
     formData.append('mobile', mobile);
@@ -266,7 +284,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     });
   };
 
-  const isFormInvalid = !name.trim() || mobile.length !== 10 || password.length < 6 || !address.trim() || (isOtpSent && otp.join("").length !== 4);
+  const isFormInvalid = !name.trim() || mobile.length !== 10 || password.length < 6 || !address.trim() || !isOtpVerified;
 
   return (
     <div className={containerClasses}>
@@ -368,11 +386,86 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       maxLength={10}
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value)}
+                      disabled={isOtpVerified}
                       placeholder="Mobile Number" 
-                      className="w-full py-4 px-5 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none bg-transparent"
+                      className="w-full py-4 px-5 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none bg-transparent disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
+
+                {!isOtpSent && !isOtpVerified && (
+                  <button 
+                    type="button" 
+                    onClick={handleSendOTP} 
+                    disabled={mobile.length !== 10}
+                    className="w-full bg-[#C44545] text-white py-4 rounded-3xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    Verify Mobile
+                  </button>
+                )}
+
+                {isOtpSent && (
+                  <div className="space-y-4 pt-2">
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-[#C44545]">Enter Verification OTP</label>
+                      {!isOtpVerified && (
+                        <button 
+                          type="button" 
+                          onClick={handleSendOTP}
+                          className="text-[10px] font-black uppercase tracking-wider text-[#C44545] hover:underline"
+                        >
+                          Resend OTP
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-3 justify-center">
+                      {otp.map((digit, idx) => (
+                        <input 
+                          key={idx} 
+                          id={`otp-${idx}`}
+                          type="tel" 
+                          maxLength={1} 
+                          value={digit} 
+                          disabled={isOtpVerified}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const newOtp = [...otp];
+                            newOtp[idx] = val;
+                            setOtp(newOtp);
+                            
+                            if (val && idx < 3) {
+                              document.getElementById(`otp-${idx + 1}`)?.focus();
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
+                              document.getElementById(`otp-${idx - 1}`)?.focus();
+                            }
+                          }}
+                          className="w-12 h-14 bg-rose-50 border-2 border-[#C44545]/10 rounded-2xl text-center text-xl font-black text-[#C44545] focus:border-[#C44545] focus:outline-none transition-all disabled:opacity-60" 
+                        />
+                      ))}
+                    </div>
+                    {!isOtpVerified && (
+                      <button 
+                        type="button" 
+                        onClick={handleVerifyOTP} 
+                        disabled={otp.join("").length !== 4}
+                        className="w-full bg-[#C44545] text-white py-4 rounded-3xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                      >
+                        Verify OTP
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {isOtpVerified && (
+                  <div className="w-full bg-emerald-50 border border-emerald-100 text-emerald-600 py-4 px-6 rounded-3xl text-xs font-black uppercase tracking-wider flex items-center justify-between shadow-sm">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className="text-emerald-600" /> Mobile Number Verified
+                    </span>
+                  </div>
+                )}
 
                 {/* Input Group: Password */}
                 <div className="relative group">
@@ -455,52 +548,6 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                   </div>
                 </div>
 
-                {isOtpSent && (
-                  <div className="space-y-3 pt-2">
-                    <div className="flex justify-between items-center px-1">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-[#C44545]">Enter Verification OTP</label>
-                      <button 
-                        type="button" 
-                        onClick={async () => {
-                          setIsOtpSent(false);
-                          setOtp(["", "", "", ""]);
-                          setTimeout(() => handleRegister(), 100);
-                        }}
-                        className="text-[10px] font-black uppercase tracking-wider text-rose-500 hover:underline"
-                      >
-                        Resend OTP
-                      </button>
-                    </div>
-                    <div className="flex gap-3 justify-center">
-                      {otp.map((digit, idx) => (
-                        <input 
-                          key={idx} 
-                          id={`otp-${idx}`}
-                          type="tel" 
-                          maxLength={1} 
-                          value={digit} 
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const newOtp = [...otp];
-                            newOtp[idx] = val;
-                            setOtp(newOtp);
-                            
-                            if (val && idx < 3) {
-                              document.getElementById(`otp-${idx + 1}`)?.focus();
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
-                              document.getElementById(`otp-${idx - 1}`)?.focus();
-                            }
-                          }}
-                          className="w-12 h-14 bg-rose-50 border-2 border-[#C44545]/10 rounded-2xl text-center text-xl font-black text-[#C44545] focus:border-[#C44545] focus:outline-none transition-all" 
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 <div className="pt-4">
                     <button 
                       type="button" 
@@ -511,7 +558,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                       <div className="flex items-center gap-3">
                         <ShieldCheck size={20} className="text-white/40" />
                         <span className="text-white text-[13px] font-black uppercase tracking-[0.2em]">
-                          {isOtpSent ? "Verify & Register" : "Create Account"}
+                          Create Account
                         </span>
                       </div>
                       <div className="h-8 w-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors">

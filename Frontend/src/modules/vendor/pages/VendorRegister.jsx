@@ -85,6 +85,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [address, setAddress] = useState({ street: "", city: "", state: "", isoCode: "", pincode: "" });
   const [houseNo, setHouseNo] = useState("");
   const [streetName, setStreetName] = useState("");
@@ -272,6 +273,26 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     }
   };
 
+  const handleVerifyOTP = async () => {
+    const enteredOtp = otp.join("");
+    if (enteredOtp.length !== 4) return toast.error("Enter 4-digit OTP");
+    const tid = toast.loading("Verifying OTP...");
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/vendors/verify-register-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mobile, otp: enteredOtp })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        setIsOtpVerified(true);
+        toast.success("OTP Verified Successfully!", { id: tid });
+    } catch (error) {
+        toast.error(error.message || "OTP verification failed", { id: tid });
+    }
+  };
+
   const fetchLiveLocation = (type = 'personal') => {
     if (!navigator.geolocation) return toast.error("Geolocation not supported");
     const tid = toast.loading("Capturing precise location...");
@@ -342,6 +363,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setPassword("");
     setOtp(["", "", "", ""]);
     setIsOtpSent(false);
+    setIsOtpVerified(false);
     setAddress({ street: "", city: "", state: "", isoCode: "", pincode: "" });
     setHouseNo("");
     setStreetName("");
@@ -386,12 +408,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     if (!mobile || mobile.length !== 10) {
         return toast.error("Please enter a valid 10-digit Mobile Number");
     }
-    if (!isOtpSent) {
-        return toast.error("Please verify your mobile number first");
-    }
-    const enteredOtp = otp.join("");
-    if (enteredOtp.length !== 4) {
-        return toast.error("Please enter the 4-digit verification OTP");
+    if (!isOtpVerified) {
+        return toast.error("Please verify your mobile number OTP first");
     }
     if (!password) {
         return toast.error("Please set a secure password");
@@ -611,7 +629,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setProfData({ ...profData, serviceStates: newStates });
   };
 
-  const isStep1Invalid = !name.trim() || mobile.length !== 10 || !isOtpSent || otp.join("").length !== 4 || !password || password.length < 6 || !streetName.trim() || !address.state || !address.city || !address.pincode;
+  const isStep1Invalid = !name.trim() || mobile.length !== 10 || !isOtpVerified || !password || password.length < 6 || !streetName.trim() || !address.state || !address.city || !address.pincode;
 
   const isCustomFieldsValid = () => {
     return activeCustomFields.every(field => {
@@ -693,23 +711,59 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                 </div>
                 <div className="space-y-4">
                   <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                  <input type="tel" placeholder="Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
-                  <button 
-                    type="button" 
-                    onClick={handleSendOTP} 
-                    disabled={mobile.length !== 10}
-                    className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
-                  >
-                    Verify Mobile
-                  </button>
+                  <input 
+                    type="tel" 
+                    placeholder="Mobile" 
+                    value={mobile} 
+                    onChange={(e) => setMobile(e.target.value)} 
+                    disabled={isOtpVerified} 
+                    className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold disabled:opacity-60 disabled:cursor-not-allowed" 
+                  />
+                  {!isOtpSent && !isOtpVerified && (
+                    <button 
+                      type="button" 
+                      onClick={handleSendOTP} 
+                      disabled={mobile.length !== 10}
+                      className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      Verify Mobile
+                    </button>
+                  )}
                   {isOtpSent && (
-                    <div className="flex gap-3 justify-center py-2">
-                      {otp.map((d, i) => (
-                        <input key={i} type="tel" maxLength={1} value={d} onChange={(e) => {
-                          const n = [...otp]; n[i] = e.target.value; setOtp(n);
-                          if(e.target.value && e.target.nextSibling) e.target.nextSibling.focus();
-                        }} className="w-12 h-14 bg-rose-50 border-2 border-[#C44545]/10 rounded-xl text-center text-xl font-black text-[#C44545]" />
-                      ))}
+                    <div className="space-y-4">
+                      <div className="flex gap-3 justify-center py-2">
+                        {otp.map((d, i) => (
+                          <input 
+                            key={i} 
+                            type="tel" 
+                            maxLength={1} 
+                            value={d} 
+                            disabled={isOtpVerified}
+                            onChange={(e) => {
+                              const n = [...otp]; n[i] = e.target.value; setOtp(n);
+                              if(e.target.value && e.target.nextSibling) e.target.nextSibling.focus();
+                            }} 
+                            className="w-12 h-14 bg-rose-50 border-2 border-[#C44545]/10 rounded-xl text-center text-xl font-black text-[#C44545] disabled:opacity-60" 
+                          />
+                        ))}
+                      </div>
+                      {!isOtpVerified && (
+                        <button 
+                          type="button" 
+                          onClick={handleVerifyOTP} 
+                          disabled={otp.join("").length !== 4}
+                          className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                        >
+                          Verify OTP
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {isOtpVerified && (
+                    <div className="w-full bg-emerald-50 border border-emerald-100 text-emerald-600 py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-between shadow-sm">
+                      <span className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-emerald-600" /> Mobile Number Verified
+                      </span>
                     </div>
                   )}
                   <input type="email" placeholder="Email Address (Optional)" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />

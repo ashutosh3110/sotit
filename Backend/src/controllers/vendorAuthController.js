@@ -286,3 +286,40 @@ const sendTokenResponse = (vendor, statusCode, res) => {
     }
   });
 };
+
+// @desc    Verify OTP for Vendor Registration
+// @route   POST /api/vendors/verify-register-otp
+// @access  Public
+exports.verifyVendorRegisterOTP = async (req, res, next) => {
+  try {
+    const { mobile, otp } = req.body;
+
+    if (!mobile || !otp) {
+      res.status(400);
+      throw new Error('Please provide mobile and OTP');
+    }
+
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    if (isRealOtp) {
+      const OTPVerification = require('../models/OTPVerification');
+      const otpRecord = await OTPVerification.findOne({ mobile });
+      if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
+        res.status(400);
+        throw new Error('Invalid or expired OTP');
+      }
+    } else {
+      if (otp !== '1234') {
+        res.status(400);
+        throw new Error('Invalid or expired OTP (Mock OTP is 1234)');
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully'
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
