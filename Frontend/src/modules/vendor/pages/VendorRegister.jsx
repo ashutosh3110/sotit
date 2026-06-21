@@ -509,6 +509,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         }
         formData.append('password', password || mobile);
         formData.append('role', role);
+        const enteredOtp = otp.join("");
         formData.append('otp', enteredOtp);
         formData.append('remark', remark);
         if (role === 'driver') {
