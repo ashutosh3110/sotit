@@ -40,7 +40,7 @@ const VehicleOwnerForm = () => {
   const [district, setDistrict] = useState("");
 
   // Driver-specific states
-  const [vehicleType, setVehicleType] = useState("");
+  const [vehicleType, setVehicleType] = useState([]);
   const [customVehicleType, setCustomVehicleType] = useState("");
   const [jobType, setJobType] = useState("Permanent");
 
@@ -81,7 +81,7 @@ const VehicleOwnerForm = () => {
     setShowLanguageList(false);
     setState("");
     setDistrict("");
-    setVehicleType("");
+    setVehicleType([]);
     setCustomVehicleType("");
     setJobType("Permanent");
     setMechanicType("");
@@ -180,9 +180,8 @@ const VehicleOwnerForm = () => {
     if (mobile.length !== 10) return toast.error("Please enter a valid 10-digit mobile number");
 
     if (ownerSubRole === 'driver') {
-      if (!vehicleType) return toast.error("Please select Vehicle Type");
-      if (vehicleType === 'Other' && !customVehicleType.trim()) {
-        return toast.error("Please enter custom vehicle type");
+      if ((!vehicleType || vehicleType.length === 0) && !customVehicleType.trim()) {
+        return toast.error("Please select at least one Vehicle Type or enter a custom one");
       }
       if (!languages || languages.length === 0) return toast.error("Please select at least one Language");
       if (!state) return toast.error("Please select State");
@@ -227,7 +226,10 @@ const VehicleOwnerForm = () => {
             name,
             mobile,
             ...(ownerSubRole === 'driver' && {
-              vehicleType: vehicleType === 'Other' ? customVehicleType.trim() : vehicleType,
+              vehicleType: [
+                ...vehicleType,
+                ...(customVehicleType.trim() ? [customVehicleType.trim()] : [])
+              ].join(', '),
               languages,
               state,
               district,
@@ -364,36 +366,43 @@ const VehicleOwnerForm = () => {
                   className="space-y-4 pt-2 overflow-visible"
                 >
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Type</label>
-                    <select 
-                      value={vehicleType}
-                      required
-                      onChange={(e) => setVehicleType(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all"
-                    >
-                      <option value="">Select Vehicle Type</option>
-                      {['2 Wheeler', '4 Wheeler', 'Truck', 'Other'].map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Type (Multiple Select)</label>
+                    <div className="flex gap-3">
+                      {['2 Wheeler', '4 Wheeler', 'Truck'].map(type => {
+                        const isSelected = vehicleType.includes(type);
+                        return (
+                          <button 
+                            key={type}
+                            type="button"
+                            onClick={() => {
+                              const n = isSelected 
+                                ? vehicleType.filter(x => x !== type) 
+                                : [...vehicleType, type];
+                              setVehicleType(n);
+                            }}
+                            className={`flex-1 py-4 rounded-2xl border-2 font-black uppercase tracking-widest text-[11px] transition-all ${
+                              isSelected 
+                                ? 'border-[#C44545] bg-[#C44545] text-white shadow-lg shadow-[#C44545]/20' 
+                                : 'border-slate-100 bg-white text-slate-400 hover:bg-slate-50'
+                            }`}
+                          >
+                            {type}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {vehicleType === 'Other' && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="space-y-1"
-                    >
-                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Enter Custom Vehicle Type</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Auto, Crane, Bus" 
-                        value={customVehicleType} 
-                        onChange={(e) => setCustomVehicleType(e.target.value)} 
-                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all" 
-                      />
-                    </motion.div>
-                  )}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Enter Vehicle Type</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Auto, Crane, Bus, Swift" 
+                      value={customVehicleType} 
+                      onChange={(e) => setCustomVehicleType(e.target.value)} 
+                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all" 
+                    />
+                  </div>
 
                   <div className="px-2">
                     <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
