@@ -186,19 +186,56 @@ exports.getVendorProfile = async (req, res) => {
 
 exports.updateVendorProfile = async (req, res) => {
     try {
-        const { name, email, address, liveLocation } = req.body;
-        const vendor = await Vendor.findByIdAndUpdate(
-            req.params.id,
-            { 
-                name, 
-                email, 
-                address: typeof address === 'string' ? JSON.parse(address) : address,
-                liveLocation: typeof liveLocation === 'string' ? JSON.parse(liveLocation) : liveLocation
-            },
-            { new: true }
-        );
-        if (!vendor) return res.status(404).json({ message: 'Vendor not found' });
-        res.status(200).json({ message: 'Profile updated successfully', vendor });
+        const { name, email, address, liveLocation, professionalDetails, mechanicDetails, rtoDetails, legalDetails, customFields } = req.body;
+        const vendorObj = await Vendor.findById(req.params.id);
+        if (!vendorObj) return res.status(404).json({ message: 'Vendor not found' });
+
+        vendorObj.name = name || vendorObj.name;
+        vendorObj.email = email || vendorObj.email;
+        if (address) {
+            vendorObj.address = typeof address === 'string' ? JSON.parse(address) : address;
+        }
+        if (liveLocation) {
+            vendorObj.liveLocation = typeof liveLocation === 'string' ? JSON.parse(liveLocation) : liveLocation;
+        }
+        if (professionalDetails) {
+            const parsedProf = typeof professionalDetails === 'string' ? JSON.parse(professionalDetails) : professionalDetails;
+            vendorObj.professionalDetails = {
+                ...vendorObj.professionalDetails,
+                ...parsedProf
+            };
+        }
+        if (mechanicDetails) {
+            const parsedMech = typeof mechanicDetails === 'string' ? JSON.parse(mechanicDetails) : mechanicDetails;
+            vendorObj.mechanicDetails = {
+                ...vendorObj.mechanicDetails,
+                ...parsedMech
+            };
+        }
+        if (rtoDetails) {
+            const parsedRto = typeof rtoDetails === 'string' ? JSON.parse(rtoDetails) : rtoDetails;
+            vendorObj.rtoDetails = {
+                ...vendorObj.rtoDetails,
+                ...parsedRto
+            };
+        }
+        if (legalDetails) {
+            const parsedLegal = typeof legalDetails === 'string' ? JSON.parse(legalDetails) : legalDetails;
+            vendorObj.legalDetails = {
+                ...vendorObj.legalDetails,
+                ...parsedLegal
+            };
+        }
+        if (customFields) {
+            const parsedCustom = typeof customFields === 'string' ? JSON.parse(customFields) : customFields;
+            vendorObj.customFields = {
+                ...(vendorObj.customFields ? (vendorObj.customFields.toJSON ? vendorObj.customFields.toJSON() : vendorObj.customFields) : {}),
+                ...parsedCustom
+            };
+        }
+
+        await vendorObj.save();
+        res.status(200).json({ message: 'Profile updated successfully', vendor: vendorObj });
     } catch (error) {
         res.status(500).json({ message: 'Error updating profile', error: error.message });
     }

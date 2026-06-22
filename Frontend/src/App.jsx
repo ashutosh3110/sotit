@@ -155,7 +155,7 @@ const AppRoutes = () => {
 
 const AppContent = () => {
   const location = useLocation();
-  const authPaths = ['/', '/about', '/auth', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise'];
+  const authPaths = ['/', '/about', '/auth', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise', '/vehicle-owner'];
   const isAuthPage = authPaths.includes(location.pathname) || location.pathname.startsWith('/admin');
 
   const isAdminPage = location.pathname.startsWith('/admin');

@@ -1150,7 +1150,49 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                             </div>
                           );
                         })}
+
+                        {/* Render custom added vehicle classes */}
+                        {profData.vehicleClasses.filter(c => !['Bike', 'Car', 'Truck'].includes(c)).map(c => (
+                          <div 
+                            key={c}
+                            onClick={() => {
+                              const n = profData.vehicleClasses.filter(x => x !== c);
+                              setProfData({...profData, vehicleClasses: n});
+                            }}
+                            className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
+                          >
+                            <span className="text-[12px] font-black uppercase">{c}</span>
+                            <CheckSquare size={20} />
+                          </div>
+                        ))}
                       </div>
+
+                      {/* Input box to add custom vehicle class */}
+                      <input 
+                        type="text" 
+                        placeholder="Add Custom Vehicle (e.g. Auto, Crane)" 
+                        value={customVehicleClass} 
+                        onChange={(e) => setCustomVehicleClass(e.target.value)} 
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (customVehicleClass.trim()) {
+                            const cVal = customVehicleClass.trim();
+                            if (!profData.vehicleClasses.includes(cVal)) {
+                              setProfData({
+                                ...profData,
+                                vehicleClasses: [...profData.vehicleClasses, cVal]
+                              });
+                            }
+                            setCustomVehicleClass("");
+                          }
+                        }}
+                        className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm"
+                      >
+                        Add Vehicle Class
+                      </button>
                     </div>
                   )}
 

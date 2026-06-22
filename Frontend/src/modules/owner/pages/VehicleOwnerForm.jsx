@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Navigation, Wrench, FileText, Truck, Briefcase, ArrowRight, CheckCircle2, Globe, MapPin, ChevronDown, Search, Check } from "lucide-react";
+import { ArrowLeft, Navigation, Wrench, FileText, Truck, Briefcase, ArrowRight, CheckCircle2, Globe, MapPin, ChevronDown, Search, Check, Square, CheckSquare } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useRef, useMemo } from "react";
 import toast from "react-hot-toast";
@@ -34,12 +34,14 @@ const VehicleOwnerForm = () => {
   }, []);
 
   // Shared conditional states
-  const [language, setLanguage] = useState("");
+  const [languages, setLanguages] = useState(["Hindi"]);
+  const [showLanguageList, setShowLanguageList] = useState(false);
   const [state, setState] = useState("");
   const [district, setDistrict] = useState("");
 
   // Driver-specific states
   const [vehicleType, setVehicleType] = useState("");
+  const [customVehicleType, setCustomVehicleType] = useState("");
   const [jobType, setJobType] = useState("Permanent");
 
   // Mechanic-specific states
@@ -75,10 +77,12 @@ const VehicleOwnerForm = () => {
   // Reset fields on role change
   const handleRoleChange = (roleId) => {
     setOwnerSubRole(roleId);
-    setLanguage("");
+    setLanguages(["Hindi"]);
+    setShowLanguageList(false);
     setState("");
     setDistrict("");
     setVehicleType("");
+    setCustomVehicleType("");
     setJobType("Permanent");
     setMechanicType("");
   };
@@ -177,7 +181,10 @@ const VehicleOwnerForm = () => {
 
     if (ownerSubRole === 'driver') {
       if (!vehicleType) return toast.error("Please select Vehicle Type");
-      if (!language) return toast.error("Please select Language");
+      if (vehicleType === 'Other' && !customVehicleType.trim()) {
+        return toast.error("Please enter custom vehicle type");
+      }
+      if (!languages || languages.length === 0) return toast.error("Please select at least one Language");
       if (!state) return toast.error("Please select State");
       if (!district) return toast.error("Please select City/District");
       if (!jobType) return toast.error("Please select Driver Type");
@@ -185,13 +192,13 @@ const VehicleOwnerForm = () => {
 
     if (ownerSubRole === 'mechanic') {
       if (!mechanicType) return toast.error("Please select Mechanic Type");
-      if (!language) return toast.error("Please select Language");
+      if (!languages || languages.length === 0) return toast.error("Please select at least one Language");
       if (!state) return toast.error("Please select State");
       if (!district) return toast.error("Please select City/District");
     }
 
     if (ownerSubRole === 'towing' || ownerSubRole === 'rto' || ownerSubRole === 'legal') {
-      if (!language) return toast.error("Please select Language");
+      if (!languages || languages.length === 0) return toast.error("Please select at least one Language");
       if (!state) return toast.error("Please select State");
       if (!district) return toast.error("Please select City/District");
     }
@@ -220,20 +227,20 @@ const VehicleOwnerForm = () => {
             name,
             mobile,
             ...(ownerSubRole === 'driver' && {
-              vehicleType,
-              language,
+              vehicleType: vehicleType === 'Other' ? customVehicleType.trim() : vehicleType,
+              languages,
               state,
               district,
               jobType
             }),
             ...(ownerSubRole === 'mechanic' && {
               mechanicType,
-              language,
+              languages,
               state,
               district
             }),
             ...((ownerSubRole === 'towing' || ownerSubRole === 'rto' || ownerSubRole === 'legal') && {
-              language,
+              languages,
               state,
               district
             })
@@ -365,25 +372,72 @@ const VehicleOwnerForm = () => {
                       className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all"
                     >
                       <option value="">Select Vehicle Type</option>
-                      {['2 Wheeler', '4 Wheeler', 'Truck'].map(opt => (
+                      {['2 Wheeler', '4 Wheeler', 'Truck', 'Other'].map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Language</label>
-                    <select 
-                      value={language}
-                      required
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all"
+                  {vehicleType === 'Other' && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-1"
                     >
-                      <option value="">Select Language</option>
-                      {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Enter Custom Vehicle Type</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Auto, Crane, Bus" 
+                        value={customVehicleType} 
+                        onChange={(e) => setCustomVehicleType(e.target.value)} 
+                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all" 
+                      />
+                    </motion.div>
+                  )}
+
+                  <div className="px-2">
+                    <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                            Languages Required
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                            Multiple Select
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowLanguageList(!showLanguageList)}
+                          className="text-xs font-black uppercase tracking-widest text-[#C44545] hover:bg-rose-100/50 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100/70 transition-all active:scale-95 shadow-sm shadow-[#C44545]/5"
+                        >
+                          {showLanguageList ? "Hide List" : "Select"}
+                        </button>
+                      </div>
+
+                      {showLanguageList && (
+                        <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all max-h-60 overflow-y-auto no-scrollbar">
+                          {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(lang => {
+                            const isSelected = languages.includes(lang);
+                            return (
+                              <div 
+                                key={lang}
+                                onClick={() => {
+                                  const n = isSelected 
+                                    ? languages.filter(x => x !== lang) 
+                                    : [...languages, lang];
+                                  setLanguages(n);
+                                }}
+                                className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                              >
+                                <span className="text-[12px] font-black uppercase">{lang}</span>
+                                {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-4">
@@ -452,19 +506,49 @@ const VehicleOwnerForm = () => {
                     </select>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Language</label>
-                    <select 
-                      value={language}
-                      required
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all"
-                    >
-                      <option value="">Select Language</option>
-                      {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                  <div className="px-2">
+                    <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                            Languages Required
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                            Multiple Select
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowLanguageList(!showLanguageList)}
+                          className="text-xs font-black uppercase tracking-widest text-[#C44545] hover:bg-rose-100/50 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100/70 transition-all active:scale-95 shadow-sm shadow-[#C44545]/5"
+                        >
+                          {showLanguageList ? "Hide List" : "Select"}
+                        </button>
+                      </div>
+
+                      {showLanguageList && (
+                        <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all max-h-60 overflow-y-auto no-scrollbar">
+                          {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(lang => {
+                            const isSelected = languages.includes(lang);
+                            return (
+                              <div 
+                                key={lang}
+                                onClick={() => {
+                                  const n = isSelected 
+                                    ? languages.filter(x => x !== lang) 
+                                    : [...languages, lang];
+                                  setLanguages(n);
+                                }}
+                                className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                              >
+                                <span className="text-[12px] font-black uppercase">{lang}</span>
+                                {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-4">
@@ -502,19 +586,49 @@ const VehicleOwnerForm = () => {
                   animate={{ opacity: 1, height: 'auto' }}
                   className="space-y-4 pt-2 overflow-visible"
                 >
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Language</label>
-                    <select 
-                      value={language}
-                      required
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold text-slate-850 focus:border-[#C44545] focus:outline-none transition-all"
-                    >
-                      <option value="">Select Language</option>
-                      {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                  <div className="px-2">
+                    <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                            Languages Required
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                            Multiple Select
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowLanguageList(!showLanguageList)}
+                          className="text-xs font-black uppercase tracking-widest text-[#C44545] hover:bg-rose-100/50 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100/70 transition-all active:scale-95 shadow-sm shadow-[#C44545]/5"
+                        >
+                          {showLanguageList ? "Hide List" : "Select"}
+                        </button>
+                      </div>
+
+                      {showLanguageList && (
+                        <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all max-h-60 overflow-y-auto no-scrollbar">
+                          {['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].map(lang => {
+                            const isSelected = languages.includes(lang);
+                            return (
+                              <div 
+                                key={lang}
+                                onClick={() => {
+                                  const n = isSelected 
+                                    ? languages.filter(x => x !== lang) 
+                                    : [...languages, lang];
+                                  setLanguages(n);
+                                }}
+                                className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                              >
+                                <span className="text-[12px] font-black uppercase">{lang}</span>
+                                {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-4">

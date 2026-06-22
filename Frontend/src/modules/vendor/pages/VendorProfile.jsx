@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Mail, Phone, MapPin, Camera, Save, Navigation } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, MapPin, Camera, Save, Navigation, Globe, ChevronDown, Check, Square, CheckSquare, Search, Briefcase, FileText, Truck, Wrench, Clock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { getVendorData, setVendorData } from "../utils/vendorStore";
 import toast from "react-hot-toast";
 import OfflineOverlay from "../../../shared/components/OfflineOverlay";
@@ -19,6 +19,25 @@ const VendorProfile = () => {
     liveLocation: null
   });
 
+  const [role, setRole] = useState("");
+  const [professionalDetails, setProfessionalDetails] = useState({ languages: ["Hindi"], vehicleClasses: [] });
+  const [mechanicDetails, setMechanicDetails] = useState({ specialties: [], vehicleExpertise: [] });
+  const [rtoDetails, setRtoDetails] = useState({ rtoOffice: "", services: [] });
+  const [legalDetails, setLegalDetails] = useState({ barRegNumber: "", practiceAreas: [], officeName: "" });
+  const [customFields, setCustomFields] = useState({});
+  const [remark, setRemark] = useState("");
+  const [configLanguages, setConfigLanguages] = useState([]);
+  const [showLanguageList, setShowLanguageList] = useState(false);
+  const [customLanguage, setCustomLanguage] = useState("");
+  const [customVehicleClass, setCustomVehicleClass] = useState("");
+
+  const displayLanguages = useMemo(() => {
+    if (configLanguages && configLanguages.length > 0) {
+      return configLanguages.map(l => l.name).sort();
+    }
+    return ['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].sort();
+  }, [configLanguages]);
+
   useEffect(() => {
     if (vendorData?.profile) {
         setFormData(prev => ({
@@ -30,6 +49,19 @@ const VendorProfile = () => {
         }));
     }
     fetchProfile();
+
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/registration-config/public`);
+        const data = await res.json();
+        if (data.success) {
+          setConfigLanguages(data.languages || []);
+        }
+      } catch (err) {
+        console.error("Error fetching registration config:", err);
+      }
+    };
+    fetchConfig();
 
     const handleUpdate = () => {
         const newData = getVendorData();
@@ -54,6 +86,13 @@ const VendorProfile = () => {
                 address: data.address || { street: "", city: "", state: "", pincode: "" },
                 liveLocation: data.liveLocation || null
             });
+            setRole(data.role || "");
+            setProfessionalDetails(data.professionalDetails || { languages: ["Hindi"], vehicleClasses: [] });
+            setMechanicDetails(data.mechanicDetails || { specialties: [], vehicleExpertise: [] });
+            setRtoDetails(data.rtoDetails || { rtoOffice: "", services: [] });
+            setLegalDetails(data.legalDetails || { barRegNumber: "", practiceAreas: [], officeName: "" });
+            setCustomFields(data.customFields || {});
+            setRemark(data.remark || "");
         }
     } catch (err) {
         console.error("Error fetching profile:", err);
@@ -119,7 +158,12 @@ const VendorProfile = () => {
                 name: formData.name,
                 email: formData.email,
                 address: formData.address,
-                liveLocation: formData.liveLocation
+                liveLocation: formData.liveLocation,
+                professionalDetails,
+                mechanicDetails,
+                rtoDetails,
+                legalDetails,
+                customFields
             })
         });
 
@@ -202,6 +246,384 @@ const VendorProfile = () => {
                     </div>
                  </div>
               </div>
+
+              {/* Professional & Registration Details */}
+              {role && (
+                <div className="pt-6 border-t border-slate-100 space-y-6">
+                  <h3 className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] mb-2">
+                    Service & Registration Profile
+                  </h3>
+
+                  {/* Common Registration Info */}
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div className="p-4 bg-white border border-black/5 rounded-2xl">
+                      <span className="text-[10px] font-bold text-neutral-400 block mb-1">ROLE</span>
+                      <span className="font-black text-slate-800 uppercase">{role}</span>
+                    </div>
+                    <div className="p-4 bg-white border border-black/5 rounded-2xl">
+                      <span className="text-[10px] font-bold text-neutral-400 block mb-1">EXPERIENCE</span>
+                      <span className="font-black text-slate-800">
+                        {role === 'mechanic' ? mechanicDetails.experienceRange :
+                         role === 'rto' ? rtoDetails.experience :
+                         role === 'legal' ? legalDetails.experience :
+                         professionalDetails.experience || 'Not Specified'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Role Specific Fields Display */}
+                  {role === 'driver' && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="p-4 bg-white border border-black/5 rounded-2xl">
+                          <span className="text-[10px] font-bold text-neutral-400 block mb-1">DL NUMBER</span>
+                          <span className="font-black text-slate-800 uppercase">{professionalDetails.dlNumber || 'N/A'}</span>
+                        </div>
+                        <div className="p-4 bg-white border border-black/5 rounded-2xl">
+                          <span className="text-[10px] font-bold text-neutral-400 block mb-1">DL EXPIRY</span>
+                          <span className="font-black text-slate-800">
+                            {professionalDetails.dlExpiry ? new Date(professionalDetails.dlExpiry).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs">
+                        <span className="text-[10px] font-bold text-neutral-400 block mb-1">SERVICE TYPE (AVAILABILITY)</span>
+                        <span className="font-black text-slate-800 uppercase">{professionalDetails.availability || 'N/A'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {role === 'mechanic' && (
+                    <div className="space-y-4">
+                      {mechanicDetails.garageName && (
+                        <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs">
+                          <span className="text-[10px] font-bold text-neutral-400 block mb-1">GARAGE NAME</span>
+                          <span className="font-black text-slate-800">{mechanicDetails.garageName}</span>
+                        </div>
+                      )}
+                      <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs">
+                        <span className="text-[10px] font-bold text-neutral-400 block mb-1">SPECIALTIES / SERVICES</span>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {mechanicDetails.specialties && mechanicDetails.specialties.length > 0 ? (
+                            mechanicDetails.specialties.map(spec => (
+                              <span key={spec} className="bg-rose-50 text-[#C44545] border border-rose-100 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg">
+                                {spec}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-slate-400 font-bold">None</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {role === 'rto' && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs">
+                        <span className="text-[10px] font-bold text-neutral-400 block mb-1">RTO OFFICE</span>
+                        <span className="font-black text-slate-800 uppercase">{rtoDetails.rtoOffice || 'N/A'}</span>
+                      </div>
+                      <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs">
+                        <span className="text-[10px] font-bold text-neutral-400 block mb-1">SERVICES OFFERED</span>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {rtoDetails.services && rtoDetails.services.length > 0 ? (
+                            rtoDetails.services.map(s => (
+                              <span key={s} className="bg-rose-50 text-[#C44545] border border-rose-100 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg">
+                                {s}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-slate-400 font-bold">None</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {role === 'legal' && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="p-4 bg-white border border-black/5 rounded-2xl">
+                          <span className="text-[10px] font-bold text-neutral-400 block mb-1">BAR REG NUMBER</span>
+                          <span className="font-black text-slate-800 uppercase">{legalDetails.barRegNumber || 'N/A'}</span>
+                        </div>
+                        <div className="p-4 bg-white border border-black/5 rounded-2xl">
+                          <span className="text-[10px] font-bold text-neutral-400 block mb-1">OFFICE/CHAMBER</span>
+                          <span className="font-black text-slate-800 uppercase">{legalDetails.officeName || 'N/A'}</span>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs">
+                        <span className="text-[10px] font-bold text-neutral-400 block mb-1">PRACTICE AREAS</span>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {legalDetails.practiceAreas && legalDetails.practiceAreas.length > 0 ? (
+                            legalDetails.practiceAreas.map(pa => (
+                              <span key={pa} className="bg-rose-50 text-[#C44545] border border-rose-100 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg">
+                                {pa}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-slate-400 font-bold">None</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Service States and Districts */}
+                  {professionalDetails.serviceStates && professionalDetails.serviceStates.length > 0 && (
+                    <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs">
+                      <span className="text-[10px] font-bold text-neutral-400 block mb-2">SERVICE LOCATIONS</span>
+                      <div className="space-y-2">
+                        {professionalDetails.serviceStates.map(st => (
+                          <div key={st.isoCode} className="border-b border-slate-100 last:border-0 pb-1.5 last:pb-0">
+                            <span className="font-black text-slate-800 text-[11px] block uppercase">{st.name}</span>
+                            <span className="text-neutral-400 text-[10px] font-bold">
+                              {st.districts && st.districts.length > 0 ? st.districts.join(', ') : 'All Districts'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Fields */}
+                  {customFields && Object.keys(customFields).length > 0 && (
+                    <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs space-y-2">
+                      <span className="text-[10px] font-bold text-neutral-400 block mb-2 uppercase">Other Details</span>
+                      {Object.entries(customFields).map(([key, val]) => (
+                        <div key={key} className="flex justify-between items-center py-1 border-b border-slate-50 last:border-0">
+                          <span className="font-bold text-slate-500 uppercase text-[10px]">{key.replace(/_/g, ' ')}</span>
+                          <span className="font-black text-slate-800">{val === true ? 'Yes' : val === false ? 'No' : String(val)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {remark && (
+                    <div className="p-4 bg-white border border-black/5 rounded-2xl text-xs">
+                      <span className="text-[10px] font-bold text-neutral-400 block mb-1">REMARKS / NOTES</span>
+                      <span className="font-bold text-slate-600 italic">"{remark}"</span>
+                    </div>
+                  )}
+
+                  {/* Editable Section 1: Languages Known */}
+                  <div className="p-5 bg-white border border-black/5 rounded-2xl shadow-xl shadow-black/[0.01]">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                          Languages Known
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                          Multiple Select (Tap Select to modify)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowLanguageList(!showLanguageList)}
+                        className="text-xs font-black uppercase tracking-widest text-[#C44545] hover:bg-rose-100/50 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100/70 transition-all active:scale-95 shadow-sm shadow-[#C44545]/5"
+                      >
+                        {showLanguageList ? "Hide List" : "Select"}
+                      </button>
+                    </div>
+
+                    {showLanguageList && (
+                      <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all max-h-60 overflow-y-auto no-scrollbar">
+                        {displayLanguages.map(lang => {
+                          const currentLanguages = professionalDetails.languages || [];
+                          const isSelected = currentLanguages.includes(lang);
+                          return (
+                            <div 
+                              key={lang}
+                              onClick={() => {
+                                const n = isSelected 
+                                  ? currentLanguages.filter(x => x !== lang) 
+                                  : [...currentLanguages, lang];
+                                setProfessionalDetails({...professionalDetails, languages: n});
+                              }}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{lang}</span>
+                              {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          );
+                        })}
+                        
+                        {/* Render custom added languages */}
+                        {(professionalDetails.languages || []).filter(l => !displayLanguages.includes(l)).map(lang => (
+                          <div 
+                            key={lang}
+                            onClick={() => {
+                              const n = (professionalDetails.languages || []).filter(x => x !== lang);
+                              setProfessionalDetails({...professionalDetails, languages: n});
+                            }}
+                            className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
+                          >
+                            <span className="text-[12px] font-black uppercase">{lang}</span>
+                            <CheckSquare size={20} />
+                          </div>
+                        ))}
+
+                        {/* Input box to add custom language */}
+                        <div className="flex gap-2 mt-2">
+                          <input 
+                            type="text" 
+                            placeholder="Add Custom Language (e.g. French)" 
+                            value={customLanguage} 
+                            onChange={(e) => setCustomLanguage(e.target.value)} 
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-xs font-bold focus:outline-none"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              if (customLanguage.trim()) {
+                                const lang = customLanguage.trim();
+                                const currentLanguages = professionalDetails.languages || [];
+                                if (!currentLanguages.includes(lang)) {
+                                  setProfessionalDetails({
+                                    ...professionalDetails,
+                                    languages: [...currentLanguages, lang]
+                                  });
+                                }
+                                setCustomLanguage("");
+                              }
+                            }}
+                            className="bg-[#C44545] text-white px-5 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm flex items-center justify-center whitespace-nowrap"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {!showLanguageList && (
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {professionalDetails.languages && professionalDetails.languages.length > 0 ? (
+                          professionalDetails.languages.map(lang => (
+                            <span key={lang} className="bg-rose-50 text-[#C44545] border border-rose-100 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg">
+                              {lang}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-slate-400 font-bold text-xs">No languages selected</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Editable Section 2: Vehicle Classes / Expertise */}
+                  {(role === 'driver' || role === 'towing') && (
+                    <div className="p-5 bg-white border border-black/5 rounded-2xl shadow-xl shadow-black/[0.01] space-y-4">
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                          Vehicle Type / Classes
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                          Multiple Select (Select vehicles you can operate)
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        {['Bike', 'Car', 'Truck'].map(c => {
+                          const currentVehicles = professionalDetails.vehicleClasses || [];
+                          const isSelected = currentVehicles.includes(c);
+                          return (
+                            <div 
+                              key={c} 
+                              onClick={() => {
+                                const n = isSelected ? currentVehicles.filter(x => x !== c) : [...currentVehicles, c];
+                                setProfessionalDetails({...professionalDetails, vehicleClasses: n});
+                              }} 
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-500 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{c}</span>
+                              {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          );
+                        })}
+
+                        {/* Render custom added vehicle classes */}
+                        {(professionalDetails.vehicleClasses || []).filter(c => !['Bike', 'Car', 'Truck'].includes(c)).map(c => (
+                          <div 
+                            key={c}
+                            onClick={() => {
+                              const n = (professionalDetails.vehicleClasses || []).filter(x => x !== c);
+                              setProfessionalDetails({...professionalDetails, vehicleClasses: n});
+                            }}
+                            className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
+                          >
+                            <span className="text-[12px] font-black uppercase">{c}</span>
+                            <CheckSquare size={20} />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Input box to add custom vehicle class */}
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          placeholder="Add Custom Vehicle (e.g. Auto, Crane)" 
+                          value={customVehicleClass} 
+                          onChange={(e) => setCustomVehicleClass(e.target.value)} 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 text-xs font-bold focus:outline-none"
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if (customVehicleClass.trim()) {
+                              const cVal = customVehicleClass.trim();
+                              const currentVehicles = professionalDetails.vehicleClasses || [];
+                              if (!currentVehicles.includes(cVal)) {
+                                setProfessionalDetails({
+                                  ...professionalDetails,
+                                  vehicleClasses: [...currentVehicles, cVal]
+                                });
+                              }
+                              setCustomVehicleClass("");
+                            }
+                          }}
+                          className="bg-[#C44545] text-white px-5 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm flex items-center justify-center whitespace-nowrap"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {role === 'mechanic' && (
+                    <div className="p-5 bg-white border border-black/5 rounded-2xl shadow-xl shadow-black/[0.01] space-y-4">
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                          Vehicle Expertise
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                          Multiple Select (Select vehicles you repair)
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        {['Bike', 'Car', 'Truck', 'Bus'].map(type => {
+                          const currentExpertise = mechanicDetails.vehicleExpertise || [];
+                          const isSelected = currentExpertise.includes(type);
+                          return (
+                            <div 
+                              key={type}
+                              onClick={() => {
+                                const n = isSelected ? currentExpertise.filter(x => x !== type) : [...currentExpertise, type];
+                                setMechanicDetails({...mechanicDetails, vehicleExpertise: n});
+                              }}
+                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-50 text-slate-400 hover:bg-slate-50'}`}
+                            >
+                              <span className="text-[12px] font-black uppercase">{type}</span>
+                              {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button onClick={handleSave} className="w-full bg-[#C44545] text-white rounded-[1.8rem] py-5 font-black uppercase tracking-widest text-[13px] flex items-center justify-center gap-3 shadow-2xl shadow-[#C44545]/20">
                  Save Profile <Save size={18} />
