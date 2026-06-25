@@ -93,6 +93,10 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [liveLocation, setLiveLocation] = useState(null);
   const [customLanguage, setCustomLanguage] = useState("");
   const [customVehicleClass, setCustomVehicleClass] = useState("");
+  const [showMechanicServices, setShowMechanicServices] = useState(false);
+  const [customMechanicService, setCustomMechanicService] = useState("");
+  const [showMechanicExpertise, setShowMechanicExpertise] = useState(false);
+  const [customMechanicExpertise, setCustomMechanicExpertise] = useState("");
   const [remark, setRemark] = useState("");
   const [showLanguageList, setShowLanguageList] = useState(false);
   const [driverStatus, setDriverStatus] = useState("free");
@@ -966,45 +970,205 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
                   {role === 'mechanic' && (
                     <div className="space-y-6">
-                      <div className="space-y-3 px-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Services Offered (Multiple Select)</label>
-                        <div className="flex flex-col gap-2">
-                          {mechanicServices.map(srv => (
-                            <div 
-                              key={srv}
-                              onClick={() => {
-                                const n = mechanicData.specialties.includes(srv) 
-                                  ? mechanicData.specialties.filter(x => x !== srv) 
-                                  : [...mechanicData.specialties, srv];
-                                setMechanicData({...mechanicData, specialties: n});
-                              }}
-                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${mechanicData.specialties.includes(srv) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                            >
-                              <span className="text-[12px] font-black uppercase">{srv}</span>
-                              {mechanicData.specialties.includes(srv) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                      <div className="px-2">
+                        <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                                Services Offered
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                                Multiple Select
+                              </span>
                             </div>
-                          ))}
+                            <button
+                              type="button"
+                              onClick={() => setShowMechanicServices(!showMechanicServices)}
+                              className="text-xs font-black uppercase tracking-widest text-[#C44545] hover:bg-rose-100/50 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100/70 transition-all active:scale-95 shadow-sm shadow-[#C44545]/5"
+                            >
+                              {showMechanicServices ? "Hide List" : "Select"}
+                            </button>
+                          </div>
+
+                          {showMechanicServices && (
+                            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all">
+                              {mechanicServices.map(srv => {
+                                const isSelected = mechanicData.specialties.includes(srv);
+                                return (
+                                  <div 
+                                    key={srv}
+                                    onClick={() => {
+                                      const n = isSelected 
+                                        ? mechanicData.specialties.filter(x => x !== srv) 
+                                        : [...mechanicData.specialties, srv];
+                                      setMechanicData({...mechanicData, specialties: n});
+                                    }}
+                                    className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                  >
+                                    <span className="text-[12px] font-black uppercase">{srv}</span>
+                                    {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                                  </div>
+                                );
+                              })}
+
+                              {/* Render custom added specialties */}
+                              {mechanicData.specialties.filter(s => !mechanicServices.includes(s)).map(srv => (
+                                <div 
+                                  key={srv}
+                                  onClick={() => {
+                                    const n = mechanicData.specialties.filter(x => x !== srv);
+                                    setMechanicData({...mechanicData, specialties: n});
+                                  }}
+                                  className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
+                                >
+                                  <span className="text-[12px] font-black uppercase">{srv}</span>
+                                  <CheckSquare size={20} />
+                                </div>
+                              ))}
+
+                              {/* Input box to add custom mechanic service */}
+                              <input 
+                                type="text" 
+                                placeholder="Add Custom Service (e.g. Dent Painting)" 
+                                value={customMechanicService} 
+                                onChange={(e) => setCustomMechanicService(e.target.value)} 
+                                className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none mt-2"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  if (customMechanicService.trim()) {
+                                    const srv = customMechanicService.trim();
+                                    if (!mechanicData.specialties.includes(srv)) {
+                                      setMechanicData({
+                                        ...mechanicData,
+                                        specialties: [...mechanicData.specialties, srv]
+                                      });
+                                    }
+                                    setCustomMechanicService("");
+                                  }
+                                }}
+                                className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm"
+                              >
+                                Add Service
+                              </button>
+                            </div>
+                          )}
+
+                          {!showMechanicServices && (
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {mechanicData.specialties && mechanicData.specialties.length > 0 ? (
+                                mechanicData.specialties.map(srv => (
+                                  <span key={srv} className="bg-rose-50 text-[#C44545] border border-rose-100 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg">
+                                    {srv}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-slate-400 font-bold text-xs">No services selected</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="space-y-3 px-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Expertise (Multiple Select)</label>
-                        <div className="flex flex-col gap-2">
-                          {['Bike', 'Car', 'Truck', 'Bus'].map(type => (
-                            <div 
-                              key={type}
-                              onClick={() => {
-                                const n = mechanicData.vehicleExpertise.includes(type) 
-                                  ? mechanicData.vehicleExpertise.filter(x => x !== type) 
-                                  : [...mechanicData.vehicleExpertise, type];
-                                setMechanicData({...mechanicData, vehicleExpertise: n});
-                              }}
-                              className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${mechanicData.vehicleExpertise.includes(type) ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                            >
-                              <span className="text-[12px] font-black uppercase">{type}</span>
-                              {mechanicData.vehicleExpertise.includes(type) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                      <div className="px-2">
+                        <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <span className="text-xs font-black uppercase tracking-wider text-slate-700 block">
+                                Vehicle Expertise
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                                Multiple Select
+                              </span>
                             </div>
-                          ))}
+                            <button
+                              type="button"
+                              onClick={() => setShowMechanicExpertise(!showMechanicExpertise)}
+                              className="text-xs font-black uppercase tracking-widest text-[#C44545] hover:bg-rose-100/50 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100/70 transition-all active:scale-95 shadow-sm shadow-[#C44545]/5"
+                            >
+                              {showMechanicExpertise ? "Hide List" : "Select"}
+                            </button>
+                          </div>
+
+                          {showMechanicExpertise && (
+                            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all">
+                              {['Bike', 'Car', 'Truck', 'Bus'].map(type => {
+                                const isSelected = mechanicData.vehicleExpertise.includes(type);
+                                return (
+                                  <div 
+                                    key={type}
+                                    onClick={() => {
+                                      const n = isSelected 
+                                        ? mechanicData.vehicleExpertise.filter(x => x !== type) 
+                                        : [...mechanicData.vehicleExpertise, type];
+                                      setMechanicData({...mechanicData, vehicleExpertise: n});
+                                    }}
+                                    className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer ${isSelected ? 'border-[#C44545] bg-rose-50 text-[#C44545]' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                  >
+                                    <span className="text-[12px] font-black uppercase">{type}</span>
+                                    {isSelected ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-200" />}
+                                  </div>
+                                );
+                              })}
+
+                              {/* Render custom added expertise */}
+                              {mechanicData.vehicleExpertise.filter(v => !['Bike', 'Car', 'Truck', 'Bus'].includes(v)).map(type => (
+                                <div 
+                                  key={type}
+                                  onClick={() => {
+                                    const n = mechanicData.vehicleExpertise.filter(x => x !== type);
+                                    setMechanicData({...mechanicData, vehicleExpertise: n});
+                                  }}
+                                  className="p-4 rounded-xl border-2 flex items-center justify-between transition-all cursor-pointer border-[#C44545] bg-rose-50 text-[#C44545]"
+                                >
+                                  <span className="text-[12px] font-black uppercase">{type}</span>
+                                  <CheckSquare size={20} />
+                                </div>
+                              ))}
+
+                              {/* Input box to add custom expertise */}
+                              <input 
+                                type="text" 
+                                placeholder="Add Custom Vehicle (e.g. Tractor, Crane)" 
+                                value={customMechanicExpertise} 
+                                onChange={(e) => setCustomMechanicExpertise(e.target.value)} 
+                                className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold placeholder:text-slate-300 focus:outline-none mt-2"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  if (customMechanicExpertise.trim()) {
+                                    const type = customMechanicExpertise.trim();
+                                    if (!mechanicData.vehicleExpertise.includes(type)) {
+                                      setMechanicData({
+                                        ...mechanicData,
+                                        vehicleExpertise: [...mechanicData.vehicleExpertise, type]
+                                      });
+                                    }
+                                    setCustomMechanicExpertise("");
+                                  }
+                                }}
+                                className="w-full bg-[#C44545] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-[#C44545]/90 active:scale-95 transition-all shadow-sm"
+                              >
+                                Add Vehicle Type
+                              </button>
+                            </div>
+                          )}
+
+                          {!showMechanicExpertise && (
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {mechanicData.vehicleExpertise && mechanicData.vehicleExpertise.length > 0 ? (
+                                mechanicData.vehicleExpertise.map(type => (
+                                  <span key={type} className="bg-rose-50 text-[#C44545] border border-rose-100 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg">
+                                    {type}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-slate-400 font-bold text-xs">No vehicles selected</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
