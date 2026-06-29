@@ -135,9 +135,9 @@ exports.register = async (req, res, next) => {
   try {
     const { name, email, password, mobile, location, otp } = req.body;
 
-    if (!mobile || !password || !name || !otp) {
+    if (!mobile || !name || !otp) {
        res.status(400);
-       throw new Error('Please provide name, mobile, password and OTP');
+       throw new Error('Please provide name, mobile, and OTP');
     }
 
     // Verify OTP
@@ -420,6 +420,102 @@ exports.verifyRegisterOTP = async (req, res, next) => {
       success: true,
       message: 'OTP verified successfully'
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Send OTP for unified login/register
+// @route   POST /api/auth/login-send-otp
+// @access  Public
+exports.sendLoginOTP = async (req, res, next) => {
+  try {
+    const { mobile } = req.body;
+
+    if (!mobile) {
+      res.status(400);
+      throw new Error('Please provide a mobile number');
+    }
+
+    // Check if user exists
+    const userExists = await User.findOne({ mobile });
+
+    // Generate 4-digit OTP
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    const otp = isRealOtp ? Math.floor(1000 + Math.random() * 9000).toString() : '1234';
+    const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+    console.log("----------------------------");
+    console.log(`LOGIN/REGISTER OTP for ${mobile}: ${otp}`);
+    console.log("----------------------------");
+
+    // Send OTP via SMS India Hub (using register/default template)
+    const smsService = require('../utils/smsService');
+    const smsResult = await smsService.sendOTP(mobile, otp, 'register');
+
+    // Save to OTPVerification collection
+    await OTPVerification.findOneAndUpdate(
+      { mobile },
+      { otp, otpExpire },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: smsResult.success ? (isRealOtp ? 'OTP sent successfully to your mobile' : 'Mock OTP generated successfully') : 'OTP sent successfully (Check console)',
+      otp, // keeping otp in response for testing/development if needed
+      isRegistered: !!userExists
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Verify OTP for unified login
+// @route   POST /api/auth/login-verify-otp
+// @access  Public
+exports.loginVerifyOTP = async (req, res, next) => {
+  try {
+    const { mobile, otp } = req.body;
+
+    if (!mobile || !otp) {
+      res.status(400);
+      throw new Error('Please provide mobile and OTP');
+    }
+
+    const isRealOtp = process.env.REAL_OTP === 'true';
+    if (isRealOtp) {
+      const otpRecord = await OTPVerification.findOne({ mobile });
+      if (!otpRecord || otpRecord.otp !== otp || otpRecord.otpExpire < Date.now()) {
+        res.status(400);
+        throw new Error('Invalid or expired OTP');
+      }
+    } else {
+      if (otp !== '1234') {
+        res.status(400);
+        throw new Error('Invalid or expired OTP (Mock OTP is 1234)');
+      }
+    }
+
+    // Check if user is already registered
+    const user = await User.findOne({ mobile });
+
+    if (user) {
+      if (user.isBlocked) {
+        res.status(403);
+        throw new Error('Your account is blocked. Please contact support.');
+      }
+      // Registered: clean up OTP verification and log in
+      await OTPVerification.deleteOne({ mobile });
+      sendTokenResponse(user, 200, res);
+    } else {
+      // Unregistered: verify success but DO NOT delete OTP yet so it can be verified during registration
+      res.status(200).json({
+        success: true,
+        isRegistered: false,
+        message: 'OTP verified successfully. Proceed to registration.'
+      });
+    }
   } catch (err) {
     next(err);
   }

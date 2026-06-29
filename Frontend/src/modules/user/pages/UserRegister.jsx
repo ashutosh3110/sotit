@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, User, Phone, ShieldCheck, Mail, ArrowRight, Camera, MapPin, CheckCircle2, Lock, Eye, EyeOff, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { initUserState } from "../utils/userStore";
 import toast from 'react-hot-toast';
 
@@ -83,6 +83,9 @@ const SearchableDropdown = ({ options, value, onChange, placeholder, disabled })
 
 const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state || {};
+
   const [step, setStep] = useState(1); // Consolidating to 1 step flow
   const [pages, setPages] = useState([]);
 
@@ -106,13 +109,11 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   // Registration States
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [mobile, setMobile] = useState(locationState.mobile || "");
   const [address, setAddress] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [isOtpSent, setIsOtpSent] = useState(!!locationState.otp);
+  const [isOtpVerified, setIsOtpVerified] = useState(!!locationState.otp);
+  const [otp, setOtp] = useState(locationState.otp ? locationState.otp.split("") : ["", "", "", ""]);
   const [loadingLocation, setLoadingLocation] = useState(false);
   
   const [addressDetails, setAddressDetails] = useState({
@@ -209,18 +210,13 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   };
 
   const handleRegister = async () => {
-    if (!name || !mobile || !password || !address) {
+    if (!name || !mobile || !address) {
       toast.error("Please fill all required fields");
       return;
     }
 
     if (mobile.length !== 10) {
       toast.error("Enter valid 10-digit mobile number");
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -236,7 +232,6 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     if (email && email.trim() !== "") {
       formData.append('email', email.trim());
     }
-    formData.append('password', password);
     formData.append('location', address);
     formData.append('otp', enteredOtp);
     if (profileFile) {
@@ -284,7 +279,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     });
   };
 
-  const isFormInvalid = !name.trim() || mobile.length !== 10 || password.length < 6 || !address.trim() || !isOtpVerified;
+  const isFormInvalid = !name.trim() || mobile.length !== 10 || !address.trim() || !isOtpVerified;
 
   return (
     <div className={containerClasses}>
@@ -467,26 +462,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                   </div>
                 )}
 
-                {/* Input Group: Password */}
-                <div className="relative group">
-                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#C44545] transition-colors">
-                    <Lock size={18} strokeWidth={2.5} />
-                  </div>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Set Secure Password" 
-                    className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 pl-14 pr-12 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
-                  >
-                    {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
-                  </button>
-                </div>
+
 
                 {/* Location/Address Fields */}
                 <div className="space-y-3 pt-2">

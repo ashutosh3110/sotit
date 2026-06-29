@@ -16,6 +16,21 @@ const connectDB = async () => {
         console.log(`Index cleanup note: ${indexErr.message}`);
       }
     }
+
+    // Seed default vehicle types if they don't exist
+    try {
+      const VehicleType = require('../models/VehicleType');
+      const defaults = ['Bike', 'Car', 'Truck', 'Bus', '2 Wheeler', '4 Wheeler'];
+      for (const def of defaults) {
+        const exists = await VehicleType.findOne({ name: def });
+        if (!exists) {
+          await VehicleType.create({ name: def });
+        }
+      }
+      console.log('Default vehicle types verified/seeded successfully.');
+    } catch (seedErr) {
+      console.error('Error seeding default vehicle types:', seedErr.message);
+    }
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);

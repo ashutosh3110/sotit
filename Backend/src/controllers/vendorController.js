@@ -101,15 +101,55 @@ exports.registerVendor = async (req, res) => {
 
     await newVendor.save();
 
+    // Auto-save new vehicle types from vendor registration
+    try {
+        const VehicleType = require('../models/VehicleType');
+        const toCheck = [];
+        if (newVendor.professionalDetails?.vehicleClasses) {
+            toCheck.push(...newVendor.professionalDetails.vehicleClasses);
+        }
+        if (newVendor.mechanicDetails?.vehicleExpertise) {
+            toCheck.push(...newVendor.mechanicDetails.vehicleExpertise);
+        }
+        
+        for (const typeName of toCheck) {
+            if (!typeName || typeName.toLowerCase() === 'other') continue;
+            const exists = await VehicleType.findOne({ name: { $regex: new RegExp(`^${typeName}$`, 'i') } });
+            if (!exists) {
+                await VehicleType.create({ name: typeName, isActive: true });
+                console.log(`Permanently saved new vehicle type from registerVendor: ${typeName}`);
+            }
+        }
+    } catch (saveErr) {
+        console.error('Error auto-saving vehicle types in registerVendor:', saveErr.message);
+    }
+
     // Delete OTP record since it is verified (for non-owner roles)
     if (role !== 'owner') {
       const OTPVerification = require('../models/OTPVerification');
       await OTPVerification.deleteOne({ mobile });
     }
 
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign({ id: newVendor._id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRE,
+    });
+
     res.status(201).json({ 
+        success: true,
         message: 'Vendor registered and activated successfully!',
-        vendorId: newVendor._id 
+        vendorId: newVendor._id,
+        token,
+        vendor: {
+            id: newVendor._id,
+            name: newVendor.name,
+            role: newVendor.role,
+            status: newVendor.status,
+            email: newVendor.email,
+            mobile: newVendor.mobile,
+            address: newVendor.address,
+            walletBalance: newVendor.walletBalance || 0
+        }
     });
 
   } catch (error) {
@@ -235,6 +275,30 @@ exports.updateVendorProfile = async (req, res) => {
         }
 
         await vendorObj.save();
+
+        // Auto-save new vehicle types from vendor profile update
+        try {
+            const VehicleType = require('../models/VehicleType');
+            const toCheck = [];
+            if (vendorObj.professionalDetails?.vehicleClasses) {
+                toCheck.push(...vendorObj.professionalDetails.vehicleClasses);
+            }
+            if (vendorObj.mechanicDetails?.vehicleExpertise) {
+                toCheck.push(...vendorObj.mechanicDetails.vehicleExpertise);
+            }
+            
+            for (const typeName of toCheck) {
+                if (!typeName || typeName.toLowerCase() === 'other') continue;
+                const exists = await VehicleType.findOne({ name: { $regex: new RegExp(`^${typeName}$`, 'i') } });
+                if (!exists) {
+                    await VehicleType.create({ name: typeName, isActive: true });
+                    console.log(`Permanently saved new vehicle type from updateVendorProfile: ${typeName}`);
+                }
+            }
+        } catch (saveErr) {
+            console.error('Error auto-saving vehicle types in updateVendorProfile:', saveErr.message);
+        }
+
         res.status(200).json({ message: 'Profile updated successfully', vendor: vendorObj });
     } catch (error) {
         res.status(500).json({ message: 'Error updating profile', error: error.message });

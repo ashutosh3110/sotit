@@ -41,6 +41,23 @@ exports.hireExpert = async (req, res) => {
             customerDeduction: 0
         });
 
+        // Auto-save new vehicle types permanently
+        if (role.toLowerCase() === 'driver' && details && details.vehicleType) {
+            try {
+                const VehicleType = require('../models/VehicleType');
+                const types = details.vehicleType.split(',').map(t => t.trim()).filter(Boolean);
+                for (const typeName of types) {
+                    const exists = await VehicleType.findOne({ name: { $regex: new RegExp(`^${typeName}$`, 'i') } });
+                    if (!exists) {
+                        await VehicleType.create({ name: typeName, isActive: true });
+                        console.log(`Permanently saved new vehicle type from hireExpert: ${typeName}`);
+                    }
+                }
+            } catch (saveErr) {
+                console.error('Error auto-saving vehicle types in hireExpert:', saveErr.message);
+            }
+        }
+
         // Emit Socket Event and FCM
         const io = req.app.get('io');
         if (targetVendor) {

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Navigation, Wrench, Shield, Briefcase, FileText, Truck, Phone, ArrowRight, Car, Camera, MapPin, CheckCircle2, ShieldCheck, CreditCard, Landmark, Info, Map, Clock, Zap, Hammer, Wind, Battery, Settings, Disc, Droplets, Building2, Scale, GraduationCap, Video, Users, ChevronDown, Search, Globe, Check, Square, CheckSquare } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useMemo, useEffect } from "react";
 import { initVendorState } from "../utils/vendorStore";
 import toast from "react-hot-toast";
@@ -39,6 +39,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [configLanguages, setConfigLanguages] = useState([]);
   const [customFieldsList, setCustomFieldsList] = useState([]);
   const [customFieldValues, setCustomFieldValues] = useState({});
+  const [configVehicleTypes, setConfigVehicleTypes] = useState([]);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -48,6 +49,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         if (data.success) {
           setConfigLanguages(data.languages || []);
           setCustomFieldsList(data.fields || []);
+          setConfigVehicleTypes(data.vehicleTypes || []);
         }
       } catch (err) {
         console.error("Error fetching registration config:", err);
@@ -69,6 +71,13 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     return indianLanguages;
   }, [configLanguages, indianLanguages]);
 
+  const displayVehicleTypes = useMemo(() => {
+    if (configVehicleTypes && configVehicleTypes.length > 0) {
+      return configVehicleTypes.map(v => v.name).sort();
+    }
+    return ['Bike', 'Car', 'Truck', 'Bus'].sort();
+  }, [configVehicleTypes]);
+
   const activeCustomFields = useMemo(() => {
     return customFieldsList.filter(f => f.role === 'all' || f.role === role);
   }, [customFieldsList, role]);
@@ -76,20 +85,22 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const rtoServices = ['RC Transfer', 'Driving License', 'Vehicle Insurance', 'Hypothecation Addition/Removal', 'NOC Certificate', 'Fitness Certificate', 'Permit Work', 'Address Change', 'Duplicate RC', 'Tax Payment'];
   const legalPractices = ['Criminal Law', 'Civil Law', 'Property Law', 'Family Law', 'Corporate Law', 'Accident Claims', 'Taxation Law', 'Consumer Court', 'Cyber Law', 'Labor Law'];
 
+  const location = useLocation();
+  const locationState = location.state || {};
+
   // --- States ---
   const [name, setName] = useState("");
-  const [mobile, setMobile] = useState("");
+  const [mobile, setMobile] = useState(locationState.mobile || "");
   const [email, setEmail] = useState("");
   const [profileImg, setProfileImg] = useState(null);
   const [profileFile, setProfileFile] = useState(null);
   const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState(["", "", "", ""]);
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [otp, setOtp] = useState(locationState.otp ? locationState.otp.split("") : ["", "", "", ""]);
+  const [isOtpSent, setIsOtpSent] = useState(!!locationState.otp);
+  const [isOtpVerified, setIsOtpVerified] = useState(!!locationState.otp);
   const [address, setAddress] = useState({ street: "", city: "", state: "", isoCode: "", pincode: "" });
   const [houseNo, setHouseNo] = useState("");
   const [streetName, setStreetName] = useState("");
-  const [landmark, setLandmark] = useState("");
   const [liveLocation, setLiveLocation] = useState(null);
   const [customLanguage, setCustomLanguage] = useState("");
   const [customVehicleClass, setCustomVehicleClass] = useState("");
@@ -102,12 +113,12 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [driverStatus, setDriverStatus] = useState("free");
 
   useEffect(() => {
-    const fullStreetAddress = [houseNo, streetName, landmark]
+    const fullStreetAddress = [houseNo, streetName]
       .map(val => val ? val.trim() : "")
       .filter(Boolean)
       .join(", ");
     setAddress(prev => ({ ...prev, street: fullStreetAddress }));
-  }, [houseNo, streetName, landmark]);
+  }, [houseNo, streetName]);
 
   const [profData, setProfData] = useState({
     dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Permanent", languages: ["Hindi"],
@@ -320,15 +331,13 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                 
                 const hNo = data.address?.house_number || data.address?.building || "";
                 const roadStr = data.address?.road || data.address?.suburb || fetchedAddress;
-                const landmarkStr = data.address?.neighbourhood || "";
 
                 setHouseNo(hNo);
                 setStreetName(roadStr);
-                setLandmark(landmarkStr);
 
                 setAddress(prev => ({
                     ...prev,
-                    street: [hNo, roadStr, landmarkStr].filter(Boolean).join(", "),
+                    street: [hNo, roadStr].filter(Boolean).join(", "),
                     city: fetchedCity,
                     state: fetchedStateName,
                     isoCode: stateObj?.isoCode || prev.isoCode,
@@ -360,18 +369,17 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
   const handleSelectRole = (roleId) => {
     setName("");
-    setMobile("");
+    setMobile(locationState.mobile || "");
     setEmail("");
     setProfileImg(null);
     setProfileFile(null);
     setPassword("");
-    setOtp(["", "", "", ""]);
-    setIsOtpSent(false);
-    setIsOtpVerified(false);
+    setOtp(locationState.otp ? locationState.otp.split("") : ["", "", "", ""]);
+    setIsOtpSent(!!locationState.otp);
+    setIsOtpVerified(!!locationState.otp);
     setAddress({ street: "", city: "", state: "", isoCode: "", pincode: "" });
     setHouseNo("");
     setStreetName("");
-    setLandmark("");
     setLiveLocation(null);
     setCustomLanguage("");
     setCustomVehicleClass("");
@@ -415,17 +423,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     if (!isOtpVerified) {
         return toast.error("Please verify your mobile number OTP first");
     }
-    if (!password) {
-        return toast.error("Please set a secure password");
-    }
-    if (password.length < 6) {
-        return toast.error("Password must be at least 6 characters long");
-    }
     if (!houseNo.trim()) {
         return toast.error("Please enter House / Flat No.");
-    }
-    if (!streetName.trim()) {
-        return toast.error("Please enter Street Address / Locality");
     }
     if (!address.state) {
         return toast.error("Please select State");
@@ -562,21 +561,10 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         toast.success(data.message || "Registration Successful!", { id: tid });
         
         // Auto-login the vendor
-        try {
-            const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/vendors/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile, password: password || mobile })
-            });
-            const loginData = await loginResponse.json();
-            if (loginResponse.ok) {
-                initVendorState({ ...loginData.vendor, token: loginData.token });
-                navigate('/vendor');
-            } else {
-                navigate('/auth?tab=vendor');
-            }
-        } catch (err) {
-            console.error("Auto login failed:", err);
+        if (data.token && data.vendor) {
+            initVendorState({ ...data.vendor, token: data.token });
+            navigate('/vendor');
+        } else {
             navigate('/auth?tab=vendor');
         }
     } catch (error) {
@@ -633,7 +621,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setProfData({ ...profData, serviceStates: newStates });
   };
 
-  const isStep1Invalid = !name.trim() || mobile.length !== 10 || !isOtpVerified || !password || password.length < 6 || !streetName.trim() || !address.state || !address.city || !address.pincode;
+  const isStep1Invalid = !name.trim() || mobile.length !== 10 || !isOtpVerified || !houseNo.trim() || !address.state || !address.city || !address.pincode;
 
   const isCustomFieldsValid = () => {
     return activeCustomFields.every(field => {
@@ -772,15 +760,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                   )}
                   <input type="email" placeholder="Email Address (Optional)" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" />
                   
-                  <div className="relative group">
-                    <input 
-                      type="password" 
-                      placeholder="Set Secure Password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold focus:border-[#C44545] transition-all" 
-                    />
-                  </div>
+
 
                   <div className="pt-6 space-y-4 border-t border-slate-100">
                     <div className="flex items-center justify-between px-2 mb-2">
@@ -814,14 +794,6 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                         className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" 
                       />
 
-                      <input 
-                        type="text" 
-                        placeholder="Landmark (Optional)" 
-                        value={landmark} 
-                        onChange={(e) => setLandmark(e.target.value)} 
-                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" 
-                      />
-                      
                       <div className="grid grid-cols-1 gap-4">
                         <CustomDropdown 
                           label="State"
@@ -1093,7 +1065,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
 
                           {showMechanicExpertise && (
                             <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all">
-                              {['Bike', 'Car', 'Truck', 'Bus'].map(type => {
+                              {displayVehicleTypes.map(type => {
                                 const isSelected = mechanicData.vehicleExpertise.includes(type);
                                 return (
                                   <div 
@@ -1113,7 +1085,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                               })}
 
                               {/* Render custom added expertise */}
-                              {mechanicData.vehicleExpertise.filter(v => !['Bike', 'Car', 'Truck', 'Bus'].includes(v)).map(type => (
+                              {mechanicData.vehicleExpertise.filter(v => !displayVehicleTypes.includes(v)).map(type => (
                                 <div 
                                   key={type}
                                   onClick={() => {
@@ -1298,7 +1270,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     <div className="space-y-3 px-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Classes (Multiple Select)</label>
                       <div className="flex flex-col gap-2">
-                        {['Bike', 'Car', 'Truck'].map(c => {
+                        {displayVehicleTypes.map(c => {
                           const isSelected = profData.vehicleClasses.includes(c);
                           return (
                             <div 
@@ -1316,7 +1288,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                         })}
 
                         {/* Render custom added vehicle classes */}
-                        {profData.vehicleClasses.filter(c => !['Bike', 'Car', 'Truck'].includes(c)).map(c => (
+                        {profData.vehicleClasses.filter(c => !displayVehicleTypes.includes(c)).map(c => (
                           <div 
                             key={c}
                             onClick={() => {
@@ -1364,7 +1336,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     <div className="space-y-3 px-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Classes (Multiple Select)</label>
                       <div className="flex flex-col gap-2">
-                        {['Bike', 'Car', 'Truck'].map(c => {
+                        {displayVehicleTypes.map(c => {
                           const isSelected = profData.vehicleClasses.includes(c);
                           return (
                             <div 
@@ -1382,7 +1354,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                         })}
 
                         {/* Render custom added vehicle classes */}
-                        {profData.vehicleClasses.filter(c => !['Bike', 'Car', 'Truck'].includes(c)).map(c => (
+                        {profData.vehicleClasses.filter(c => !displayVehicleTypes.includes(c)).map(c => (
                           <div 
                             key={c}
                             onClick={() => {

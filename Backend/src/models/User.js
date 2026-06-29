@@ -38,8 +38,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6,
+    required: false,
     select: false,
   },
   walletBalance: {
@@ -85,7 +84,7 @@ userSchema.pre('save', async function () {
     this.email = undefined;
   }
 
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || !this.password) {
     return;
   }
 

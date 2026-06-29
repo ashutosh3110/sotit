@@ -6,7 +6,10 @@ const {
   deleteLanguage,
   getRegistrationFields,
   createRegistrationField,
-  deleteRegistrationField
+  deleteRegistrationField,
+  getVehicleTypes,
+  createVehicleType,
+  deleteVehicleType
 } = require('../controllers/registrationConfigController');
 const { adminProtect } = require('../middlewares/adminAuthMiddleware');
 
@@ -21,6 +24,13 @@ router.route('/languages')
   .post(adminProtect, createLanguage);
 
 router.delete('/languages/:id', adminProtect, deleteLanguage);
+
+// Vehicle Types management (Admin)
+router.route('/vehicle-types')
+  .get(adminProtect, getVehicleTypes)
+  .post(adminProtect, createVehicleType);
+
+router.delete('/vehicle-types/:id', adminProtect, deleteVehicleType);
 
 // Fields management (Admin)
 router.route('/fields')

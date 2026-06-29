@@ -38,6 +38,29 @@ const VehicleOwnerForm = () => {
   const [showLanguageList, setShowLanguageList] = useState(false);
   const [state, setState] = useState("");
   const [district, setDistrict] = useState("");
+  const [configVehicleTypes, setConfigVehicleTypes] = useState([]);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/registration-config/public`);
+        const data = await res.json();
+        if (data.success) {
+          setConfigVehicleTypes(data.vehicleTypes || []);
+        }
+      } catch (err) {
+        console.error("Error fetching registration config:", err);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const displayVehicleTypes = useMemo(() => {
+    if (configVehicleTypes && configVehicleTypes.length > 0) {
+      return configVehicleTypes.map(v => v.name);
+    }
+    return ['2 Wheeler', '4 Wheeler', 'Truck'];
+  }, [configVehicleTypes]);
 
   // Driver-specific states
   const [vehicleType, setVehicleType] = useState([]);
@@ -367,8 +390,8 @@ const VehicleOwnerForm = () => {
                 >
                   <div className="space-y-1">
                     <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-2">Vehicle Type (Multiple Select)</label>
-                    <div className="flex gap-3">
-                      {['2 Wheeler', '4 Wheeler', 'Truck'].map(type => {
+                    <div className="flex flex-wrap gap-2">
+                      {displayVehicleTypes.map(type => {
                         const isSelected = vehicleType.includes(type);
                         return (
                           <button 
@@ -380,9 +403,9 @@ const VehicleOwnerForm = () => {
                                 : [...vehicleType, type];
                               setVehicleType(n);
                             }}
-                            className={`flex-1 py-4 rounded-2xl border-2 font-black uppercase tracking-widest text-[11px] transition-all ${
+                            className={`px-4 py-3 rounded-xl border-2 font-black uppercase tracking-widest text-[11px] transition-all ${
                               isSelected 
-                                ? 'border-[#C44545] bg-[#C44545] text-white shadow-lg shadow-[#C44545]/20' 
+                                ? 'border-[#C44545] bg-[#C44545] text-white shadow-md shadow-[#C44545]/10' 
                                 : 'border-slate-100 bg-white text-slate-400 hover:bg-slate-50'
                             }`}
                           >

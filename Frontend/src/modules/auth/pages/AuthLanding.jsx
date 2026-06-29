@@ -26,7 +26,10 @@ const AuthLanding = () => {
     if (role === 'owner') {
       setFormType('register');
     }
-  }, [location.search]);
+    if (location.state && location.state.redirectToRegister) {
+      setFormType('register');
+    }
+  }, [location.search, location.state]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);

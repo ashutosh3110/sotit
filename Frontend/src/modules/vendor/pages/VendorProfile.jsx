@@ -27,6 +27,7 @@ const VendorProfile = () => {
   const [customFields, setCustomFields] = useState({});
   const [remark, setRemark] = useState("");
   const [configLanguages, setConfigLanguages] = useState([]);
+  const [configVehicleTypes, setConfigVehicleTypes] = useState([]);
   const [showLanguageList, setShowLanguageList] = useState(false);
   const [customLanguage, setCustomLanguage] = useState("");
   const [customVehicleClass, setCustomVehicleClass] = useState("");
@@ -43,6 +44,13 @@ const VendorProfile = () => {
     }
     return ['Hindi', 'English', 'Punjabi', 'Marathi', 'Gujarati', 'Bengali', 'Tamil', 'Telugu', 'Kannada', 'Malayalam'].sort();
   }, [configLanguages]);
+
+  const displayVehicleTypes = useMemo(() => {
+    if (configVehicleTypes && configVehicleTypes.length > 0) {
+      return configVehicleTypes.map(v => v.name).sort();
+    }
+    return ['Bike', 'Car', 'Truck', 'Bus'].sort();
+  }, [configVehicleTypes]);
 
   useEffect(() => {
     if (vendorData?.profile) {
@@ -62,6 +70,7 @@ const VendorProfile = () => {
         const data = await res.json();
         if (data.success) {
           setConfigLanguages(data.languages || []);
+          setConfigVehicleTypes(data.vehicleTypes || []);
         }
       } catch (err) {
         console.error("Error fetching registration config:", err);
@@ -530,7 +539,7 @@ const VendorProfile = () => {
                       </div>
 
                       <div className="flex flex-col gap-2">
-                        {['Bike', 'Car', 'Truck'].map(c => {
+                        {displayVehicleTypes.map(c => {
                           const currentVehicles = professionalDetails.vehicleClasses || [];
                           const isSelected = currentVehicles.includes(c);
                           return (
@@ -549,7 +558,7 @@ const VendorProfile = () => {
                         })}
 
                         {/* Render custom added vehicle classes */}
-                        {(professionalDetails.vehicleClasses || []).filter(c => !['Bike', 'Car', 'Truck'].includes(c)).map(c => (
+                        {(professionalDetails.vehicleClasses || []).filter(c => !displayVehicleTypes.includes(c)).map(c => (
                           <div 
                             key={c}
                             onClick={() => {
@@ -722,7 +731,7 @@ const VendorProfile = () => {
 
                         {showMechanicExpertise && (
                           <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100 transition-all max-h-60 overflow-y-auto no-scrollbar">
-                            {['Bike', 'Car', 'Truck', 'Bus'].map(type => {
+                            {displayVehicleTypes.map(type => {
                               const currentExpertise = mechanicDetails.vehicleExpertise || [];
                               const isSelected = currentExpertise.includes(type);
                               return (
@@ -741,7 +750,7 @@ const VendorProfile = () => {
                             })}
 
                             {/* Render custom added expertise */}
-                            {(mechanicDetails.vehicleExpertise || []).filter(v => !['Bike', 'Car', 'Truck', 'Bus'].includes(v)).map(type => (
+                            {(mechanicDetails.vehicleExpertise || []).filter(v => !displayVehicleTypes.includes(v)).map(type => (
                               <div 
                                 key={type}
                                 onClick={() => {
