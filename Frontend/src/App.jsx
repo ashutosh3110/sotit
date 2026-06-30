@@ -60,7 +60,7 @@ const OwnerDashboard = lazy(() => import('./modules/owner/pages/OwnerDashboard')
 const RequirementForm = lazy(() => import('./modules/owner/pages/RequirementForm'));
 const VehicleOwnerForm = lazy(() => import('./modules/owner/pages/VehicleOwnerForm'));
 const AboutContact = lazy(() => import('./modules/landing/pages/AboutContact'));
-import { AdminSecurity, AdminNotifications, AdminPlatform, AdminProfile } from './modules/admin/pages/AdminSubSettings';
+import { AdminSecurity, AdminNotifications, AdminPlatform, AdminProfile, AdminPaymentSettings } from './modules/admin/pages/AdminSubSettings';
 
 // Page Transition Component
 const ModuleWrapper = ({ children, type }) => (
@@ -140,6 +140,7 @@ const AppRoutes = () => {
           <Route path="/admin/settings/notifications" element={<ModuleWrapper type="admin"><AdminNotifications /></ModuleWrapper>} />
           <Route path="/admin/settings/platform" element={<ModuleWrapper type="admin"><AdminPlatform /></ModuleWrapper>} />
           <Route path="/admin/settings/profile" element={<ModuleWrapper type="admin"><AdminProfile /></ModuleWrapper>} />
+          <Route path="/admin/settings/payment" element={<ModuleWrapper type="admin"><AdminPaymentSettings /></ModuleWrapper>} />
           <Route path="/admin/banners" element={<ModuleWrapper type="admin"><AdminBanners /></ModuleWrapper>} />
           <Route path="/admin/support" element={<ModuleWrapper type="admin"><AdminSupport /></ModuleWrapper>} />
           <Route path="/admin/faqs" element={<ModuleWrapper type="admin"><AdminFAQs /></ModuleWrapper>} />

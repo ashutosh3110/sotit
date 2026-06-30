@@ -23,7 +23,17 @@ const getSettings = async (req, res, next) => {
 // @access  Private (Admin)
 const updateSettings = async (req, res, next) => {
   try {
-    const { platformName, systemCurrency, supportEmail } = req.body;
+    const { 
+      platformName, 
+      systemCurrency, 
+      supportEmail,
+      subscriptionDaily,
+      subscriptionMonthly,
+      subscriptionYearly,
+      hireExpertFee,
+      singleUnlockFee,
+      leadAcceptanceFee
+    } = req.body;
     let settings = await SystemSetting.findOne();
     if (!settings) {
       settings = new SystemSetting();
@@ -32,6 +42,13 @@ const updateSettings = async (req, res, next) => {
     if (platformName !== undefined) settings.platformName = platformName;
     if (systemCurrency !== undefined) settings.systemCurrency = systemCurrency;
     if (supportEmail !== undefined) settings.supportEmail = supportEmail;
+
+    if (subscriptionDaily !== undefined) settings.subscriptionDaily = Number(subscriptionDaily);
+    if (subscriptionMonthly !== undefined) settings.subscriptionMonthly = Number(subscriptionMonthly);
+    if (subscriptionYearly !== undefined) settings.subscriptionYearly = Number(subscriptionYearly);
+    if (hireExpertFee !== undefined) settings.hireExpertFee = Number(hireExpertFee);
+    if (singleUnlockFee !== undefined) settings.singleUnlockFee = Number(singleUnlockFee);
+    if (leadAcceptanceFee !== undefined) settings.leadAcceptanceFee = Number(leadAcceptanceFee);
 
     await settings.save();
 

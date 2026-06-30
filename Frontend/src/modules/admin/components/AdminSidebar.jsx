@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { LayoutDashboard, Users, ShieldCheck, Briefcase, Settings, LogOut, X, Globe, MessageCircle, HelpCircle, Wallet, FileText, ListPlus } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, Briefcase, Settings, LogOut, X, Globe, MessageCircle, HelpCircle, Wallet, FileText, ListPlus, CreditCard } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import logo from "../../../assets/logo.png";
@@ -14,6 +14,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
     { label: "Driver Ratings", path: "/admin/ratings", icon: Briefcase },
     { label: "Manage Banners", path: "/admin/banners", icon: Globe },
     { label: "Help & Support", path: "/admin/support", icon: MessageCircle },
+    { label: "Payment Settings", path: "/admin/settings/payment", icon: CreditCard },
     { label: "Manage FAQs", path: "/admin/faqs", icon: HelpCircle },
     { label: "Manage Pages", path: "/admin/pages", icon: FileText },
     { label: "Registration Config", path: "/admin/registration-config", icon: ListPlus },

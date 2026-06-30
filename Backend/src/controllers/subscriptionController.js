@@ -1,6 +1,7 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const User = require('../models/User');
+const SystemSetting = require('../models/SystemSetting');
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -25,12 +26,17 @@ exports.createSubscriptionOrder = async (req, res) => {
             });
         }
 
+        let settings = await SystemSetting.findOne();
+        if (!settings) {
+            settings = await SystemSetting.create({});
+        }
+
         let amount = 0;
 
-        if (planType === 'Daily') amount = 99;
-        else if (planType === 'Monthly') amount = 999;
-        else if (planType === 'Yearly') amount = 9999;
-        else if (planType === 'Single') amount = 9;
+        if (planType === 'Daily') amount = settings.subscriptionDaily;
+        else if (planType === 'Monthly') amount = settings.subscriptionMonthly;
+        else if (planType === 'Yearly') amount = settings.subscriptionYearly;
+        else if (planType === 'Single') amount = settings.hireExpertFee; // Uses Direct Hire Fee configured by Admin
         else return res.status(400).json({ success: false, message: "Invalid plan type" });
         
         const options = {

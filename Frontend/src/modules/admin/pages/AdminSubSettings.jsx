@@ -278,3 +278,126 @@ export const AdminProfile = () => {
         </AdminSubSettings>
     );
 };
+
+export const AdminPaymentSettings = () => {
+    const [subscriptionDaily, setSubscriptionDaily] = useState(99);
+    const [subscriptionMonthly, setSubscriptionMonthly] = useState(999);
+    const [subscriptionYearly, setSubscriptionYearly] = useState(9999);
+    const [hireExpertFee, setHireExpertFee] = useState(5);
+    const [singleUnlockFee, setSingleUnlockFee] = useState(9);
+    const [leadAcceptanceFee, setLeadAcceptanceFee] = useState(9);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`);
+                const data = await response.json();
+                if (data.success && data.data) {
+                    setSubscriptionDaily(data.data.subscriptionDaily ?? 99);
+                    setSubscriptionMonthly(data.data.subscriptionMonthly ?? 999);
+                    setSubscriptionYearly(data.data.subscriptionYearly ?? 9999);
+                    setHireExpertFee(data.data.hireExpertFee ?? 5);
+                    setSingleUnlockFee(data.data.singleUnlockFee ?? 9);
+                    setLeadAcceptanceFee(data.data.leadAcceptanceFee ?? 9);
+                }
+            } catch (error) {
+                console.error("Error fetching settings:", error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    const handleSave = async () => {
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('admin_token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    subscriptionDaily, 
+                    subscriptionMonthly, 
+                    subscriptionYearly, 
+                    hireExpertFee,
+                    singleUnlockFee,
+                    leadAcceptanceFee
+                }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success("Pricing settings updated successfully!");
+            } else {
+                toast.error(data.message || "Failed to update settings");
+            }
+        } catch (error) {
+            console.error("Settings update error:", error);
+            toast.error("Server connection failed");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <AdminSubSettings 
+            title="Payment Settings" 
+            description="Manage dynamic subscription plans, customer hire fees, and expert lead acceptance charges." 
+            onSave={handleSave}
+            isLoading={isLoading}
+        >
+            <div className="space-y-8">
+                <div>
+                    <h4 className="text-[11px] font-black uppercase tracking-widest text-[#C44545] mb-4 border-b border-slate-100 pb-2">Subscription Plans Pricing (INR)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Daily Plan (₹)</label>
+                            <input 
+                                type="number" 
+                                value={subscriptionDaily} 
+                                onChange={(e) => setSubscriptionDaily(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Monthly Plan (₹)</label>
+                            <input 
+                                type="number" 
+                                value={subscriptionMonthly} 
+                                onChange={(e) => setSubscriptionMonthly(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Yearly Plan (₹)</label>
+                            <input 
+                                type="number" 
+                                value={subscriptionYearly} 
+                                onChange={(e) => setSubscriptionYearly(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 className="text-[11px] font-black uppercase tracking-widest text-[#C44545] mb-4 border-b border-slate-100 pb-2">Expert Hiring Fee (INR)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-1">Direct Hire Fee (₹)</label>
+                            <input 
+                                type="number" 
+                                value={hireExpertFee} 
+                                onChange={(e) => setHireExpertFee(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </AdminSubSettings>
+    );
+};

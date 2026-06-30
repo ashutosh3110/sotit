@@ -1,6 +1,6 @@
 const express = require('express');
 const { adminLogin, updateProfile, updateFCMToken } = require('../controllers/adminAuthController');
-const { getPendingVendors, getAllVendors, getAllUsers, getMasterDirectory, updateVendorStatus, toggleVendorBlock, updateVendorRating, toggleUserBlock } = require('../controllers/adminController');
+const { getPendingVendors, getAllVendors, getAllUsers, getMasterDirectory, updateVendorStatus, toggleVendorBlock, updateVendorRating, toggleUserBlock, updateVendor } = require('../controllers/adminController');
 const { adminProtect } = require('../middlewares/adminAuthMiddleware');
 
 const router = express.Router();
@@ -19,5 +19,7 @@ router.get('/vendors/pending', adminProtect, getPendingVendors);
 router.put('/vendors/:vendorId/status', adminProtect, updateVendorStatus);
 router.put('/vendors/:vendorId/toggle-block', adminProtect, toggleVendorBlock);
 router.put('/vendors/:vendorId/update-rating', adminProtect, updateVendorRating);
+router.put('/vendors/:vendorId', adminProtect, updateVendor);
 
 module.exports = router;
+

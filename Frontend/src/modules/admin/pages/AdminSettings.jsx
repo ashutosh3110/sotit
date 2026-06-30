@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Settings, Shield, Bell, Globe, User, Menu, ChevronRight } from "lucide-react";
+import { Settings, Shield, Bell, Globe, User, Menu, ChevronRight, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../components/AdminSidebar";
@@ -13,6 +13,7 @@ const AdminSettings = () => {
     { label: "Notifications", desc: "Configure system alerts and emails", icon: Bell, path: "/admin/settings/notifications" },
     { label: "Platform Settings", desc: "General platform configurations", icon: Globe, path: "/admin/settings/platform" },
     { label: "Profile Details", desc: "Update your administrative profile", icon: User, path: "/admin/settings/profile" },
+    { label: "Payment Settings", desc: "Manage subscription rates and expert hiring fees", icon: CreditCard, path: "/admin/settings/payment" },
   ];
 
   return (

@@ -150,3 +150,85 @@ exports.toggleUserBlock = async (req, res) => {
         res.status(500).json({ message: 'Error toggling block status' });
     }
 };
+
+exports.updateVendor = async (req, res) => {
+    const { vendorId } = req.params;
+    const updateData = req.body;
+
+    try {
+        const vendor = await Vendor.findById(vendorId);
+        if (!vendor) return res.status(404).json({ message: 'Vendor not found' });
+
+        if (updateData.mobile && updateData.mobile !== vendor.mobile) {
+            const existing = await Vendor.findOne({ mobile: updateData.mobile });
+            if (existing) {
+                return res.status(400).json({ message: 'Mobile number already registered by another vendor' });
+            }
+        }
+
+        // Update core fields
+        if (updateData.name !== undefined) vendor.name = updateData.name;
+        if (updateData.mobile !== undefined) vendor.mobile = updateData.mobile;
+        if (updateData.email !== undefined) vendor.email = updateData.email;
+        if (updateData.role !== undefined) vendor.role = updateData.role;
+        if (updateData.status !== undefined) {
+            vendor.status = updateData.status;
+            vendor.isApproved = updateData.status === 'approved';
+        }
+        if (updateData.isBlocked !== undefined) vendor.isBlocked = updateData.isBlocked;
+        if (updateData.rating !== undefined) vendor.rating = updateData.rating;
+        if (updateData.isOnline !== undefined) vendor.isOnline = updateData.isOnline;
+
+        if (updateData.password) {
+            vendor.password = updateData.password; // triggers pre-save hash
+        }
+
+        if (updateData.address) {
+            vendor.address = {
+                ...vendor.address,
+                ...updateData.address
+            };
+        }
+
+        if (updateData.bankDetails) {
+            vendor.bankDetails = {
+                ...vendor.bankDetails,
+                ...updateData.bankDetails
+            };
+        }
+
+        // Role specific details
+        if (updateData.professionalDetails) {
+            vendor.professionalDetails = {
+                ...vendor.professionalDetails,
+                ...updateData.professionalDetails
+            };
+        }
+        if (updateData.mechanicDetails) {
+            vendor.mechanicDetails = {
+                ...vendor.mechanicDetails,
+                ...updateData.mechanicDetails
+            };
+        }
+        if (updateData.rtoDetails) {
+            vendor.rtoDetails = {
+                ...vendor.rtoDetails,
+                ...updateData.rtoDetails
+            };
+        }
+        if (updateData.legalDetails) {
+            vendor.legalDetails = {
+                ...vendor.legalDetails,
+                ...updateData.legalDetails
+            };
+        }
+
+        await vendor.save();
+
+        res.status(200).json({ message: 'Vendor details updated successfully', vendor });
+    } catch (error) {
+        console.error("Error updating vendor:", error);
+        res.status(500).json({ message: 'Error updating vendor details', error: error.message });
+    }
+};
+

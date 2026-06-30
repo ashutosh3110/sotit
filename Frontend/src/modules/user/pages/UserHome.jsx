@@ -56,6 +56,8 @@ const Home = () => {
 
   // Fetch User Profile for Subscription
   const [profile, setProfile] = useState(null);
+  const [systemSettings, setSystemSettings] = useState(null);
+
   const fetchProfile = async () => {
       const userData = getUserData();
       if (!userData?.profile?.token) return;
@@ -70,8 +72,21 @@ const Home = () => {
       }
   };
 
+  const fetchSystemSettings = async () => {
+      try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`);
+          const data = await response.json();
+          if (response.ok && data.success) {
+              setSystemSettings(data.data);
+          }
+      } catch (err) {
+          console.error("Error fetching system settings:", err);
+      }
+  };
+
   useEffect(() => {
       fetchProfile();
+      fetchSystemSettings();
   }, [user?.profile?.token]);
 
   // Razorpay Upgrade Logic
@@ -344,10 +359,10 @@ const Home = () => {
           ) : (
               <div className="space-y-4">
                   {[
-                      { type: 'Single', price: '9', period: 'Expert', desc: 'Unlock any one expert contact', isNav: true },
-                      { type: 'Daily', price: '99', period: 'Day', desc: 'Unlimited access for 24 hours' },
-                      { type: 'Monthly', price: '999', period: 'Month', desc: 'Unlimited access for 30 days' },
-                      { type: 'Yearly', price: '9999', period: 'Year', desc: 'Unlimited access for 365 days' }
+                      { type: 'Single', price: systemSettings?.hireExpertFee || '9', period: 'Expert', desc: 'Unlock any one expert contact', isNav: true },
+                      { type: 'Daily', price: systemSettings?.subscriptionDaily || '99', period: 'Day', desc: 'Unlimited access for 24 hours' },
+                      { type: 'Monthly', price: systemSettings?.subscriptionMonthly || '999', period: 'Month', desc: 'Unlimited access for 30 days' },
+                      { type: 'Yearly', price: systemSettings?.subscriptionYearly || '9999', period: 'Year', desc: 'Unlimited access for 365 days' }
                   ].map((plan) => (
                     <motion.div 
                       key={plan.type}

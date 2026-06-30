@@ -4,6 +4,7 @@ const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User');
 const Vendor = require('../models/Vendor');
 const WalletTransaction = require('../models/WalletTransaction');
+const SystemSetting = require('../models/SystemSetting');
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -16,7 +17,11 @@ const razorpay = new Razorpay({
 exports.createHireOrder = async (req, res) => {
     try {
         const { vendorId, role } = req.body;
-        const amount = 5; // Fix amount for hiring
+        let settings = await SystemSetting.findOne();
+        if (!settings) {
+            settings = await SystemSetting.create({});
+        }
+        const amount = settings.hireExpertFee; // dynamic hire expert fee
 
         const options = {
             amount: amount * 100, // in paisa
@@ -51,6 +56,12 @@ exports.verifyHirePayment = async (req, res) => {
             details
         } = req.body;
 
+        let settings = await SystemSetting.findOne();
+        if (!settings) {
+            settings = await SystemSetting.create({});
+        }
+        const amount = settings.hireExpertFee;
+
         const body = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -79,7 +90,7 @@ exports.verifyHirePayment = async (req, res) => {
             details: details || {},
             status: (isDirectHire && role.toLowerCase() === 'driver') ? 'hired' : (isDirectHire ? 'accepted' : 'pending'),
             hiredAt: (isDirectHire && role.toLowerCase() === 'driver') ? new Date() : undefined,
-            customerDeduction: 5, // Record the payment amount
+            customerDeduction: amount, // Record the payment amount
             paymentId: razorpay_payment_id,
             paymentStatus: 'success'
         });
@@ -89,7 +100,7 @@ exports.verifyHirePayment = async (req, res) => {
             userId: user ? actorId : undefined,
             vendorId: requesterVendor ? actorId : undefined,
             userType: user ? 'user' : 'vendor',
-            amount: 5,
+            amount: amount,
             type: 'debit',
             transactionType: 'payment',
             status: 'success',
@@ -149,7 +160,11 @@ exports.verifyHirePayment = async (req, res) => {
 exports.createAcceptanceOrder = async (req, res) => {
     try {
         const { requestId } = req.body;
-        const amount = 9; // Fix amount for accepting lead
+        let settings = await SystemSetting.findOne();
+        if (!settings) {
+            settings = await SystemSetting.create({});
+        }
+        const amount = settings.leadAcceptanceFee; // Fix amount for accepting lead
 
         const options = {
             amount: amount * 100, // in paisa
@@ -181,6 +196,12 @@ exports.verifyAcceptancePayment = async (req, res) => {
             razorpay_signature,
             requestId
         } = req.body;
+
+        let settings = await SystemSetting.findOne();
+        if (!settings) {
+            settings = await SystemSetting.create({});
+        }
+        const amount = settings.leadAcceptanceFee;
 
         const body = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
@@ -218,7 +239,7 @@ exports.verifyAcceptancePayment = async (req, res) => {
             request.vendor = vendorId;
         }
 
-        request.vendorDeduction = 9; // Record the payment amount
+        request.vendorDeduction = amount; // Record the payment amount
         request.isVendorPaid = true;
         await request.save();
 
@@ -226,7 +247,7 @@ exports.verifyAcceptancePayment = async (req, res) => {
         await WalletTransaction.create({
             vendorId: vendorId,
             userType: 'vendor',
-            amount: 9,
+            amount: amount,
             type: 'debit',
             transactionType: 'payment',
             status: 'success',

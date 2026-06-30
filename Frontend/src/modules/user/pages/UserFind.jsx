@@ -266,8 +266,21 @@ const UserFind = () => {
         }
     };
 
+    const [systemSettings, setSystemSettings] = useState(null);
+
     useEffect(() => {
         fetchUserProfile();
+        const fetchSystemSettings = async () => {
+            try {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/settings`);
+                if (response.data.success) {
+                    setSystemSettings(response.data.data);
+                }
+            } catch (err) {
+                console.error("Error fetching system settings:", err);
+            }
+        };
+        fetchSystemSettings();
     }, []);
 
     useEffect(() => {
@@ -545,7 +558,7 @@ const UserFind = () => {
                                             onClick={() => handleHireExpert(selectedVendor._id, selectedVendor.role)}
                                             className="w-full py-5 bg-[#C44545] text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-[#C44545]/30 hover:scale-[1.02] active:scale-95 transition-all"
                                         >
-                                            Unlock Contact (₹9)
+                                            Unlock Contact (₹{systemSettings?.hireExpertFee || '9'})
                                         </button>
                                     </div>
                                 )}
@@ -687,17 +700,17 @@ const UserFind = () => {
                 <div className="px-6 mt-4">
                     <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
                         {[
-                            { type: 'Single', price: '9', period: 'Expert', title: 'Single Unlock', label: 'Unlock One' },
-                            { type: 'Daily', price: '99', period: 'Day', title: 'Unlimited Details', label: 'Daily Access' },
-                            { type: 'Monthly', price: '999', period: 'Month', title: 'Unlimited Details', label: 'Monthly Access' },
-                            { type: 'Yearly', price: '9999', period: 'Year', title: 'Unlimited Details', label: 'Yearly Access' }
+                            { type: 'Single', price: systemSettings?.hireExpertFee || '9', period: 'Expert', title: 'Single Unlock', label: 'Unlock One' },
+                            { type: 'Daily', price: systemSettings?.subscriptionDaily || '99', period: 'Day', title: 'Unlimited Details', label: 'Daily Access' },
+                            { type: 'Monthly', price: systemSettings?.subscriptionMonthly || '999', period: 'Month', title: 'Unlimited Details', label: 'Monthly Access' },
+                            { type: 'Yearly', price: systemSettings?.subscriptionYearly || '9999', period: 'Year', title: 'Unlimited Details', label: 'Yearly Access' }
                         ].map(plan => (
                             <motion.div 
                                 key={plan.type}
                                 whileTap={{ scale: 0.96 }}
                                 onClick={() => {
                                     if (plan.type === 'Single') {
-                                        toast('Select any expert below to unlock their details for ₹9!', {
+                                        toast(`Select any expert below to unlock their details for ₹${systemSettings?.hireExpertFee || '9'}!`, {
                                             icon: '💡',
                                             duration: 4000
                                         });
@@ -1204,7 +1217,7 @@ const UserFind = () => {
                                                 </span>
                                             </div>
                                             {!vendor.isUnlocked && !(['Daily', 'Monthly', 'Yearly'].includes(userProfile?.subscription?.plan) && new Date(userProfile.subscription.expiresAt) > new Date()) && (
-                                                <span className="text-[9px] font-black uppercase text-[#C44545] tracking-tighter">Pay ₹9 to View Contact</span>
+                                                <span className="text-[9px] font-black uppercase text-[#C44545] tracking-tighter">Pay ₹{systemSettings?.hireExpertFee || '9'} to View Contact</span>
                                             )}
                                         </div>
                                         <div className="flex gap-2 mt-4">
