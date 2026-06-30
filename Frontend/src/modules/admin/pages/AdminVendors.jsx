@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Phone, Menu, Mail, ShieldCheck, ArrowLeft, ExternalLink, Filter, User, Briefcase, Landmark, CreditCard, Info, FileText, X, Clock, Zap, Wrench, AlertCircle, HelpCircle, Star } from "lucide-react";
+import { Search, MapPin, Phone, Menu, Mail, ShieldCheck, ArrowLeft, ExternalLink, Filter, User, Briefcase, Landmark, CreditCard, Info, FileText, X, Clock, Zap, Wrench, AlertCircle, HelpCircle, Star, Navigation, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import AdminSidebar from "../components/AdminSidebar";
@@ -12,6 +12,11 @@ const AdminVendors = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEntity, setSelectedEntity] = useState(null);
+  
+  // Custom Filtering States
+  const [selectedRole, setSelectedRole] = useState(null); // 'driver', 'mechanic', 'towing', 'rto', 'legal'
+  const [selectedAvailability, setSelectedAvailability] = useState("all"); // 'Permanent', 'Temporary', 'all'
+  const [selectedStatus, setSelectedStatus] = useState("all"); // 'free', 'busy', 'all'
 
   useEffect(() => {
     fetchVendors();
@@ -45,11 +50,31 @@ const AdminVendors = () => {
     }
   };
 
-  const filteredVendors = vendors.filter(v => 
-    v.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (v._id && v._id.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (v.role && v.role.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredVendors = vendors.filter(v => {
+    // 1. Role Filter
+    if (!selectedRole || v.role !== selectedRole) return false;
+
+    // 2. Driver Availability Type (Permanent vs Temporary)
+    if (selectedRole === 'driver' && selectedAvailability !== 'all') {
+      if (v.professionalDetails?.availability !== selectedAvailability) return false;
+    }
+
+    // 3. Online Status (Free/Online vs Busy/Offline)
+    if (selectedStatus !== 'all') {
+      const isFree = v.isOnline === true;
+      if (selectedStatus === 'free' && !isFree) return false;
+      if (selectedStatus === 'busy' && isFree) return false;
+    }
+
+    // 4. Search Filter
+    const term = searchTerm.toLowerCase();
+    const searchMatch = 
+      v.name.toLowerCase().includes(term) || 
+      (v._id && v._id.toLowerCase().includes(term)) ||
+      (v.mobile && v.mobile.toLowerCase().includes(term));
+      
+    return searchMatch;
+  });
 
   const DetailRow = ({ icon: Icon, label, value }) => (
     <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -88,70 +113,177 @@ const AdminVendors = () => {
 
         <section className="px-6 py-8 flex-1 overflow-y-auto">
             <div className="max-w-[1400px] mx-auto w-full">
-                {/* Search Bar */}
-                <div className="relative group mb-8">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                        <Search size={16} className="text-slate-400" />
-                    </div>
-                    <input 
-                        type="text" 
-                        placeholder="Search by name, role or ID..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-sm font-medium focus:border-[#C44545]/20 focus:outline-none transition-all shadow-sm"
-                    />
+                
+                {/* Category Grid Selection */}
+                <div className="mb-8 bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+                  <h3 className="text-xs font-black uppercase text-[#C44545] tracking-[0.2em] mb-4">Select Provider Category</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {[
+                      { id: 'driver', label: 'Drivers', icon: Navigation, desc: 'Chauffeur services' },
+                      { id: 'mechanic', label: 'Mechanics', icon: Wrench, desc: 'Repair & maintenance' },
+                      { id: 'towing', label: 'Towing', icon: Truck, desc: 'Recovery services' },
+                      { id: 'rto', label: 'RTO Agents', icon: FileText, desc: 'RTO assistant' },
+                      { id: 'legal', label: 'Legal Advisors', icon: Briefcase, desc: 'Legal advisory' }
+                    ].map((c) => {
+                      const isSelected = selectedRole === c.id;
+                      return (
+                        <div 
+                          key={c.id} 
+                          onClick={() => {
+                            setSelectedRole(c.id);
+                            setSelectedAvailability("all");
+                            setSelectedStatus("all");
+                          }}
+                          className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between h-36 ${isSelected ? 'border-[#C44545] bg-[#C44545] text-white shadow-xl shadow-[#C44545]/20' : 'border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-300'}`}
+                        >
+                          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-white/10 text-white' : 'bg-white border border-slate-100 text-slate-500 shadow-sm'}`}><c.icon size={20} /></div>
+                          <div>
+                            <p className="text-sm font-black uppercase tracking-tight leading-none mb-1">{c.label}</p>
+                            <p className={`text-[10px] font-bold leading-none ${isSelected ? 'text-white/70' : 'text-slate-400'}`}>{c.desc}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
+
+                {/* Conditional Sub-Filters */}
+                {selectedRole && (
+                  <div className="bg-white border border-slate-200 rounded-[2rem] p-6 mb-8 shadow-sm">
+                    <div className="flex flex-wrap gap-8">
+                      {/* Driver Specific Type Filter */}
+                      {selectedRole === 'driver' && (
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.15em] pl-1 block">Driver Type</label>
+                          <div className="flex gap-2">
+                            {['all', 'Permanent', 'Temporary'].map((type) => (
+                              <button 
+                                key={type}
+                                onClick={() => setSelectedAvailability(type)}
+                                className={`px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-wider transition-all ${selectedAvailability === type ? 'bg-[#C44545] border-[#C44545] text-white shadow-md shadow-[#C44545]/20' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                              >
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Status Filter (Busy vs Free) */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.15em] pl-1 block">
+                          {selectedRole === 'driver' ? 'Availability Status' : 'Online Status'}
+                        </label>
+                        <div className="flex gap-2">
+                          {[
+                            { id: 'all', label: 'All Status' },
+                            { id: 'free', label: selectedRole === 'driver' ? 'Free (Online)' : 'Online' },
+                            { id: 'busy', label: selectedRole === 'driver' ? 'Busy (Offline)' : 'Offline' }
+                          ].map((status) => (
+                            <button 
+                              key={status.id}
+                              onClick={() => setSelectedStatus(status.id)}
+                              className={`px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-wider transition-all ${selectedStatus === status.id ? 'bg-[#C44545] border-[#C44545] text-white shadow-md shadow-[#C44545]/20' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                            >
+                              {status.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Search Bar inside Selected Category */}
+                {selectedRole && (
+                  <div className="relative group mb-8">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                          <Search size={16} className="text-slate-400" />
+                      </div>
+                      <input 
+                          type="text" 
+                          placeholder={`Search ${selectedRole}s by name or mobile...`} 
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-sm font-medium focus:border-[#C44545]/20 focus:outline-none transition-all shadow-sm"
+                      />
+                  </div>
+                )}
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="h-10 w-10 border-4 border-[#C44545]/20 border-t-[#C44545] rounded-full animate-spin" />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredVendors.map((vendor) => (
-                            <motion.div 
-                                key={vendor._id} 
-                                layout 
-                                initial={{ opacity: 0 }} 
-                                animate={{ opacity: 1 }} 
-                                className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-[#C44545]/20 transition-all flex flex-col justify-between"
-                            >
-                                <div>
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 bg-rose-50/50 rounded-xl flex items-center justify-center text-[#C44545] font-bold border border-rose-100 uppercase shadow-inner text-lg">
-                                                {vendor.name?.[0]}
-                                            </div>
-                                            <div>
-                                                <h3 className="text-base font-bold tracking-tight text-slate-800 truncate max-w-[140px]">{vendor.name}</h3>
-                                                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-lg border mt-1 block w-fit bg-emerald-50 text-emerald-600 border-emerald-100 capitalize">{vendor.role}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-1 shrink-0">
-                                            <div className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-lg text-[10px] font-semibold border border-emerald-100">Verified</div>
-                                            {vendor.isBlocked && <div className="bg-red-50 text-red-600 px-2 py-0.5 rounded-lg text-[10px] font-semibold border border-red-100">Blocked</div>}
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3 mb-6 py-4 border-y border-slate-50">
-                                        <div className="flex items-center gap-3">
-                                            <MapPin size={14} className="text-[#C44545]" />
-                                            <span className="text-sm font-medium text-slate-600 truncate">{vendor.address?.city || 'N/A'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <Phone size={14} className="text-[#C44545]" />
-                                            <span className="text-sm font-medium text-slate-600">{vendor.mobile}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button 
-                                    onClick={() => setSelectedEntity(vendor)} 
-                                    className="w-full bg-slate-900 hover:bg-[#C44545] text-white py-3 rounded-xl font-bold text-xs active:scale-95 transition-all flex items-center justify-center gap-2"
-                                >
-                                    View Profile Details <ExternalLink size={14} />
-                                </button>
-                            </motion.div>
-                        ))}
-                    </div>
+                    <>
+                      {!selectedRole ? (
+                        <div className="p-12 border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center text-center bg-white shadow-sm mt-8">
+                          <div className="h-16 w-16 bg-[#C44545]/5 rounded-3xl flex items-center justify-center text-[#C44545] mb-4 border border-[#C44545]/10">
+                            <Info size={28} />
+                          </div>
+                          <h4 className="text-base font-black text-slate-800 uppercase tracking-tight mb-1">Select a Category</h4>
+                          <p className="text-xs font-bold text-slate-400 max-w-sm">Aapko jis category ke providers ki list dekhni hai, use upar se select karein.</p>
+                        </div>
+                      ) : (
+                        filteredVendors.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {filteredVendors.map((vendor) => (
+                                  <motion.div 
+                                      key={vendor._id} 
+                                      layout 
+                                      initial={{ opacity: 0 }} 
+                                      animate={{ opacity: 1 }} 
+                                      className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-[#C44545]/20 transition-all flex flex-col justify-between"
+                                  >
+                                      <div>
+                                          <div className="flex justify-between items-start mb-6">
+                                              <div className="flex items-center gap-4">
+                                                  <div className="h-12 w-12 bg-rose-50/50 rounded-xl flex items-center justify-center text-[#C44545] font-bold border border-rose-100 uppercase shadow-inner text-lg">
+                                                      {vendor.name?.[0]}
+                                                  </div>
+                                                  <div>
+                                                      <h3 className="text-base font-bold tracking-tight text-slate-800 truncate max-w-[140px]">{vendor.name}</h3>
+                                                      <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-lg border mt-1 block w-fit bg-[#C44545]/5 text-[#C44545] border-[#C44545]/10 capitalize">{vendor.role}</span>
+                                                  </div>
+                                              </div>
+                                              <div className="flex flex-col items-end gap-1 shrink-0">
+                                                  <div className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold border ${vendor.isOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                                                    {vendor.isOnline ? 'Free / Online' : 'Busy / Offline'}
+                                                  </div>
+                                                  {vendor.isBlocked && <div className="bg-red-50 text-red-600 px-2 py-0.5 rounded-lg text-[10px] font-semibold border border-red-100">Blocked</div>}
+                                              </div>
+                                          </div>
+                                          <div className="space-y-3 mb-6 py-4 border-y border-slate-50">
+                                              <div className="flex items-center gap-3">
+                                                  <MapPin size={14} className="text-[#C44545]" />
+                                                  <span className="text-sm font-medium text-slate-600 truncate">{vendor.address?.city || 'N/A'}</span>
+                                              </div>
+                                              <div className="flex items-center gap-3">
+                                                  <Phone size={14} className="text-[#C44545]" />
+                                                  <span className="text-sm font-medium text-slate-600">{vendor.mobile}</span>
+                                              </div>
+                                          </div>
+                                      </div>
+                                      <button 
+                                          onClick={() => setSelectedEntity(vendor)} 
+                                          className="w-full bg-slate-900 hover:bg-[#C44545] text-white py-3 rounded-xl font-bold text-xs active:scale-95 transition-all flex items-center justify-center gap-2"
+                                      >
+                                          View Profile Details <ExternalLink size={14} />
+                                      </button>
+                                  </motion.div>
+                              ))}
+                          </div>
+                        ) : (
+                          <div className="p-12 border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center text-center bg-white shadow-sm">
+                            <div className="h-16 w-16 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-400 mb-4 border border-slate-100">
+                              <AlertCircle size={28} />
+                            </div>
+                            <h4 className="text-base font-black text-slate-800 uppercase tracking-tight mb-1">No Providers Found</h4>
+                            <p className="text-xs font-bold text-slate-400 max-w-sm font-inter">Is category or filter criteria ke koi bhi providers nahi mile.</p>
+                          </div>
+                        )
+                      )}
+                    </>
                 )}
             </div>
         </section>
