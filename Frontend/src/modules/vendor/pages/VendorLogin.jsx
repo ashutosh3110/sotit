@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Lock, Phone, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Lock, Phone, ArrowLeft, CheckCircle2, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { initVendorState } from "../utils/vendorStore";
@@ -219,6 +219,24 @@ const VendorLogin = ({ isEmbedded = false, onSwitchToRegister }) => {
                <Link to="/vendor/register" className="text-[#C44545] ml-2 border-b-2 border-[#C44545]/30 pb-0.5">Apply here</Link>
              )}
           </p>
+        </div>
+
+        {/* Support Contact Info Box */}
+        <div className="bg-slate-100 border border-slate-200/50 rounded-2xl p-4 mt-6 flex flex-col gap-2">
+          <p className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.15em] mb-1 text-center">
+            Need Help / Questions?
+          </p>
+          <div className="flex justify-around items-center text-xs font-bold text-neutral-700">
+            <a href="tel:9438405980" className="flex items-center gap-1.5 hover:text-[#C44545] transition-colors">
+              <Phone size={14} className="text-[#C44545]" />
+              <span>9438405980</span>
+            </a>
+            <div className="w-[1px] h-4 bg-slate-300" />
+            <a href="mailto:sootit3@gmail.com" className="flex items-center gap-1.5 hover:text-[#C44545] transition-colors">
+              <Mail size={14} className="text-[#C44545]" />
+              <span>sootit3@gmail.com</span>
+            </a>
+          </div>
         </div>
 
         {pages.length > 0 && (
