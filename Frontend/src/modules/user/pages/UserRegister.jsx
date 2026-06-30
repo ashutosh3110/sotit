@@ -138,7 +138,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
             const fetchedState = office.State;
             setAddressDetails(prev => {
               const updated = { ...prev, city: fetchedCity, state: fetchedState };
-              setAddress(`${updated.house}${updated.house ? ', ' : ''}${updated.area}${updated.area ? ', ' : ''}${updated.city}${updated.city ? ', ' : ''}${updated.state} - ${updated.pincode}`);
+              setAddress(`${updated.area}${updated.area ? ', ' : ''}${updated.city}${updated.city ? ', ' : ''}${updated.state} - ${updated.pincode}`);
               return updated;
             });
             toast.success(`Location auto-fetched: ${fetchedCity}, ${fetchedState}`);
@@ -263,7 +263,7 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     const { name, value } = e.target;
     setAddressDetails(prev => {
         const updated = { ...prev, [name]: value };
-        setAddress(`${updated.house}${updated.house ? ', ' : ''}${updated.area}${updated.area ? ', ' : ''}${updated.city}${updated.city ? ', ' : ''}${updated.state} - ${updated.pincode}`);
+        setAddress(`${updated.area}${updated.area ? ', ' : ''}${updated.city}${updated.city ? ', ' : ''}${updated.state} - ${updated.pincode}`);
         return updated;
     });
   };
@@ -274,12 +274,12 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
         if (name === 'state') {
           updated.city = ''; // Reset city when state changes
         }
-        setAddress(`${updated.house}${updated.house ? ', ' : ''}${updated.area}${updated.area ? ', ' : ''}${updated.city}${updated.city ? ', ' : ''}${updated.state} - ${updated.pincode}`);
+        setAddress(`${updated.area}${updated.area ? ', ' : ''}${updated.city}${updated.city ? ', ' : ''}${updated.state} - ${updated.pincode}`);
         return updated;
     });
   };
 
-  const isFormInvalid = !name.trim() || mobile.length !== 10 || !address.trim() || !isOtpVerified;
+  const isFormInvalid = !name.trim() || mobile.length !== 10 || !addressDetails.area.trim() || !addressDetails.state || !addressDetails.city || !addressDetails.pincode || !isOtpVerified;
 
   return (
     <div className={containerClasses}>
@@ -468,41 +468,31 @@ const UserRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                 <div className="space-y-3 pt-2">
                   <label className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.2em] pl-1 block ml-2">Location Details</label>
                   
-                  {/* House No & Pincode */}
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Pincode */}
+                  <div className="relative w-full">
                     <input 
-                      name="house"
-                      value={addressDetails.house}
+                      name="pincode"
+                      value={addressDetails.pincode}
                       onChange={handleDetailChange}
-                      type="text" 
-                      placeholder="House/Flat No." 
-                      className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 px-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
+                      type="tel"
+                      maxLength={6}
+                      placeholder="Pincode" 
+                      className={`w-full bg-white border ${loadingLocation ? 'border-rose-300' : 'border-black/[0.03]'} rounded-3xl py-4 pl-6 pr-12 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all`}
                     />
-                    <div className="relative w-full">
-                      <input 
-                        name="pincode"
-                        value={addressDetails.pincode}
-                        onChange={handleDetailChange}
-                        type="tel"
-                        maxLength={6}
-                        placeholder="Pincode" 
-                        className={`w-full bg-white border ${loadingLocation ? 'border-rose-300' : 'border-black/[0.03]'} rounded-3xl py-4 pl-6 pr-12 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all`}
-                      />
-                      {loadingLocation && (
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#C44545] border-t-transparent"></div>
-                        </div>
-                      )}
-                    </div>
+                    {loadingLocation && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#C44545] border-t-transparent"></div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Area/Street/Landmark */}
+                  {/* Street Address */}
                   <input 
                     name="area"
                     value={addressDetails.area}
                     onChange={handleDetailChange}
                     type="text" 
-                    placeholder="Area / Street / Landmark" 
+                    placeholder="Street Address, Area (Required)" 
                     className="w-full bg-white border border-black/[0.03] rounded-3xl py-4 px-6 text-sm font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-slate-900/20 focus:shadow-xl focus:shadow-black/[0.02] transition-all"
                   />
 

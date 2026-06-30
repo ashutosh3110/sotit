@@ -99,7 +99,6 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [isOtpSent, setIsOtpSent] = useState(!!locationState.otp);
   const [isOtpVerified, setIsOtpVerified] = useState(!!locationState.otp);
   const [address, setAddress] = useState({ street: "", city: "", state: "", isoCode: "", pincode: "" });
-  const [houseNo, setHouseNo] = useState("");
   const [streetName, setStreetName] = useState("");
   const [liveLocation, setLiveLocation] = useState(null);
   const [customLanguage, setCustomLanguage] = useState("");
@@ -113,12 +112,9 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
   const [driverStatus, setDriverStatus] = useState("free");
 
   useEffect(() => {
-    const fullStreetAddress = [houseNo, streetName]
-      .map(val => val ? val.trim() : "")
-      .filter(Boolean)
-      .join(", ");
+    const fullStreetAddress = (streetName || "").trim();
     setAddress(prev => ({ ...prev, street: fullStreetAddress }));
-  }, [houseNo, streetName]);
+  }, [streetName]);
 
   const [profData, setProfData] = useState({
     dlNumber: "", dlExpiry: "", dlFile: null, vehicleClasses: [], experience: "1-3 Years", bgCheck: false, availability: "Permanent", languages: ["Hindi"],
@@ -329,15 +325,13 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                 const fetchedStateName = data.address?.state || "";
                 const stateObj = allStates.find(s => s.name === fetchedStateName);
                 
-                const hNo = data.address?.house_number || data.address?.building || "";
                 const roadStr = data.address?.road || data.address?.suburb || fetchedAddress;
 
-                setHouseNo(hNo);
                 setStreetName(roadStr);
 
                 setAddress(prev => ({
                     ...prev,
-                    street: [hNo, roadStr].filter(Boolean).join(", "),
+                    street: roadStr,
                     city: fetchedCity,
                     state: fetchedStateName,
                     isoCode: stateObj?.isoCode || prev.isoCode,
@@ -378,7 +372,6 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setIsOtpSent(!!locationState.otp);
     setIsOtpVerified(!!locationState.otp);
     setAddress({ street: "", city: "", state: "", isoCode: "", pincode: "" });
-    setHouseNo("");
     setStreetName("");
     setLiveLocation(null);
     setCustomLanguage("");
@@ -423,8 +416,8 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     if (!isOtpVerified) {
         return toast.error("Please verify your mobile number OTP first");
     }
-    if (!houseNo.trim()) {
-        return toast.error("Please enter House / Flat No.");
+    if (!streetName.trim()) {
+        return toast.error("Please enter Street Address");
     }
     if (!address.state) {
         return toast.error("Please select State");
@@ -621,7 +614,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
     setProfData({ ...profData, serviceStates: newStates });
   };
 
-  const isStep1Invalid = !name.trim() || mobile.length !== 10 || !isOtpVerified || !houseNo.trim() || !address.state || !address.city || !address.pincode;
+  const isStep1Invalid = !name.trim() || mobile.length !== 10 || !isOtpVerified || !streetName.trim() || !address.state || !address.city || !address.pincode;
 
   const isCustomFieldsValid = () => {
     return activeCustomFields.every(field => {
@@ -780,15 +773,7 @@ const VendorRegister = ({ isEmbedded = false, onSwitchToLogin }) => {
                     <div className="space-y-4">
                       <input 
                         type="text" 
-                        placeholder="House / Flat No, Building Name" 
-                        value={houseNo} 
-                        onChange={(e) => setHouseNo(e.target.value)} 
-                        className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" 
-                      />
-
-                      <input 
-                        type="text" 
-                        placeholder="Street Address, Locality, Area" 
+                        placeholder="Street Address, Locality, Area (Required)" 
                         value={streetName} 
                         onChange={(e) => setStreetName(e.target.value)} 
                         className="w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 font-bold" 
