@@ -3,7 +3,6 @@ const ServiceRequest = require('../models/ServiceRequest');
 const User = require('../models/User');
 const Vendor = require('../models/Vendor');
 const WalletTransaction = require('../models/WalletTransaction');
-const { sendPushNotification } = require('../utils/firebase');
 
 // Hires an expert (Supports Direct Hiring and Network Broadcast)
 // NOW FREE FOR EVERYONE
@@ -69,9 +68,7 @@ exports.hireExpert = async (req, res) => {
                     message: 'You have a new direct hiring request!'
                 });
             }
-            if (targetVendor.fcmToken) {
-                sendPushNotification(targetVendor.fcmToken, "New Direct Lead! 🔔", `${requester.name} hired you specifically.`, { requestId: request._id.toString(), type: 'new_lead' }).catch(e => {});
-            }
+
         } else {
             if (io) {
                 io.to(`role_${role.toLowerCase()}`).emit('new_lead', {
@@ -115,15 +112,7 @@ exports.acceptRequest = async (req, res) => {
         request.vendor = vendorId; 
         await request.save();
 
-        // Send FCM Push Notification to Requester
-        if (request.requesterId && request.requesterId.fcmToken) {
-            sendPushNotification(
-                request.requesterId.fcmToken,
-                "Expert Found! 🚗",
-                `${vendor.name} has accepted your request.`,
-                { requestId: requestId.toString(), type: 'request_accepted' }
-            ).catch(e => {});
-        }
+
 
         res.status(200).json({ success: true, message: 'Lead accepted!', request });
 
@@ -300,40 +289,7 @@ exports.getUserReviews = async (req, res) => {
 };
 
 
-exports.updateFCMToken = async (req, res) => {
-    try {
-        const { fcmToken, platform } = req.body;
-        const userId = req.user.id;
-        await User.findByIdAndUpdate(userId, { fcmToken, platform });
-        await Vendor.findByIdAndUpdate(userId, { fcmToken, platform });
-        res.status(200).json({ success: true, message: 'FCM Token registered successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error updating FCM token' });
-    }
-};
 
-exports.sendTestNotification = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const user = await User.findById(userId) || await Vendor.findById(userId);
-        
-        if (!user || !user.fcmToken) {
-            return res.status(404).json({ success: false, message: 'User or FCM Token not found. Please register FCM token first.' });
-        }
-
-        await sendPushNotification(
-            user.fcmToken,
-            "Test Success! 🚀",
-            "Sootit notifications are working perfectly.",
-            { type: 'test' }
-        );
-
-        res.status(200).json({ success: true, message: 'Test notification sent! Check your device.' });
-    } catch (error) {
-        console.error("Test Notification Error:", error);
-        res.status(500).json({ success: false, message: 'Error sending test notification' });
-    }
-};
 exports.checkDriverRatings = async (req, res) => {
     try {
         const oneMonthAgo = new Date();
@@ -347,15 +303,7 @@ exports.checkDriverRatings = async (req, res) => {
         }).populate('requesterId').populate('vendor');
 
         for (const reqObj of requests) {
-            // 1. Notify Customer
-            if (reqObj.requesterId && reqObj.requesterId.fcmToken) {
-                sendPushNotification(
-                    reqObj.requesterId.fcmToken,
-                    "How was your Driver? ⭐",
-                    `It's been a month since you hired ${reqObj.vendor?.name}. Please share your experience!`,
-                    { requestId: reqObj._id.toString(), type: 'rate_driver', vendorId: reqObj.vendor?._id?.toString() }
-                ).catch(e => {});
-            }
+
 
             // 2. Mark as requested
             reqObj.ratingRequested = true;

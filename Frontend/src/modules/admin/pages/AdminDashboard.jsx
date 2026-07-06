@@ -5,7 +5,6 @@ import { useState } from "react";
 import AdminSidebar from "../components/AdminSidebar";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
-import { requestForToken, onMessageListener } from "../../../utils/firebase";
 
 /**
  * Super Admin Panel (Ultra Compact Desktop/Mobile Hybrid)
@@ -15,43 +14,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Firebase FCM Setup for Admin
-  useEffect(() => {
-    const adminToken = localStorage.getItem('admin_token');
-    if (adminToken) {
-        // 1. Request Permission
-        if ("Notification" in window && Notification.permission === "default") {
-            Notification.requestPermission();
-        }
 
-        // 2. Request FCM Token and Sync with Backend
-        requestForToken().then(token => {
-            if (token) {
-                console.log("[ADMIN-FCM] Syncing token...");
-                fetch(`${import.meta.env.VITE_API_URL}/admin/update-fcm`, {
-                    method: 'PUT',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ fcmToken: token })
-                })
-                .then(res => res.json())
-                .then(data => console.log("[ADMIN-FCM] Server Response:", data))
-                .catch(err => console.error("[ADMIN-FCM] Sync Error:", err));
-            }
-        });
-
-        // 3. Listener
-        onMessageListener().then(payload => {
-            toast.success(payload.notification.title, { 
-                description: payload.notification.body,
-                icon: '💰',
-                duration: 6000
-            });
-        }).catch(err => console.log('FCM failed: ', err));
-    }
-  }, []);
 
   return (
     <div className="bg-neutral-50 min-h-screen font-inter flex">

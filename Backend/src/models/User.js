@@ -45,15 +45,6 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  fcmToken: {
-    type: String,
-    default: null,
-  },
-  platform: {
-    type: String,
-    enum: ['app', 'web', 'android', 'ios', null],
-    default: null,
-  },
   isBlocked: {
     type: Boolean,
     default: false,

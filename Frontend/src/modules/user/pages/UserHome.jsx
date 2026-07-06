@@ -4,7 +4,6 @@ import { Star, Shield, Zap, TrendingUp, ArrowRight, Navigation, Clock, Wrench, U
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserData } from "../utils/userStore";
-import { requestForToken, onMessageListener } from "../../../utils/firebase";
 import toast from "react-hot-toast";
 import logo from "../../../assets/logo.png";
 
@@ -165,52 +164,6 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    const userToken = user?.profile?.token;
-    console.log("[FCM] Checking for setup. User logged in:", !!userToken);
-    
-    if (userToken) {
-        // 1. Request Browser Permission
-        if ("Notification" in window) {
-            console.log("[FCM] Current Permission:", Notification.permission);
-            if (Notification.permission === "default") {
-                Notification.requestPermission().then(permission => {
-                    console.log("[FCM] Permission Response:", permission);
-                });
-            }
-        }
-
-        // 2. Request FCM Token and Save
-        requestForToken().then(token => {
-            if (token) {
-                console.log("[FCM] Syncing token with server...");
-                fetch(`${import.meta.env.VITE_API_URL}/services/update-fcm`, {
-                    method: 'PUT',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${userToken}`
-                    },
-                    body: JSON.stringify({ fcmToken: token })
-                })
-                .then(res => res.json())
-                .then(data => console.log("[FCM] Server Sync Response:", data))
-                .catch(err => console.error("[FCM] Token Sync Error:", err));
-            } else {
-                console.warn("[FCM] No token received from Firebase.");
-            }
-        });
-
-        // 3. Foreground Listener
-        onMessageListener().then(payload => {
-            console.log("[FCM] Foreground Notification Received:", payload);
-            toast.success(payload.notification.title, { 
-                description: payload.notification.body,
-                icon: '🚀',
-                duration: 5000
-            });
-        }).catch(err => console.log('[FCM] Listener failed: ', err));
-    }
-  }, [user?.profile?.token]);
 
   return (
     <div className="bg-white min-h-screen font-inter overflow-hidden pb-10">

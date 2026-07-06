@@ -46,7 +46,11 @@ const VendorJobs = () => {
 
       // Request Notification Permission
       if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission();
+        try {
+          Notification.requestPermission();
+        } catch (err) {
+          console.warn("Notification.requestPermission failed:", err);
+        }
       }
 
       // Socket Connection
@@ -76,9 +80,13 @@ const VendorJobs = () => {
 
           // Browser Push
           if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("New Lead Available! 💼", {
-              body: `${data.customerName} is looking for a ${data.role}.`,
-            });
+            try {
+              new Notification("New Lead Available! 💼", {
+                body: `${data.customerName} is looking for a ${data.role}.`,
+              });
+            } catch (err) {
+              console.warn("Could not show browser push notification:", err);
+            }
           }
 
           fetchRequests();

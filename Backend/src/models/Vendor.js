@@ -122,15 +122,6 @@ const vendorSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  fcmToken: {
-    type: String,
-    default: null
-  },
-  platform: {
-    type: String,
-    enum: ['app', 'web', 'android', 'ios', null],
-    default: null
-  },
   isOnline: {
     type: Boolean,
     default: true

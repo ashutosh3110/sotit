@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { getVendorData, setVendorData } from "../utils/vendorStore";
 import { getVendorConfig } from "../utils/vendorConfig";
 import { socket, connectSocket, disconnectSocket } from "../../../utils/socket";
-import { requestForToken, onMessageListener } from "../../../utils/firebase";
 import toast from "react-hot-toast";
 import PostRequirementModal from "../components/PostRequirementModal";
 
@@ -96,33 +95,13 @@ const VendorHome = () => {
       
       // Request Notification Permission (Browser)
       if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission();
+        try {
+          Notification.requestPermission();
+        } catch (err) {
+          console.warn("FCM Notification.requestPermission failed:", err);
+        }
       }
 
-      // 1. Firebase Cloud Messaging (FCM) Setup
-      requestForToken().then(token => {
-        if (token) {
-          // Save token to backend
-          const userToken = vendor?.profile?.token;
-          fetch(`${import.meta.env.VITE_API_URL}/services/update-fcm`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${userToken}`
-            },
-            body: JSON.stringify({ fcmToken: token })
-          }).catch(err => console.error("FCM Token Sync Error:", err));
-        }
-      });
-
-      // 2. Foreground Message Listener
-      onMessageListener().then(payload => {
-        console.log("Foreground FCM Message:", payload);
-        toast.success(payload.notification.title, { 
-            description: payload.notification.body,
-            icon: '🔥'
-        });
-      }).catch(err => console.log('failed: ', err));
 
       // Socket Connection
       const vendorId = vendor?.profile?.id || vendor?.profile?._id;
@@ -161,10 +140,14 @@ const VendorHome = () => {
  
           // 3. Browser Push Notification
           if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("New Hiring Request! 🔔", {
-              body: `${name} wants to hire you as a ${data.role}.`,
-              icon: '/logo192.png' // Use your app logo path
-            });
+            try {
+              new Notification("New Hiring Request! 🔔", {
+                body: `${name} wants to hire you as a ${data.role}.`,
+                icon: '/logo192.png' // Use your app logo path
+              });
+            } catch (err) {
+              console.warn("Could not show browser push notification:", err);
+            }
           }
  
           fetchRequests();

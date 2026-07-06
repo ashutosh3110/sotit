@@ -121,16 +121,7 @@ exports.verifyHirePayment = async (req, res) => {
                     message: 'You have a new direct hiring request!'
                 });
             }
-            // Send FCM Push Notification
-            if (targetVendor && targetVendor.fcmToken) {
-                const { sendPushNotification } = require('../utils/firebase');
-                sendPushNotification(
-                    targetVendor.fcmToken, 
-                    "New Direct Lead! 🔔", 
-                    `${requester.name} hired you specifically.`, 
-                    { requestId: request._id.toString(), type: 'new_lead' }
-                ).catch(e => console.error("FCM Error:", e));
-            }
+
         } else {
             if (io) {
                 io.to(`role_${role.toLowerCase()}`).emit('new_lead', {
@@ -256,16 +247,7 @@ exports.verifyAcceptancePayment = async (req, res) => {
             description: `Lead Acceptance Fee for Request: ${requestId}`
         });
 
-        // 3. Notify Requester
-        if (request.requesterId && request.requesterId.fcmToken) {
-            const { sendPushNotification } = require('../utils/firebase');
-            sendPushNotification(
-                request.requesterId.fcmToken,
-                "Expert Found! 🚗",
-                `${vendor.name} has accepted your request.`,
-                { requestId: requestId.toString(), type: 'request_accepted' }
-            ).catch(e => {});
-        }
+
 
         res.json({
             success: true,

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { hireExpert, acceptRequest, getVendorRequests, getVendorHistory, getUserHistory, getUserReviews, updateFCMToken, sendTestNotification, submitVendorRating, checkDriverRatings, getProfileData } = require('../controllers/serviceController');
+const { hireExpert, acceptRequest, getVendorRequests, getVendorHistory, getUserHistory, getUserReviews, submitVendorRating, checkDriverRatings, getProfileData } = require('../controllers/serviceController');
 const { createHireOrder, verifyHirePayment, createAcceptanceOrder, verifyAcceptancePayment, createSubscriptionOrder, verifySubscriptionPayment } = require('../controllers/paymentController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -17,9 +17,6 @@ router.get('/vendor/requests', protect, getVendorRequests);
 router.get('/vendor/history', protect, getVendorHistory);
 router.get('/user/history', protect, getUserHistory);
 router.get('/user/reviews', protect, getUserReviews);
-router.put('/update-fcm', protect, updateFCMToken);
-router.post('/register-fcm', protect, updateFCMToken); // Alias for registration
-router.post('/test-notification', protect, sendTestNotification);
 router.post('/rate', protect, submitVendorRating);
 router.get('/process-driver-ratings', checkDriverRatings);
 
