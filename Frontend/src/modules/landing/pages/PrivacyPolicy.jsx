@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, FileText, Mail, Phone } from "lucide-react";
+import { ArrowLeft, Loader2, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -71,56 +71,62 @@ const PrivacyPolicy = () => {
                 <>
                   <p className="font-bold text-slate-800 text-base">Effective Date: July 6, 2026</p>
                   <p>
-                    Welcome to Sootit. Your privacy is critical to us. This Privacy Policy documents the types of personal information that is collected and recorded by Sootit and how we use it.
+                    Welcome to Sootit! Your privacy is of paramount importance to us. This Privacy Policy describes how Sootit ("we", "our", or "us") collects, uses, shares, and protects your information when you use our mobile application, website, and related on-demand vehicle services (collectively, the "Services").
                   </p>
+                  <p>
+                    By accessing or using our Services, you consent to the collection, transfer, storage, disclosure, and use of your information as described in this Privacy Policy.
+                  </p>
+                  
                   <h3 className="text-lg font-black text-slate-900 tracking-tight mt-6">1. Information We Collect</h3>
                   <p>
-                    We collect personal information that you voluntarily provide to us when you register on the App, express an interest in obtaining information about us, or when you contact us. This may include:
+                    We collect various types of information to provide and improve our Services:
                   </p>
                   <ul className="list-disc pl-6 space-y-2">
-                    <li>Personal identification details (Name, Email Address, Phone Number, Profile Picture).</li>
-                    <li>Vehicle information and location coordinates to facilitate on-demand services.</li>
-                    <li>Payment information securely processed via external gateways (Razorpay).</li>
+                    <li><strong>Personal Information You Provide:</strong> This includes registration details such as your name, email address, phone number, and profile picture.</li>
+                    <li><strong>Vehicle Information:</strong> To facilitate accurate repair, towing, and maintenance services, we collect vehicle details such as make, model, year of manufacture, and license plate/registration number.</li>
+                    <li><strong>Payment Information:</strong> All payments are processed securely through external PCI-DSS compliant payment gateways (such as Razorpay). We do not store your raw credit/debit card numbers or CVV.</li>
+                    <li><strong>Location Data:</strong> With your explicit permission, we collect precise or approximate location coordinates from your device when the app is running in the foreground or background. This is crucial for matching you with nearby technicians, verifying service locations, and tracking active service requests.</li>
+                    <li><strong>Device & Usage Information:</strong> We collect details about the device you use to access the app, including IP address, hardware model, operating system, and app performance logs.</li>
                   </ul>
                   
                   <h3 className="text-lg font-black text-slate-900 tracking-tight mt-6">2. How We Use Your Information</h3>
                   <p>
-                    We use the information we collect to operate and maintain our application, verify identity, facilitate connection between customers and service experts, and notify users of important events.
+                    We use the information we collect to operate, maintain, and improve our services, including:
+                  </p>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li>Connecting you with registered service experts, mechanics, and drivers.</li>
+                    <li>Facilitating real-time tracking of technician arrival and service status.</li>
+                    <li>Processing and verifying payments for completed bookings.</li>
+                    <li>Sending transactional alerts, booking confirmations, and support communications via email, SMS, or WhatsApp.</li>
+                    <li>Providing customer support, resolving disputes, and ensuring safety and fraud prevention.</li>
+                  </ul>
+
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight mt-6">3. How We Share Your Information</h3>
+                  <p>
+                    We respect your privacy and only share your data under the following circumstances:
+                  </p>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li><strong>With Service Vendors:</strong> To fulfill your booking, we share your name, phone number, vehicle details, and service location with the matched technician/vendor.</li>
+                    <li><strong>With Payment Gateways:</strong> We share necessary transaction details with our secure payment partners (e.g., Razorpay) to process payments.</li>
+                    <li><strong>For Legal Reasons:</strong> We may disclose your information if required to do so by law, regulation, or legal process, or to protect the safety and rights of Sootit, its users, or the public.</li>
+                  </ul>
+
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight mt-6">4. Data Security and Retention</h3>
+                  <p>
+                    We implement robust administrative, technical, and physical security measures to safeguard your personal data from unauthorized access, loss, or alteration. We retain your personal information for as long as your account is active or as needed to provide you Services and satisfy legal compliance.
                   </p>
 
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight mt-6">3. Information Sharing</h3>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight mt-6">5. Your Rights and Choices</h3>
                   <p>
-                    We do not sell, trade, or rent user personal identification information to third parties. We share location and name information with registered vendors only to deliver the service you booked.
+                    You have control over your data:
                   </p>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li><strong>Account Access:</strong> You can review and update your profile information anytime through the account settings.</li>
+                    <li><strong>Location Permissions:</strong> You can enable or disable location services at any time through your device settings. Note that disabling location tracking may limit the core functionality of our on-demand services.</li>
+                    <li><strong>Data Deletion:</strong> You can request the deletion of your account and personal data by reaching out to our support team at <a href="mailto:sootit3@gmail.com" className="text-[#C44545] hover:underline font-bold">sootit3@gmail.com</a>.</li>
+                  </ul>
                 </>
               )}
-            </div>
-
-            {/* Contact Info Box */}
-            <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col gap-3">
-              <div className="p-5 bg-rose-50/50 rounded-2xl border border-rose-100/50 flex items-center gap-4 text-left">
-                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-[#C44545] shadow-sm shrink-0">
-                  <Mail size={18} />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-rose-500 opacity-80 leading-none mb-1.5">Email Support</p>
-                  <a href="mailto:sootit3@gmail.com" className="font-black text-xs md:text-sm text-slate-800 hover:text-[#C44545] hover:underline break-all leading-tight block">
-                    sootit3@gmail.com
-                  </a>
-                </div>
-              </div>
-
-              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4 text-left">
-                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-700 shadow-sm shrink-0">
-                  <Phone size={18} />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 opacity-80 leading-none mb-1.5">Phone Support</p>
-                  <a href="tel:9437153203" className="font-black text-xs md:text-sm text-slate-800 hover:text-[#C44545] hover:underline leading-tight block">
-                    9437153203
-                  </a>
-                </div>
-              </div>
             </div>
           </motion.div>
         )}
