@@ -167,7 +167,7 @@ const AboutContact = () => {
             <button onClick={() => scrollSection('about-us')} className="hover:text-[#C44545] transition-colors">About Us</button>
             <button onClick={() => scrollSection('services')} className="hover:text-[#C44545] transition-colors">Our Services</button>
             <button onClick={() => scrollSection('how-it-works')} className="hover:text-[#C44545] transition-colors">How It Works</button>
-            <button onClick={() => scrollSection('faqs-contact')} className="hover:text-[#C44545] transition-colors">FAQ & Support</button>
+            <button onClick={() => navigate('/support')} className="hover:text-[#C44545] transition-colors">FAQ & Support</button>
           </nav>
 
           {/* Nav CTAs */}
@@ -566,8 +566,8 @@ const AboutContact = () => {
         <div className="max-w-7xl mx-auto px-6 border-t border-slate-900 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-slate-500 text-xs">© {new Date().getFullYear()} Sootit. All rights reserved.</p>
           <div className="flex gap-6 text-xs text-slate-500 font-semibold">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <button onClick={() => navigate('/privacy-policy')} className="hover:text-white transition-colors">Privacy Policy</button>
+            <button onClick={() => navigate('/page/terms-of-service')} className="hover:text-white transition-colors">Terms of Service</button>
           </div>
         </div>
       </footer>

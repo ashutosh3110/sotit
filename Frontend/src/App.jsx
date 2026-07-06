@@ -60,6 +60,8 @@ const OwnerDashboard = lazy(() => import('./modules/owner/pages/OwnerDashboard')
 const RequirementForm = lazy(() => import('./modules/owner/pages/RequirementForm'));
 const VehicleOwnerForm = lazy(() => import('./modules/owner/pages/VehicleOwnerForm'));
 const AboutContact = lazy(() => import('./modules/landing/pages/AboutContact'));
+const PrivacyPolicy = lazy(() => import('./modules/landing/pages/PrivacyPolicy'));
+const Support = lazy(() => import('./modules/landing/pages/Support'));
 import { AdminSecurity, AdminNotifications, AdminPlatform, AdminProfile, AdminPaymentSettings } from './modules/admin/pages/AdminSubSettings';
 
 // Page Transition Component
@@ -87,6 +89,8 @@ const AppRoutes = () => {
           {/* Main Auth Gateway */}
           <Route path="/" element={<WelcomePage />} />
           <Route path="/about" element={<AboutContact />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/auth" element={<AuthLanding />} />
           <Route path="/user/auth" element={<Navigate to="/auth" replace />} />
 
@@ -156,7 +160,7 @@ const AppRoutes = () => {
 
 const AppContent = () => {
   const location = useLocation();
-  const authPaths = ['/', '/about', '/auth', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise', '/vehicle-owner'];
+  const authPaths = ['/', '/about', '/auth', '/user/login', '/user/register', '/vendor/login', '/vendor/register', '/vendor/register/personal', '/vendor/register/expertise', '/vehicle-owner', '/support', '/privacy-policy'];
   const isAuthPage = authPaths.includes(location.pathname) || location.pathname.startsWith('/admin');
 
   const isAdminPage = location.pathname.startsWith('/admin');
@@ -174,7 +178,8 @@ const AppContent = () => {
 import { Toaster } from 'react-hot-toast';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(true);
+  const isPublicPage = window.location.pathname === '/support' || window.location.pathname === '/privacy-policy';
+  const [isLoading, setIsLoading] = useState(!isPublicPage);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -201,9 +206,9 @@ function App() {
     document.addEventListener('touchstart', preventZoom, { passive: false });
     document.addEventListener('wheel', preventWheelZoom, { passive: false });
 
-    const timer = setTimeout(() => setIsLoading(false), 2000);
+    const timer = !isPublicPage ? setTimeout(() => setIsLoading(false), 2000) : null;
     return () => {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       lenis.destroy();
       document.removeEventListener('touchstart', preventZoom);
       document.removeEventListener('wheel', preventWheelZoom);
