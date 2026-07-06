@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, FileText } from "lucide-react";
+import { ArrowLeft, Loader2, FileText, Mail, Phone } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -73,6 +73,33 @@ const PageDetail = () => {
 
             <div className="text-sm font-medium text-slate-600 leading-relaxed space-y-4 whitespace-pre-wrap">
               {page.content}
+            </div>
+
+            {/* Contact Info Box */}
+            <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col gap-3">
+              <div className="p-5 bg-rose-50/50 rounded-2xl border border-rose-100/50 flex items-center gap-4 text-left">
+                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-[#C44545] shadow-sm shrink-0">
+                  <Mail size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-rose-500 opacity-80 leading-none mb-1.5">Email Support</p>
+                  <a href="mailto:sootit3@gmail.com" className="font-black text-xs md:text-sm text-slate-800 hover:text-[#C44545] hover:underline break-all leading-tight block">
+                    sootit3@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4 text-left">
+                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-700 shadow-sm shrink-0">
+                  <Phone size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 opacity-80 leading-none mb-1.5">Phone Support</p>
+                  <a href="tel:9437153203" className="font-black text-xs md:text-sm text-slate-800 hover:text-[#C44545] hover:underline leading-tight block">
+                    9437153203
+                  </a>
+                </div>
+              </div>
             </div>
           </motion.div>
         ) : (

@@ -352,6 +352,18 @@ const UserSupport = () => {
                     </div>
                 </div>
 
+                {/* Email Support Card */}
+                <div className="bg-rose-50/30 p-8 rounded-[3rem] mt-6 flex flex-col items-center text-center border border-rose-100/60">
+                    <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center text-[#C44545] shadow-sm mb-4">
+                        <Mail size={22} strokeWidth={2.5} />
+                    </div>
+                    <h5 className="text-[13px] font-black uppercase tracking-widest mb-1 text-slate-900">Email Support</h5>
+                    <p className="text-[12px] font-bold text-neutral-400 leading-relaxed max-w-[220px] mb-3">Reach out to us directly via email for any immediate help.</p>
+                    <a href="mailto:sootit3@gmail.com" className="text-[15px] font-black text-[#C44545] hover:underline tracking-tight">
+                        sootit3@gmail.com
+                    </a>
+                </div>
+
                 {/* Trust Badge */}
                 <div className="bg-slate-100/50 p-8 rounded-[3rem] mt-10 flex flex-col items-center text-center border border-slate-100">
                     <ShieldCheck size={32} className="text-[#C44545] mb-4" strokeWidth={2.5} />

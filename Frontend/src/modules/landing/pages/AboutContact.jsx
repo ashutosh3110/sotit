@@ -71,7 +71,7 @@ const AboutContact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [supportEmail, setSupportEmail] = useState('support@sootit.com');
+  const [supportEmail, setSupportEmail] = useState('sootit3@gmail.com');
 
   useEffect(() => {
     const fetchSettings = async () => {

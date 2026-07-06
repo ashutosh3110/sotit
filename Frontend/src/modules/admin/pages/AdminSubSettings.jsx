@@ -85,7 +85,7 @@ export const AdminNotifications = () => (
 export const AdminPlatform = () => {
     const [platformName, setPlatformName] = useState("Sootit Admin");
     const [systemCurrency, setSystemCurrency] = useState("INR (₹)");
-    const [supportEmail, setSupportEmail] = useState("support@sootit.com");
+    const [supportEmail, setSupportEmail] = useState("sootit3@gmail.com");
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -96,7 +96,7 @@ export const AdminPlatform = () => {
                 if (data.success && data.data) {
                     setPlatformName(data.data.platformName || "Sootit Admin");
                     setSystemCurrency(data.data.systemCurrency || "INR (₹)");
-                    setSupportEmail(data.data.supportEmail || "support@sootit.com");
+                    setSupportEmail(data.data.supportEmail || "sootit3@gmail.com");
                 }
             } catch (error) {
                 console.error("Error fetching settings:", error);
@@ -167,7 +167,7 @@ export const AdminPlatform = () => {
                         value={supportEmail} 
                         onChange={(e) => setSupportEmail(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-[#C44545]/20 focus:outline-none transition-all" 
-                        placeholder="e.g. support@sootit.com"
+                        placeholder="e.g. sootit3@gmail.com"
                     />
                 </div>
             </div>

@@ -11,7 +11,7 @@ const systemSettingSchema = new mongoose.Schema({
   },
   supportEmail: {
     type: String,
-    default: 'support@sootit.com',
+    default: 'sootit3@gmail.com',
   },
   subscriptionDaily: {
     type: Number,
