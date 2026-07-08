@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, MapPin, Phone, Menu, Mail, ShieldCheck, ArrowLeft, ExternalLink, Filter, User, Briefcase, Landmark, CreditCard, Info, FileText, X, Clock, Zap, Wrench, AlertCircle, HelpCircle, Star, Navigation, Truck, ChevronDown, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import AdminSidebar from "../components/AdminSidebar";
 import toast from "react-hot-toast";
 import { indiaData } from "../../../utils/indiaData";
@@ -22,7 +22,62 @@ const AdminVendors = () => {
   const [selectedState, setSelectedState] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [selectedVehicleType, setSelectedVehicleType] = useState(null);
-  const [selectedWorkOffered, setSelectedWorkOffered] = useState(null);
+  const [selectedServiceOffered, setSelectedServiceOffered] = useState(null);
+  const [selectedVehicleClass, setSelectedVehicleClass] = useState(null);
+
+  // Dynamic list of vehicle classes/expertise based on active role (with default standard options)
+  const dynamicVehicleClasses = useMemo(() => {
+    if (!selectedRole || (selectedRole !== 'driver' && selectedRole !== 'mechanic')) return [];
+    const defaultClasses = ['Bike', 'Car', 'Truck', 'Bus'];
+    const classes = new Set(defaultClasses);
+    vendors.forEach(v => {
+      if (v.role === selectedRole) {
+        if (selectedRole === 'driver') {
+          const list = v.professionalDetails?.vehicleClasses || [];
+          list.forEach(c => {
+            if (c && c.trim()) classes.add(c.trim());
+          });
+        } else if (selectedRole === 'mechanic') {
+          const list = v.mechanicDetails?.vehicleExpertise || [];
+          list.forEach(c => {
+            if (c && c.trim()) classes.add(c.trim());
+          });
+          const list2 = v.professionalDetails?.vehicleClasses || [];
+          list2.forEach(c => {
+            if (c && c.trim()) classes.add(c.trim());
+          });
+        }
+      }
+    });
+    return Array.from(classes).sort();
+  }, [vendors, selectedRole]);
+
+  // Dynamic list of services offered by approved mechanics (with default standard options)
+  const dynamicServicesOffered = useMemo(() => {
+    if (selectedRole !== 'mechanic') return [];
+    const defaultServices = [
+      "General Service",
+      "Engine Repair",
+      "Brake Service",
+      "Electrical Work",
+      "AC Service",
+      "Suspension & Steering",
+      "Oil & Filter Change",
+      "Body Work & Paint",
+      "Clutch & Gearbox",
+      "Battery & Charging"
+    ];
+    const services = new Set(defaultServices);
+    vendors.forEach(v => {
+      if (v.role === 'mechanic') {
+        const list = v.mechanicDetails?.specialties || [];
+        list.forEach(s => {
+          if (s && s.trim()) services.add(s.trim());
+        });
+      }
+    });
+    return Array.from(services).sort();
+  }, [vendors, selectedRole]);
 
   // Editing States
   const [isEditing, setIsEditing] = useState(false);
@@ -84,14 +139,24 @@ const AdminVendors = () => {
     // District Filter
     if (selectedDistrict && v.address?.city !== selectedDistrict) return false;
 
-    // Mechanic vehicle type filter
-    if (selectedRole === 'mechanic' && selectedVehicleType) {
-      if (!v.mechanicDetails?.vehicleExpertise || !v.mechanicDetails.vehicleExpertise.includes(selectedVehicleType)) return false;
+    // Vehicle Class Filter (Driver or Mechanic)
+    if (selectedVehicleClass) {
+      const searchVal = selectedVehicleClass.trim().toLowerCase();
+      if (selectedRole === 'driver') {
+        const classes = (v.professionalDetails?.vehicleClasses || []).map(c => c.trim().toLowerCase());
+        if (!classes.includes(searchVal)) return false;
+      } else if (selectedRole === 'mechanic') {
+        const expertise = (v.mechanicDetails?.vehicleExpertise || []).map(e => e.trim().toLowerCase());
+        const classes = (v.professionalDetails?.vehicleClasses || []).map(c => c.trim().toLowerCase());
+        if (!expertise.includes(searchVal) && !classes.includes(searchVal)) return false;
+      }
     }
 
-    // Mechanic work offered/specialties filter
-    if (selectedRole === 'mechanic' && selectedWorkOffered) {
-      if (!v.mechanicDetails?.specialties || !v.mechanicDetails.specialties.includes(selectedWorkOffered)) return false;
+    // Mechanic service offered filter (case-insensitive matching)
+    if (selectedRole === 'mechanic' && selectedServiceOffered) {
+      const searchVal = selectedServiceOffered.trim().toLowerCase();
+      const specialties = (v.mechanicDetails?.specialties || []).map(s => s.trim().toLowerCase());
+      if (!specialties.includes(searchVal)) return false;
     }
 
     // 4. Search Filter
@@ -327,7 +392,8 @@ const AdminVendors = () => {
                             setSelectedState(null);
                             setSelectedDistrict(null);
                             setSelectedVehicleType(null);
-                            setSelectedWorkOffered(null);
+                            setSelectedServiceOffered(null);
+                            setSelectedVehicleClass(null);
                           }}
                           className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between h-36 ${isSelected ? 'border-[#C44545] bg-[#C44545] text-white shadow-xl shadow-[#C44545]/20' : 'border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-300'}`}
                         >
@@ -420,49 +486,39 @@ const AdminVendors = () => {
                         placeholder="All Districts"
                         compact={true}
                       />
+                      {/* Vehicle Class Filter (Driver or Mechanic) */}
+                      {(selectedRole === 'driver' || selectedRole === 'mechanic') && (
+                        <CustomDropdown
+                          label="Vehicle Class"
+                          options={["All Vehicle Classes", ...dynamicVehicleClasses]}
+                          value={selectedVehicleClass || "All Vehicle Classes"}
+                          onChange={(val) => {
+                            if (val === "All Vehicle Classes") {
+                              setSelectedVehicleClass(null);
+                            } else {
+                              setSelectedVehicleClass(val);
+                            }
+                          }}
+                          placeholder="All Vehicle Classes"
+                          compact={true}
+                        />
+                      )}
 
                       {/* Mechanic Specific Filters */}
                       {selectedRole === 'mechanic' && (
                         <>
                           <CustomDropdown
-                            label="Vehicle Type"
-                            options={["All Vehicle Types", "Bike", "Car", "Truck", "Bus"]}
-                            value={selectedVehicleType || "All Vehicle Types"}
+                            label="Service Offered"
+                            options={["All Services", ...dynamicServicesOffered]}
+                            value={selectedServiceOffered || "All Services"}
                             onChange={(val) => {
-                              if (val === "All Vehicle Types") {
-                                setSelectedVehicleType(null);
+                              if (val === "All Services") {
+                                setSelectedServiceOffered(null);
                               } else {
-                                setSelectedVehicleType(val);
+                                setSelectedServiceOffered(val);
                               }
                             }}
-                            placeholder="All Vehicle Types"
-                            compact={true}
-                          />
-
-                          <CustomDropdown
-                            label="Work Offered"
-                            options={[
-                              "All Works",
-                              "General Service",
-                              "Engine Repair",
-                              "Brake Service",
-                              "Electrical Work",
-                              "AC Service",
-                              "Suspension & Steering",
-                              "Oil & Filter Change",
-                              "Body Work & Paint",
-                              "Clutch & Gearbox",
-                              "Battery & Charging"
-                            ]}
-                            value={selectedWorkOffered || "All Works"}
-                            onChange={(val) => {
-                              if (val === "All Works") {
-                                setSelectedWorkOffered(null);
-                              } else {
-                                setSelectedWorkOffered(val);
-                              }
-                            }}
-                            placeholder="All Works"
+                            placeholder="All Services"
                             compact={true}
                           />
                         </>
